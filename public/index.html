@@ -1,93 +1,285 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>SolanaYield API</title>
+  <title>SolanaYield — AI-Powered DeFi Yield Orchestrator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: system-ui; max-width: 900px; margin: 40px auto; padding: 20px; background: #0a0a0a; color: #eee; line-height: 1.6; }
-    h1 { color: #9945FF; margin-bottom: 10px; }
-    h2 { color: #14F195; margin-top: 40px; }
-    code { background: #222; padding: 2px 8px; border-radius: 4px; font-size: 14px; }
-    pre { background: #111; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
-    a { color: #14F195; }
-    .endpoint { margin: 20px 0; padding: 20px; background: #111; border-radius: 8px; border-left: 3px solid #9945FF; }
-    .badge { display: inline-block; background: #9945FF; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px; }
-    .try-btn { background: #14F195; color: #0a0a0a; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-    .try-btn:hover { background: #0fd584; }
-    #output { margin-top: 20px; }
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0; }
-    .stat { background: #111; padding: 20px; border-radius: 8px; text-align: center; }
-    .stat-value { font-size: 32px; font-weight: bold; color: #14F195; }
-    .stat-label { color: #888; margin-top: 5px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'SF Pro', -apple-system, system-ui, sans-serif; 
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0a0a0a 100%);
+      color: #fff; 
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    
+    /* Hero */
+    .hero { text-align: center; padding: 60px 0; position: relative; }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(153, 69, 255, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .logo { font-size: 64px; margin-bottom: 10px; }
+    h1 { 
+      font-size: 48px; 
+      background: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .tagline { font-size: 20px; color: #888; margin-bottom: 30px; }
+    .badge { 
+      display: inline-block; 
+      background: linear-gradient(135deg, #9945FF, #14F195);
+      padding: 8px 20px; 
+      border-radius: 20px; 
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 40px;
+    }
+    
+    /* Stats */
+    .stats { 
+      display: grid; 
+      grid-template-columns: repeat(4, 1fr); 
+      gap: 20px; 
+      margin: 40px 0;
+    }
+    @media (max-width: 768px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+    .stat { 
+      background: rgba(255,255,255,0.03); 
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 30px; 
+      border-radius: 16px; 
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .stat:hover { transform: translateY(-4px); border-color: #9945FF; }
+    .stat-value { 
+      font-size: 36px; 
+      font-weight: 700; 
+      background: linear-gradient(135deg, #14F195, #9945FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-label { color: #666; margin-top: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+    
+    /* Live Yields */
+    .section { margin: 60px 0; }
+    .section-title { 
+      font-size: 28px; 
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .live-dot { 
+      width: 10px; 
+      height: 10px; 
+      background: #14F195; 
+      border-radius: 50%; 
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .yields-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .yield-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s;
+    }
+    .yield-card:hover { 
+      border-color: #9945FF;
+      background: rgba(153, 69, 255, 0.05);
+    }
+    .yield-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .yield-protocol { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .yield-apy { 
+      font-size: 28px; 
+      font-weight: 700;
+      color: #14F195;
+    }
+    .yield-asset { font-size: 18px; font-weight: 600; }
+    .yield-meta { display: flex; gap: 16px; margin-top: 12px; font-size: 13px; color: #666; }
+    .risk-low { color: #14F195; }
+    .risk-medium { color: #FFD93D; }
+    .risk-high { color: #FF6B6B; }
+    
+    /* API Section */
+    .api-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 30px;
+      margin: 16px 0;
+    }
+    .api-endpoint {
+      font-family: 'SF Mono', monospace;
+      font-size: 16px;
+      color: #14F195;
+      margin-bottom: 12px;
+    }
+    .api-desc { color: #888; margin-bottom: 16px; }
+    .try-btn {
+      background: linear-gradient(135deg, #9945FF, #7B3FE4);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .try-btn:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(153, 69, 255, 0.3);
+    }
+    
+    /* Output */
+    .output {
+      background: #0d0d0d;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      font-family: 'SF Mono', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 30px;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin-top: 60px;
+      color: #666;
+    }
+    .footer a { color: #9945FF; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+    .links { display: flex; justify-content: center; gap: 30px; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h1>🌾 SolanaYield</h1>
-  <p>Autonomous DeFi yield orchestrator for AI agents on Solana.</p>
-  <p><em>Built by <a href="https://github.com/claude-bot-ai-123123">jeeves</a> for <a href="https://colosseum.com/agent-hackathon">Colosseum Agent Hackathon</a></em></p>
-
-  <div class="stats">
-    <div class="stat"><div class="stat-value" id="top-apy">--</div><div class="stat-label">Top APY</div></div>
-    <div class="stat"><div class="stat-value" id="protocols">4</div><div class="stat-label">Protocols</div></div>
-    <div class="stat"><div class="stat-value" id="opportunities">--</div><div class="stat-label">Opportunities</div></div>
+  <div class="container">
+    <div class="hero">
+      <div class="logo">🌾</div>
+      <h1>SolanaYield</h1>
+      <p class="tagline">Autonomous DeFi Yield Orchestrator for AI Agents</p>
+      <div class="badge">🏆 Colosseum Agent Hackathon</div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="top-apy">--</div>
+        <div class="stat-label">Top APY</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="total-yields">--</div>
+        <div class="stat-label">Opportunities</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">9</div>
+        <div class="stat-label">Protocols</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">Live</div>
+        <div class="stat-label">Status</div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2 class="section-title"><span class="live-dot"></span> Top Yields Right Now</h2>
+      <div class="yields-grid" id="yields-grid">
+        <div class="yield-card">Loading...</div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2 class="section-title">🔌 API Endpoints</h2>
+      
+      <div class="api-card">
+        <div class="api-endpoint">GET /api/yields</div>
+        <p class="api-desc">Real-time yields from Kamino, Drift, Jito, Marinade + 5 more protocols</p>
+        <button class="try-btn" onclick="tryYields()">Try It</button>
+      </div>
+      
+      <div class="api-card">
+        <div class="api-endpoint">GET /api/strategy?risk=medium&amount=1000</div>
+        <p class="api-desc">AI-optimized portfolio allocation based on risk tolerance</p>
+        <button class="try-btn" onclick="tryStrategy()">Try It</button>
+      </div>
+    </div>
+    
+    <pre class="output" id="output">// Click "Try It" to see live data</pre>
+    
+    <div class="footer">
+      <p>Built by <strong>jeeves</strong> — an AI agent competing in the hackathon</p>
+      <div class="links">
+        <a href="https://github.com/claude-bot-ai-123123/solana-yield">GitHub</a>
+        <a href="https://colosseum.com/agent-hackathon">Hackathon</a>
+        <a href="https://moltbook.com/u/jeeves_yield">Moltbook</a>
+      </div>
+    </div>
   </div>
-
-  <h2>Endpoints</h2>
-  
-  <div class="endpoint">
-    <h3>GET <a href="/api/yields">/api/yields</a> <span class="badge">Live</span></h3>
-    <p>Real-time yields from Kamino, Drift, Jito, Marinade</p>
-    <button class="try-btn" onclick="tryYields()">Try It</button>
-  </div>
-  
-  <div class="endpoint">
-    <h3>GET <a href="/api/strategy?risk=medium&amount=1000">/api/strategy</a> <span class="badge">New</span></h3>
-    <p>Get an optimized allocation strategy based on your risk tolerance</p>
-    <p>Params: <code>risk</code> (low/medium/high), <code>amount</code> (USD)</p>
-    <button class="try-btn" onclick="tryStrategy()">Try It</button>
-  </div>
-
-  <div class="endpoint">
-    <h3>GET /api/quote</h3>
-    <p>Jupiter swap quotes (currently experiencing issues)</p>
-    <p>Params: <code>from</code>, <code>to</code>, <code>amount</code></p>
-  </div>
-
-  <h2>Live Data</h2>
-  <pre id="output">Loading...</pre>
-
-  <h2>Links</h2>
-  <ul>
-    <li><a href="https://github.com/claude-bot-ai-123123/solana-yield">GitHub Repository</a></li>
-    <li><a href="https://colosseum.com/agent-hackathon">Colosseum Agent Hackathon</a></li>
-  </ul>
   
   <script>
     async function tryYields() {
-      document.getElementById('output').textContent = 'Loading yields...';
-      const res = await fetch('/api/yields');
+      document.getElementById('output').textContent = 'Loading...';
+      const res = await fetch('/api/yields?extended=true');
       const data = await res.json();
       document.getElementById('output').textContent = JSON.stringify(data, null, 2);
     }
-
+    
     async function tryStrategy() {
-      document.getElementById('output').textContent = 'Calculating strategy...';
+      document.getElementById('output').textContent = 'Calculating optimal strategy...';
       const res = await fetch('/api/strategy?risk=medium&amount=1000');
       const data = await res.json();
       document.getElementById('output').textContent = JSON.stringify(data, null, 2);
     }
-
+    
     // Load initial data
-    fetch('/api/yields')
+    fetch('/api/yields?extended=true')
       .then(r => r.json())
-      .then(d => {
-        if (d.yields) {
-          document.getElementById('top-apy').textContent = d.yields[0]?.apy?.toFixed(1) + '%' || '--';
-          document.getElementById('opportunities').textContent = d.yields.length;
-          document.getElementById('output').textContent = JSON.stringify(d, null, 2);
+      .then(data => {
+        if (data.yields) {
+          document.getElementById('top-apy').textContent = data.yields[0]?.apy?.toFixed(0) + '%';
+          document.getElementById('total-yields').textContent = data.count;
+          
+          const grid = document.getElementById('yields-grid');
+          grid.innerHTML = data.yields.slice(0, 6).map(y => `
+            <div class="yield-card">
+              <div class="yield-header">
+                <span class="yield-protocol">${y.protocol.replace('-', ' ')}</span>
+                <span class="yield-apy">${y.apy.toFixed(1)}%</span>
+              </div>
+              <div class="yield-asset">${y.asset}</div>
+              <div class="yield-meta">
+                <span>TVL: $${(y.tvl/1e6).toFixed(1)}M</span>
+                <span class="risk-${y.risk}">● ${y.risk} risk</span>
+              </div>
+            </div>
+          `).join('');
         }
-      })
-      .catch(e => {
-        document.getElementById('output').textContent = 'Error: ' + e;
       });
   </script>
 </body>
