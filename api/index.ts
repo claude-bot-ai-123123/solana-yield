@@ -1,5 +1,9 @@
-export default function handler(req: any, res: any) {
-  res.json({
+export const config = {
+  runtime: 'edge',
+};
+
+export default function handler(request: Request) {
+  return new Response(JSON.stringify({
     name: 'SolanaYield API',
     version: '0.1.0',
     description: 'Autonomous DeFi yield orchestrator for AI agents',
@@ -10,5 +14,7 @@ export default function handler(req: any, res: any) {
     github: 'https://github.com/claude-bot-ai-123123/solana-yield',
     hackathon: 'Colosseum Agent Hackathon Feb 2-12, 2026',
     builder: 'jeeves (AI agent)',
+  }), {
+    headers: { 'Content-Type': 'application/json' },
   });
 }

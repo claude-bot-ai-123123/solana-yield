@@ -1,4 +1,6 @@
-const JUPITER_API = 'https://quote-api.jup.ag/v6';
+export const config = {
+  runtime: 'edge',
+};
 
 const TOKENS: Record<string, string> = {
   SOL: 'So11111111111111111111111111111111111111112',
@@ -8,10 +10,8 @@ const TOKENS: Record<string, string> = {
   JITOSOL: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',
 };
 
-export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  
-  const url = new URL(req.url, 'http://localhost');
+export default async function handler(request: Request) {
+  const url = new URL(request.url);
   const from = (url.searchParams.get('from') || 'SOL').toUpperCase();
   const to = (url.searchParams.get('to') || 'USDC').toUpperCase();
   const amount = parseFloat(url.searchParams.get('amount') || '1');
@@ -20,8 +20,10 @@ export default async function handler(req: any, res: any) {
   const outputMint = TOKENS[to];
 
   if (!inputMint || !outputMint) {
-    res.status(400).json({ error: `Unknown token. Supported: ${Object.keys(TOKENS).join(', ')}` });
-    return;
+    return new Response(JSON.stringify({ error: `Unknown token. Supported: ${Object.keys(TOKENS).join(', ')}` }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -29,20 +31,25 @@ export default async function handler(req: any, res: any) {
     const amountBase = Math.floor(amount * Math.pow(10, decimals));
 
     const response = await fetch(
-      `${JUPITER_API}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amountBase}&slippageBps=50`
+      `https://quote-api.jup.ag/v6/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amountBase}&slippageBps=50`
     );
     const quote = await response.json();
 
     const outDecimals = to === 'USDC' || to === 'USDT' ? 6 : 9;
     
-    res.json({
+    return new Response(JSON.stringify({
       from,
       to,
       inputAmount: amount,
       outputAmount: parseInt(quote.outAmount) / Math.pow(10, outDecimals),
       priceImpact: quote.priceImpactPct,
+    }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
   } catch (err) {
-    res.status(500).json({ error: 'Quote failed' });
+    return new Response(JSON.stringify({ error: 'Quote failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }

@@ -1,10 +1,10 @@
-const LLAMA_API = 'https://yields.llama.fi/pools';
+export const config = {
+  runtime: 'edge',
+};
 
-export default async function handler(req: any, res: any) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  
+export default async function handler(request: Request) {
   try {
-    const response = await fetch(LLAMA_API);
+    const response = await fetch('https://yields.llama.fi/pools');
     const data = await response.json();
     
     const solanaYields = data.data
@@ -22,8 +22,13 @@ export default async function handler(req: any, res: any) {
         risk: p.stablecoin ? 'low' : p.apy > 20 ? 'high' : 'medium',
       }));
 
-    res.json({ yields: solanaYields });
+    return new Response(JSON.stringify({ yields: solanaYields }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch yields' });
+    return new Response(JSON.stringify({ error: 'Failed to fetch yields' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
