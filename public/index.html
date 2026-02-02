@@ -3,45 +3,57 @@
 <head>
   <title>SolanaYield API</title>
   <style>
-    body { font-family: system-ui; max-width: 800px; margin: 40px auto; padding: 20px; background: #0a0a0a; color: #eee; }
-    h1 { color: #9945FF; }
-    code { background: #222; padding: 2px 6px; border-radius: 4px; }
-    pre { background: #111; padding: 16px; border-radius: 8px; overflow-x: auto; }
+    body { font-family: system-ui; max-width: 900px; margin: 40px auto; padding: 20px; background: #0a0a0a; color: #eee; line-height: 1.6; }
+    h1 { color: #9945FF; margin-bottom: 10px; }
+    h2 { color: #14F195; margin-top: 40px; }
+    code { background: #222; padding: 2px 8px; border-radius: 4px; font-size: 14px; }
+    pre { background: #111; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; }
     a { color: #14F195; }
-    .endpoint { margin: 20px 0; padding: 16px; background: #111; border-radius: 8px; border-left: 3px solid #9945FF; }
+    .endpoint { margin: 20px 0; padding: 20px; background: #111; border-radius: 8px; border-left: 3px solid #9945FF; }
+    .badge { display: inline-block; background: #9945FF; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px; }
+    .try-btn { background: #14F195; color: #0a0a0a; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    .try-btn:hover { background: #0fd584; }
+    #output { margin-top: 20px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0; }
+    .stat { background: #111; padding: 20px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 32px; font-weight: bold; color: #14F195; }
+    .stat-label { color: #888; margin-top: 5px; }
   </style>
 </head>
 <body>
-  <h1>🌾 SolanaYield API</h1>
+  <h1>🌾 SolanaYield</h1>
   <p>Autonomous DeFi yield orchestrator for AI agents on Solana.</p>
-  
+  <p><em>Built by <a href="https://github.com/claude-bot-ai-123123">jeeves</a> for <a href="https://colosseum.com/agent-hackathon">Colosseum Agent Hackathon</a></em></p>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="top-apy">--</div><div class="stat-label">Top APY</div></div>
+    <div class="stat"><div class="stat-value" id="protocols">4</div><div class="stat-label">Protocols</div></div>
+    <div class="stat"><div class="stat-value" id="opportunities">--</div><div class="stat-label">Opportunities</div></div>
+  </div>
+
   <h2>Endpoints</h2>
   
   <div class="endpoint">
-    <h3>GET <a href="/api/yields">/api/yields</a></h3>
+    <h3>GET <a href="/api/yields">/api/yields</a> <span class="badge">Live</span></h3>
     <p>Real-time yields from Kamino, Drift, Jito, Marinade</p>
+    <button class="try-btn" onclick="tryYields()">Try It</button>
   </div>
   
   <div class="endpoint">
-    <h3>GET <a href="/api/quote?from=SOL&to=USDC&amount=1">/api/quote</a></h3>
-    <p>Jupiter swap quotes</p>
-    <p>Params: <code>from</code>, <code>to</code>, <code>amount</code></p>
-    <p>Example: <code>/api/quote?from=SOL&to=USDC&amount=1</code></p>
+    <h3>GET <a href="/api/strategy?risk=medium&amount=1000">/api/strategy</a> <span class="badge">New</span></h3>
+    <p>Get an optimized allocation strategy based on your risk tolerance</p>
+    <p>Params: <code>risk</code> (low/medium/high), <code>amount</code> (USD)</p>
+    <button class="try-btn" onclick="tryStrategy()">Try It</button>
   </div>
 
-  <h2>Try It</h2>
-  <pre id="output">Loading yields...</pre>
-  
-  <script>
-    fetch('/api/yields')
-      .then(r => r.json())
-      .then(d => {
-        document.getElementById('output').textContent = JSON.stringify(d, null, 2);
-      })
-      .catch(e => {
-        document.getElementById('output').textContent = 'Error: ' + e;
-      });
-  </script>
+  <div class="endpoint">
+    <h3>GET /api/quote</h3>
+    <p>Jupiter swap quotes (currently experiencing issues)</p>
+    <p>Params: <code>from</code>, <code>to</code>, <code>amount</code></p>
+  </div>
+
+  <h2>Live Data</h2>
+  <pre id="output">Loading...</pre>
 
   <h2>Links</h2>
   <ul>
@@ -49,6 +61,34 @@
     <li><a href="https://colosseum.com/agent-hackathon">Colosseum Agent Hackathon</a></li>
   </ul>
   
-  <p><em>Built by jeeves (AI agent) for Colosseum Hackathon Feb 2026</em></p>
+  <script>
+    async function tryYields() {
+      document.getElementById('output').textContent = 'Loading yields...';
+      const res = await fetch('/api/yields');
+      const data = await res.json();
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function tryStrategy() {
+      document.getElementById('output').textContent = 'Calculating strategy...';
+      const res = await fetch('/api/strategy?risk=medium&amount=1000');
+      const data = await res.json();
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    // Load initial data
+    fetch('/api/yields')
+      .then(r => r.json())
+      .then(d => {
+        if (d.yields) {
+          document.getElementById('top-apy').textContent = d.yields[0]?.apy?.toFixed(1) + '%' || '--';
+          document.getElementById('opportunities').textContent = d.yields.length;
+          document.getElementById('output').textContent = JSON.stringify(d, null, 2);
+        }
+      })
+      .catch(e => {
+        document.getElementById('output').textContent = 'Error: ' + e;
+      });
+  </script>
 </body>
 </html>
