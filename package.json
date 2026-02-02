@@ -7,6 +7,9 @@
   "bin": {
     "solana-yield": "dist/cli.js"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
