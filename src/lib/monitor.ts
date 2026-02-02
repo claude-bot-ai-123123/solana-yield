@@ -1,5 +1,6 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { YieldOpportunity, Portfolio, Position } from '../types';
+import { fetchSolanaYields, fetchAllSolanaYields } from './defillama';
 import { KaminoAdapter } from '../adapters/kamino';
 import { DriftAdapter } from '../adapters/drift';
 import { JitoAdapter } from '../adapters/jito';
@@ -24,7 +25,26 @@ export class YieldMonitor {
     };
   }
 
+  /**
+   * Fetch yields from our supported protocols via DeFi Llama
+   */
   async fetchAllYields(): Promise<YieldOpportunity[]> {
+    try {
+      return await fetchSolanaYields(100000); // Min $100k TVL
+    } catch (err) {
+      console.warn('DeFi Llama fetch failed, using adapter fallbacks');
+      return this.fetchFromAdapters();
+    }
+  }
+
+  /**
+   * Fetch ALL Solana yields (including protocols we don't have adapters for)
+   */
+  async fetchAllSolanaOpportunities(): Promise<YieldOpportunity[]> {
+    return fetchAllSolanaYields(100000);
+  }
+
+  private async fetchFromAdapters(): Promise<YieldOpportunity[]> {
     const results = await Promise.allSettled([
       this.adapters.kamino.getYields(),
       this.adapters.drift.getYields(),
@@ -44,8 +64,12 @@ export class YieldMonitor {
     const positions: Position[] = [];
     
     for (const [protocol, adapter] of Object.entries(this.adapters)) {
-      const protocolPositions = await adapter.getPositions(wallet);
-      positions.push(...protocolPositions);
+      try {
+        const protocolPositions = await adapter.getPositions(wallet);
+        positions.push(...protocolPositions);
+      } catch (err) {
+        // Continue with other protocols
+      }
     }
 
     const totalValue = positions.reduce((sum, p) => sum + p.valueUsd, 0);

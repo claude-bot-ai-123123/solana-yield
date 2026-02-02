@@ -7,6 +7,7 @@ export { SolanaYield } from './lib/yield';
 export { YieldMonitor } from './lib/monitor';
 export { StrategyEngine } from './lib/strategy';
 export { Executor } from './lib/executor';
+export { fetchSolanaYields, fetchAllSolanaYields } from './lib/defillama';
 
 // Protocol adapters
 export { KaminoAdapter } from './adapters/kamino';
