@@ -1,5 +1,3 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 const JUPITER_API = 'https://quote-api.jup.ag/v6';
 
 const TOKENS: Record<string, string> = {
@@ -10,12 +8,13 @@ const TOKENS: Record<string, string> = {
   JITOSOL: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',
 };
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   
-  const from = (req.query.from as string || 'SOL').toUpperCase();
-  const to = (req.query.to as string || 'USDC').toUpperCase();
-  const amount = parseFloat(req.query.amount as string || '1');
+  const url = new URL(req.url, 'http://localhost');
+  const from = (url.searchParams.get('from') || 'SOL').toUpperCase();
+  const to = (url.searchParams.get('to') || 'USDC').toUpperCase();
+  const amount = parseFloat(url.searchParams.get('amount') || '1');
 
   const inputMint = TOKENS[from];
   const outputMint = TOKENS[to];
