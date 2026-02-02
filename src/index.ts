@@ -7,6 +7,7 @@ export { SolanaYield } from './lib/yield';
 export { YieldMonitor } from './lib/monitor';
 export { StrategyEngine } from './lib/strategy';
 export { Executor } from './lib/executor';
+export { JupiterSwap, TOKENS } from './lib/jupiter';
 export { fetchSolanaYields, fetchAllSolanaYields } from './lib/defillama';
 
 // Protocol adapters
