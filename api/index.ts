@@ -10,6 +10,8 @@ export default function handler(request: Request) {
     endpoints: {
       '/api/yields': 'GET - Yield opportunities from Kamino, Drift, Jito, Marinade',
       '/api/quote': 'GET - Swap quote (?from=SOL&to=USDC&amount=1)',
+      '/api/live': 'GET - Live decision stream UI (cyberpunk)',
+      '/api/autopilot': 'GET - Autonomous decision analysis',
     },
     github: 'https://github.com/claude-bot-ai-123123/solana-yield',
     hackathon: 'Colosseum Agent Hackathon Feb 2-12, 2026',
