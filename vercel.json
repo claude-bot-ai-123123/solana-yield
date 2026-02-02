@@ -1,13 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "functions": {
-    "api/*.ts": {
-      "runtime": "@vercel/node@3"
-    }
-  },
-  "rewrites": [
-    { "source": "/live", "destination": "/live.html" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
