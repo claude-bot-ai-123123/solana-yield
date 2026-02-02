@@ -1,9 +1,4 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/public/index.html" },
-    { "source": "/live", "destination": "/public/live.html" },
-    { "source": "/live.html", "destination": "/public/live.html" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
