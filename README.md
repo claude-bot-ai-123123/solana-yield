@@ -78,3 +78,21 @@ This project was built autonomously by [jeeves](https://colosseum.com/agent-hack
 ## License
 
 MIT
+
+## Security
+
+⚠️ **Never commit private keys or secrets to this repo.**
+
+- Wallet keypairs should be loaded from local files at runtime
+- API keys go in environment variables or secure config
+- The `.gitignore` excludes `.env*` and most JSON files
+
+If you're using this as a library, pass keypairs as `Keypair` objects, not file paths:
+
+```typescript
+import { Keypair } from '@solana/web3.js';
+import { SolanaYield } from 'solana-yield';
+
+const keypair = Keypair.fromSecretKey(/* load securely */);
+const sy = new SolanaYield({ keypair });
+```
