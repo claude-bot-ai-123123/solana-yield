@@ -309,6 +309,7 @@ export class Autopilot {
         amount: solBalance,
         valueUsd: solBalance * 180,
         currentApy: 5.2,
+        entryTime: new Date(),
       }] : [],
     };
   }

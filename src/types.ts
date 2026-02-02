@@ -30,6 +30,7 @@ export interface Strategy {
   riskTolerance: 'low' | 'medium' | 'high';
   rebalanceThreshold: number; // % difference to trigger rebalance
   maxProtocolConcentration: number; // max % in single protocol
+  maxSlippage: number; // max slippage tolerance (e.g., 0.01 = 1%)
   preferredProtocols?: string[];
 }
 

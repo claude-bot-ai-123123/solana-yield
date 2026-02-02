@@ -82,6 +82,7 @@ program
         riskTolerance: options.risk,
         rebalanceThreshold: 0.5,
         maxProtocolConcentration: 0.4,
+        maxSlippage: 0.01,
       }
     });
     
