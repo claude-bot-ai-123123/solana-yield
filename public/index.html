@@ -215,6 +215,17 @@
     </div>
     
     <div class="section">
+      <h2 class="section-title">🤖 Autopilot — Autonomous Decision Engine</h2>
+      <p style="color: #888; margin-bottom: 20px;">Watch the AI analyze yields and make decisions in real-time. This is what "Most Agentic" looks like.</p>
+      
+      <div class="api-card" style="border-color: #9945FF;">
+        <div class="api-endpoint">GET /api/autopilot</div>
+        <p class="api-desc">Live decision analysis with explainable reasoning — see exactly how the AI thinks</p>
+        <button class="try-btn" onclick="tryAutopilot()" style="background: linear-gradient(135deg, #14F195, #00C48C);">🧠 See AI Decision</button>
+      </div>
+    </div>
+    
+    <div class="section">
       <h2 class="section-title">🔌 API Endpoints</h2>
       
       <div class="api-card">
@@ -224,9 +235,9 @@
       </div>
       
       <div class="api-card">
-        <div class="api-endpoint">GET /api/strategy?risk=medium&amount=1000</div>
-        <p class="api-desc">AI-optimized portfolio allocation based on risk tolerance</p>
-        <button class="try-btn" onclick="tryStrategy()">Try It</button>
+        <div class="api-endpoint">GET /api/quote?from=SOL&to=USDC&amount=1</div>
+        <p class="api-desc">Jupiter swap quotes for cross-protocol rebalancing</p>
+        <button class="try-btn" onclick="tryQuote()">Try It</button>
       </div>
     </div>
     
@@ -250,9 +261,16 @@
       document.getElementById('output').textContent = JSON.stringify(data, null, 2);
     }
     
-    async function tryStrategy() {
-      document.getElementById('output').textContent = 'Calculating optimal strategy...';
-      const res = await fetch('/api/strategy?risk=medium&amount=1000');
+    async function tryAutopilot() {
+      document.getElementById('output').textContent = '🧠 Running autonomous decision analysis...';
+      const res = await fetch('/api/autopilot');
+      const data = await res.json();
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+    
+    async function tryQuote() {
+      document.getElementById('output').textContent = 'Getting Jupiter quote...';
+      const res = await fetch('/api/quote?from=SOL&to=USDC&amount=1');
       const data = await res.json();
       document.getElementById('output').textContent = JSON.stringify(data, null, 2);
     }

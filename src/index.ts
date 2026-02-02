@@ -9,6 +9,7 @@ export { StrategyEngine } from './lib/strategy';
 export { Executor } from './lib/executor';
 export { JupiterSwap, TOKENS } from './lib/jupiter';
 export { fetchSolanaYields, fetchAllSolanaYields } from './lib/defillama';
+export { Autopilot, type AutopilotState, type AutopilotDecision } from './lib/autopilot';
 
 // Protocol adapters
 export { KaminoAdapter } from './adapters/kamino';
