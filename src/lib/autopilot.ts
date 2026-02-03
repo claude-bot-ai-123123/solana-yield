@@ -19,6 +19,7 @@ import {
   getTopRecommendations,
   RiskAdjustedOpportunity,
 } from './risk';
+import { getHistoryStore } from './history';
 
 export interface AutopilotDecision {
   timestamp: number;
@@ -73,6 +74,7 @@ export class Autopilot {
   private executor: Executor;
   private state: AutopilotState;
   private intervalId: NodeJS.Timeout | null = null;
+  private historyStore = getHistoryStore();
 
   constructor(
     connection: Connection,
@@ -182,18 +184,35 @@ export class Autopilot {
         }
       }
 
-      // 6. Record decision
+      // 6. Record decision to state
       this.state.lastDecision = decision;
       this.state.decisionHistory.push(decision);
       this.state.stats.totalDecisions++;
 
-      // Keep history bounded
+      // Keep in-memory history bounded
       if (this.state.decisionHistory.length > 100) {
         this.state.decisionHistory = this.state.decisionHistory.slice(-100);
       }
 
+      // 7. Record to persistent audit trail
+      try {
+        await this.historyStore.record(decision, {
+          portfolioSnapshot: portfolio,
+          yieldSnapshot: yields.slice(0, 20),
+          riskAnalyzedYields: this.state.riskAdjustedYields.slice(0, 20),
+          strategyConfig: this.strategy,
+          marketConditions: {
+            solPrice: 180, // TODO: fetch real price
+            avgApy: yields.reduce((sum, y) => sum + y.apy, 0) / yields.length,
+          },
+        });
+        console.log(`📝 Decision recorded to audit trail`);
+      } catch (historyErr) {
+        console.error(`⚠️ Failed to record decision to history: ${historyErr}`);
+      }
+
       console.log(`🧠 Decision: ${decision.type} (confidence: ${(decision.confidence * 100).toFixed(0)}%)`);
-      console.log(`   Reasoning: ${decision.reasoning}`);
+      console.log(`   Reasoning: ${decision.reasoning.split('\n')[0]}`);
 
       return decision;
 

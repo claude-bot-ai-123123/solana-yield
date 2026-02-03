@@ -1,7 +1,7 @@
 /**
  * SolanaYield HTTP API Server
  * Simple REST API for yield monitoring and quotes
- * Now with risk-adjusted recommendations!
+ * Now with risk-adjusted recommendations and full audit trail!
  */
 
 import { createServer, IncomingMessage, ServerResponse } from 'http';
@@ -15,10 +15,16 @@ import {
   calculateRiskScore,
   PROTOCOL_PROFILES,
 } from './lib/risk';
+import { 
+  getHistoryStore, 
+  DecisionQuery,
+  DecisionRecord,
+} from './lib/history';
 
 const connection = new Connection('https://api.mainnet-beta.solana.com');
 const monitor = new YieldMonitor(connection);
 const jupiter = new JupiterSwap(connection);
+const historyStore = getHistoryStore(process.env.DECISION_DATA_DIR || './data/decisions');
 
 const PORT = process.env.PORT || 3000;
 
@@ -30,8 +36,8 @@ const routes: Record<string, RouteHandler> = {
   'GET /': async (req, res) => {
     json(res, {
       name: 'SolanaYield API',
-      version: '0.2.0',
-      description: 'Autonomous DeFi yield orchestrator with risk-adjusted recommendations',
+      version: '0.3.0',
+      description: 'Autonomous DeFi yield orchestrator with risk-adjusted recommendations and full audit trail',
       endpoints: {
         '/yields': 'GET - All yield opportunities (raw APY)',
         '/yields/top': 'GET - Top 10 by raw APY',
@@ -40,6 +46,10 @@ const routes: Record<string, RouteHandler> = {
         '/risk/compare': 'GET - Compare raw APY vs risk-adjusted rankings',
         '/risk/protocols': 'GET - Protocol risk profiles',
         '/quote': 'GET - Swap quote (?from=SOL&to=USDC&amount=1)',
+        '/audit/decisions': 'GET - Query decision history (?type=rebalance&limit=20)',
+        '/audit/stats': 'GET - Decision statistics summary',
+        '/audit/timeline': 'GET - Decision timeline (?groupBy=hour|day)',
+        '/audit/export': 'GET - Export decisions for compliance (?startDate=2024-01-01)',
         '/health': 'GET - Health check',
       },
     });
@@ -224,6 +234,188 @@ const routes: Record<string, RouteHandler> = {
       },
     });
   },
+
+  // ============================================================================
+  // Audit Trail Endpoints - Full Decision Transparency
+  // ============================================================================
+
+  'GET /audit/decisions': async (req, res) => {
+    const url = new URL(req.url || '', `http://localhost:${PORT}`);
+    
+    const query: DecisionQuery = {
+      limit: parseInt(url.searchParams.get('limit') || '20'),
+      offset: parseInt(url.searchParams.get('offset') || '0'),
+    };
+
+    // Type filter (comma-separated)
+    const typesParam = url.searchParams.get('type') || url.searchParams.get('types');
+    if (typesParam) {
+      query.types = typesParam.split(',') as any;
+    }
+
+    // Protocol filter
+    const protocolsParam = url.searchParams.get('protocol') || url.searchParams.get('protocols');
+    if (protocolsParam) {
+      query.protocols = protocolsParam.split(',');
+    }
+
+    // Asset filter
+    const assetsParam = url.searchParams.get('asset') || url.searchParams.get('assets');
+    if (assetsParam) {
+      query.assets = assetsParam.split(',');
+    }
+
+    // Time range
+    const startTime = url.searchParams.get('startTime');
+    const endTime = url.searchParams.get('endTime');
+    if (startTime) query.startTime = parseInt(startTime);
+    if (endTime) query.endTime = parseInt(endTime);
+
+    // Date shortcuts
+    const startDate = url.searchParams.get('startDate');
+    const endDate = url.searchParams.get('endDate');
+    if (startDate) query.startTime = new Date(startDate).getTime();
+    if (endDate) query.endTime = new Date(endDate + 'T23:59:59').getTime();
+
+    // Confidence filter
+    const minConf = url.searchParams.get('minConfidence');
+    if (minConf) query.minConfidence = parseFloat(minConf);
+
+    // Execution filter
+    if (url.searchParams.get('executedOnly') === 'true') query.executedOnly = true;
+    if (url.searchParams.get('withErrors') === 'true') query.withErrors = true;
+
+    try {
+      const decisions = await historyStore.query(query);
+      
+      json(res, {
+        query,
+        count: decisions.length,
+        decisions: decisions.map(d => ({
+          id: d.id,
+          timestamp: d.decision.timestamp,
+          time: new Date(d.decision.timestamp).toISOString(),
+          type: d.decision.type,
+          confidence: Math.round(d.decision.confidence * 100),
+          executed: d.decision.executed,
+          hasError: !!d.decision.error,
+          protocols: d.meta.protocols,
+          assets: d.meta.assets,
+          riskChange: d.meta.riskChange,
+          apyImpact: d.meta.apyImpact,
+          reasoningPreview: d.decision.reasoning.split('\n')[0],
+        })),
+        pagination: {
+          limit: query.limit,
+          offset: query.offset,
+          hasMore: decisions.length === query.limit,
+        },
+      });
+    } catch (err) {
+      error(res, 500, `Failed to query decisions: ${err}`);
+    }
+  },
+
+  'GET /audit/stats': async (req, res) => {
+    try {
+      const stats = historyStore.getStats();
+      
+      json(res, {
+        summary: {
+          totalDecisions: stats.totalDecisions,
+          executionRate: `${(stats.executionRate * 100).toFixed(1)}%`,
+          avgConfidence: `${(stats.avgConfidence * 100).toFixed(1)}%`,
+          errorRate: `${(stats.errorRate * 100).toFixed(1)}%`,
+          totalApyGained: `${stats.totalApyGained.toFixed(2)}%`,
+        },
+        byDecisionType: stats.byType,
+        byProtocol: stats.byProtocol,
+        riskChanges: stats.riskChanges,
+        timeRange: stats.timeRange.first ? {
+          first: new Date(stats.timeRange.first).toISOString(),
+          last: new Date(stats.timeRange.last!).toISOString(),
+          daysActive: Math.ceil((stats.timeRange.last! - stats.timeRange.first) / (1000 * 60 * 60 * 24)),
+        } : null,
+      });
+    } catch (err) {
+      error(res, 500, `Failed to get stats: ${err}`);
+    }
+  },
+
+  'GET /audit/timeline': async (req, res) => {
+    const url = new URL(req.url || '', `http://localhost:${PORT}`);
+    const groupBy = (url.searchParams.get('groupBy') || 'day') as 'hour' | 'day';
+    
+    const startTime = url.searchParams.get('startTime');
+    const endTime = url.searchParams.get('endTime');
+    const startDate = url.searchParams.get('startDate');
+    const endDate = url.searchParams.get('endDate');
+
+    try {
+      const timeline = await historyStore.getTimeline({
+        groupBy,
+        startTime: startTime ? parseInt(startTime) : startDate ? new Date(startDate).getTime() : undefined,
+        endTime: endTime ? parseInt(endTime) : endDate ? new Date(endDate + 'T23:59:59').getTime() : undefined,
+      });
+
+      json(res, {
+        groupBy,
+        bucketCount: timeline.buckets.length,
+        timeline: timeline.buckets.map(b => ({
+          ...b,
+          avgConfidence: Math.round(b.avgConfidence * 100),
+        })),
+      });
+    } catch (err) {
+      error(res, 500, `Failed to get timeline: ${err}`);
+    }
+  },
+
+  'GET /audit/export': async (req, res) => {
+    const url = new URL(req.url || '', `http://localhost:${PORT}`);
+    const startDate = url.searchParams.get('startDate') || undefined;
+    const endDate = url.searchParams.get('endDate') || undefined;
+    const format = url.searchParams.get('format') || 'json';
+
+    try {
+      const exportData = await historyStore.export({ startDate, endDate });
+
+      if (format === 'csv') {
+        // CSV export for spreadsheets
+        const csvLines = [
+          'id,timestamp,type,confidence,executed,error,protocols,assets,riskChange,apyImpact,reasoning',
+        ];
+        
+        for (const record of exportData.records) {
+          const d = record.decision;
+          csvLines.push([
+            record.id,
+            new Date(d.timestamp).toISOString(),
+            d.type,
+            (d.confidence * 100).toFixed(1),
+            d.executed ? 'true' : 'false',
+            d.error || '',
+            record.meta.protocols.join(';'),
+            record.meta.assets.join(';'),
+            record.meta.riskChange || '',
+            record.meta.apyImpact.toFixed(2),
+            `"${d.reasoning.replace(/"/g, '""').replace(/\n/g, ' ')}"`,
+          ].join(','));
+        }
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=solanayield-audit-${new Date().toISOString().split('T')[0]}.csv`);
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.end(csvLines.join('\n'));
+      } else {
+        // JSON export (default)
+        res.setHeader('Content-Disposition', `attachment; filename=solanayield-audit-${new Date().toISOString().split('T')[0]}.json`);
+        json(res, exportData);
+      }
+    } catch (err) {
+      error(res, 500, `Export failed: ${err}`);
+    }
+  },
 };
 
 function json(res: ServerResponse, data: unknown) {
@@ -237,15 +429,138 @@ function error(res: ServerResponse, code: number, message: string) {
   json(res, { error: message });
 }
 
+// Dynamic route handlers for parameterized paths
+const dynamicRoutes: Array<{
+  pattern: RegExp;
+  method: string;
+  handler: (req: IncomingMessage, res: ServerResponse, params: Record<string, string>) => Promise<void>;
+}> = [
+  {
+    pattern: /^\/audit\/decisions\/([^/]+)$/,
+    method: 'GET',
+    handler: async (req, res, params) => {
+      const id = params.id;
+      
+      try {
+        const record = await historyStore.get(id);
+        
+        if (!record) {
+          error(res, 404, `Decision not found: ${id}`);
+          return;
+        }
+
+        json(res, {
+          id: record.id,
+          timestamp: record.decision.timestamp,
+          time: new Date(record.decision.timestamp).toISOString(),
+          type: record.decision.type,
+          confidence: record.decision.confidence,
+          executed: record.decision.executed,
+          error: record.decision.error,
+          txIds: record.decision.txIds,
+          reasoning: record.decision.reasoning,
+          actions: record.decision.actions,
+          riskAnalysis: record.decision.riskAnalysis,
+          context: {
+            portfolioSnapshot: record.context.portfolioSnapshot,
+            strategyConfig: record.context.strategyConfig,
+            marketConditions: record.context.marketConditions,
+            topYieldsAvailable: record.context.riskAnalyzedYields?.slice(0, 5).map(y => ({
+              protocol: y.protocol,
+              asset: y.asset,
+              rawApy: y.apy,
+              adjustedApy: y.adjustedApy,
+              riskScore: y.riskScore.overall,
+            })),
+          },
+          meta: record.meta,
+        });
+      } catch (err) {
+        error(res, 500, `Failed to get decision: ${err}`);
+      }
+    },
+  },
+  {
+    pattern: /^\/audit\/replay\/([^/]+)$/,
+    method: 'GET',
+    handler: async (req, res, params) => {
+      const id = params.id;
+      
+      try {
+        const replay = await historyStore.getReplayContext(id);
+        
+        if (!replay) {
+          error(res, 404, `Decision not found: ${id}`);
+          return;
+        }
+
+        json(res, {
+          decision: {
+            id: replay.decision.id,
+            timestamp: replay.decision.decision.timestamp,
+            time: new Date(replay.decision.decision.timestamp).toISOString(),
+            type: replay.decision.decision.type,
+            confidence: replay.decision.decision.confidence,
+            executed: replay.decision.decision.executed,
+            reasoning: replay.decision.decision.reasoning,
+            actions: replay.decision.decision.actions,
+            riskAnalysis: replay.decision.decision.riskAnalysis,
+          },
+          fullContext: replay.decision.context,
+          previousDecisions: replay.previousDecisions.map(p => ({
+            id: p.id,
+            timestamp: p.decision.timestamp,
+            time: new Date(p.decision.timestamp).toISOString(),
+            type: p.decision.type,
+            confidence: p.decision.confidence,
+            executed: p.decision.executed,
+          })),
+          summary: replay.summary,
+        });
+      } catch (err) {
+        error(res, 500, `Failed to get replay context: ${err}`);
+      }
+    },
+  },
+];
+
 const server = createServer(async (req, res) => {
   const method = req.method || 'GET';
   const path = (req.url || '/').split('?')[0];
   const routeKey = `${method} ${path}`;
 
-  const handler = routes[routeKey] || routes['GET /'];
-  
+  // Try static routes first
+  const handler = routes[routeKey];
+  if (handler) {
+    try {
+      await handler(req, res);
+      return;
+    } catch (err) {
+      error(res, 500, `Internal error: ${err}`);
+      return;
+    }
+  }
+
+  // Try dynamic routes
+  for (const route of dynamicRoutes) {
+    if (route.method !== method) continue;
+    
+    const match = path.match(route.pattern);
+    if (match) {
+      const params: Record<string, string> = { id: match[1] };
+      try {
+        await route.handler(req, res, params);
+        return;
+      } catch (err) {
+        error(res, 500, `Internal error: ${err}`);
+        return;
+      }
+    }
+  }
+
+  // Default to root handler
   try {
-    await handler(req, res);
+    await routes['GET /'](req, res);
   } catch (err) {
     error(res, 500, `Internal error: ${err}`);
   }

@@ -24,6 +24,18 @@ export {
   type RiskAdjustedOpportunity,
 } from './lib/risk';
 
+// Decision History & Audit Trail
+export {
+  DecisionHistoryStore,
+  getHistoryStore,
+  type DecisionRecord,
+  type DecisionContext,
+  type DecisionMeta,
+  type DecisionQuery,
+  type DecisionStats,
+  type AuditExport,
+} from './lib/history';
+
 // Protocol adapters
 export { KaminoAdapter } from './adapters/kamino';
 export { DriftAdapter } from './adapters/drift';
