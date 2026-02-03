@@ -644,6 +644,285 @@
       99% { transform: translate(1px, 1px); }
     }
 
+    /* Chat Interface */
+    .chat-section {
+      margin: 60px 0;
+      padding: 0 20px;
+    }
+
+    .chat-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(5, 5, 8, 0.95);
+      border: 1px solid rgba(0, 255, 249, 0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0, 255, 249, 0.1);
+    }
+
+    .chat-header {
+      padding: 20px 25px;
+      border-bottom: 1px solid rgba(0, 255, 249, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: rgba(0, 255, 249, 0.02);
+    }
+
+    .chat-header-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .chat-header-text h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      color: var(--neon-cyan);
+      margin-bottom: 4px;
+    }
+
+    .chat-header-text p {
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .chat-messages {
+      min-height: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .chat-message {
+      margin-bottom: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-message.user {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .chat-message.user .message-content {
+      background: linear-gradient(135deg, rgba(0, 255, 249, 0.2), rgba(0, 255, 249, 0.1));
+      border: 1px solid rgba(0, 255, 249, 0.3);
+      color: #fff;
+    }
+
+    .chat-message.assistant .message-content {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .message-content {
+      max-width: 85%;
+      padding: 15px 20px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .message-content strong {
+      color: var(--neon-cyan);
+    }
+
+    .thinking-chain {
+      margin-top: 15px;
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 2px solid var(--neon-purple);
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .thinking-chain div {
+      margin-bottom: 6px;
+    }
+
+    .recommendations-list {
+      margin-top: 15px;
+    }
+
+    .recommendation-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      background: rgba(0, 255, 249, 0.05);
+      border: 1px solid rgba(0, 255, 249, 0.1);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .recommendation-item:hover {
+      border-color: rgba(0, 255, 249, 0.3);
+      background: rgba(0, 255, 249, 0.1);
+    }
+
+    .rec-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--dark-bg);
+    }
+
+    .rec-details {
+      flex: 1;
+    }
+
+    .rec-protocol {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .rec-asset {
+      font-size: 0.75rem;
+      color: #888;
+    }
+
+    .rec-apy {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      color: var(--neon-green);
+    }
+
+    .rec-risk {
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .rec-risk.low { background: rgba(57, 255, 20, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
+    .rec-risk.medium { background: rgba(255, 217, 61, 0.1); color: var(--neon-yellow); border: 1px solid var(--neon-yellow); }
+    .rec-risk.high { background: rgba(255, 68, 68, 0.1); color: #ff4444; border: 1px solid #ff4444; }
+
+    .follow-ups {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .follow-up-btn {
+      padding: 8px 14px;
+      background: transparent;
+      border: 1px solid rgba(255, 0, 255, 0.3);
+      color: var(--neon-pink);
+      font-size: 0.75rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .follow-up-btn:hover {
+      background: rgba(255, 0, 255, 0.1);
+      border-color: var(--neon-pink);
+    }
+
+    .chat-input-container {
+      padding: 15px 20px;
+      border-top: 1px solid rgba(0, 255, 249, 0.2);
+      display: flex;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 14px 18px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 255, 249, 0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .chat-input:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 255, 249, 0.2);
+    }
+
+    .chat-input::placeholder {
+      color: #555;
+    }
+
+    .chat-send-btn {
+      padding: 14px 24px;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+      border: none;
+      border-radius: 8px;
+      color: var(--dark-bg);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chat-send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 255, 249, 0.4);
+    }
+
+    .chat-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 15px 20px;
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      background: var(--neon-cyan);
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
     /* Mobile */
     @media (max-width: 768px) {
       h1 { font-size: 2.5rem; }
@@ -651,6 +930,8 @@
       .hero { padding: 60px 20px 40px; }
       header { padding: 15px 20px; }
       .nav-links { display: none; }
+      .chat-container { border-radius: 0; }
+      .message-content { max-width: 95%; }
     }
 
     /* Scrollbar */
@@ -673,6 +954,7 @@
   <header>
     <div class="logo glitch">SOLANA_YIELD</div>
     <nav class="nav-links">
+      <a href="#ask">Ask AI 💬</a>
       <a href="#yields">Yields</a>
       <a href="#api">API</a>
       <a href="/live.html">Live Feed</a>
@@ -693,6 +975,35 @@
       <div class="cta-group">
         <a href="/live.html" class="btn-primary">⚡ Watch Live Feed</a>
         <a href="#api" class="btn-secondary">// explore_api</a>
+      </div>
+    </section>
+
+    <!-- Natural Language Chat Interface -->
+    <section class="chat-section" id="ask">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="chat-header-icon">🤖</div>
+          <div class="chat-header-text">
+            <h3>ASK THE AGENT</h3>
+            <p>Natural language yield queries powered by AI</p>
+          </div>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-message assistant">
+            <div class="message-content">
+              👋 I'm your DeFi yield analyst. Ask me anything about Solana yields:
+              <br><br>
+              • "What's the best low-risk stablecoin yield?"<br>
+              • "Compare Kamino vs Drift yields"<br>
+              • "Build me a $10k portfolio strategy"<br>
+              • "Show me high-yield opportunities over 15% APY"
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-container">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Ask about Solana yields..." autocomplete="off">
+          <button class="chat-send-btn" id="chat-send-btn" onclick="sendMessage()">SEND</button>
+        </div>
       </div>
     </section>
 
@@ -1051,6 +1362,144 @@
       const yPercent = (e.clientY / window.innerHeight - 0.5) * 5;
       grid.style.transform = `perspective(400px) rotateX(${65 + yPercent}deg) translateX(${xPercent}px) translateZ(0)`;
     });
+
+    // Chat functionality
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const chatSendBtn = document.getElementById('chat-send-btn');
+
+    // Handle Enter key
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    async function sendMessage(customQuery = null) {
+      const query = customQuery || chatInput.value.trim();
+      if (!query) return;
+
+      // Clear input and disable button
+      chatInput.value = '';
+      chatSendBtn.disabled = true;
+
+      // Add user message
+      addMessage('user', query);
+
+      // Show typing indicator
+      const typingId = showTyping();
+
+      try {
+        const response = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        });
+
+        const data = await response.json();
+        
+        // Remove typing indicator
+        removeTyping(typingId);
+
+        if (data.error) {
+          addMessage('assistant', `❌ ${data.error}`);
+        } else {
+          // Build rich response
+          addAssistantResponse(data);
+        }
+      } catch (err) {
+        removeTyping(typingId);
+        addMessage('assistant', `❌ Error: ${err.message}`);
+      }
+
+      chatSendBtn.disabled = false;
+      chatInput.focus();
+    }
+
+    function addMessage(role, content) {
+      const div = document.createElement('div');
+      div.className = `chat-message ${role}`;
+      div.innerHTML = `<div class="message-content">${content}</div>`;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addAssistantResponse(data) {
+      const div = document.createElement('div');
+      div.className = 'chat-message assistant';
+
+      let html = `<div class="message-content">`;
+      
+      // Main answer (convert markdown bold to HTML)
+      html += data.answer.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
+      // Thinking chain (collapsible)
+      if (data.thinking && data.thinking.length > 0) {
+        html += `<div class="thinking-chain">`;
+        html += `<div style="color: var(--neon-purple); margin-bottom: 8px; font-weight: 600;">🧠 Agent Reasoning:</div>`;
+        data.thinking.forEach(t => {
+          html += `<div>${t}</div>`;
+        });
+        html += `</div>`;
+      }
+
+      // Recommendations
+      if (data.recommendations && data.recommendations.length > 0) {
+        html += `<div class="recommendations-list">`;
+        data.recommendations.forEach((rec, i) => {
+          html += `
+            <div class="recommendation-item">
+              <div class="rec-rank">${i + 1}</div>
+              <div class="rec-details">
+                <div class="rec-protocol">${rec.protocol}</div>
+                <div class="rec-asset">${rec.asset}</div>
+              </div>
+              <div class="rec-apy">${rec.apy}%</div>
+              <div class="rec-risk ${rec.risk}">${rec.risk}</div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      // Follow-up suggestions
+      if (data.followUp && data.followUp.length > 0) {
+        html += `<div class="follow-ups">`;
+        data.followUp.forEach(q => {
+          html += `<button class="follow-up-btn" onclick="sendMessage('${q.replace(/'/g, "\\'")}')">${q}</button>`;
+        });
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+      div.innerHTML = html;
+
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    let typingCounter = 0;
+    function showTyping() {
+      const id = ++typingCounter;
+      const div = document.createElement('div');
+      div.className = 'typing-indicator';
+      div.id = `typing-${id}`;
+      div.innerHTML = `
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span>Analyzing yields...</span>
+      `;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return id;
+    }
+
+    function removeTyping(id) {
+      const el = document.getElementById(`typing-${id}`);
+      if (el) el.remove();
+    }
   </script>
 </body>
 </html>

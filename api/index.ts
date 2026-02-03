@@ -5,11 +5,14 @@ export const config = {
 export default function handler(request: Request) {
   return new Response(JSON.stringify({
     name: 'SolanaYield API',
-    version: '0.4.0',
+    version: '0.5.0',
     description: 'Autonomous DeFi yield orchestrator with transparent reasoning — every decision explained',
     tagline: 'No black boxes. No hidden logic. Complete transparency.',
-    highlight: '🧠 NEW: Transparent Reasoning Engine — see exactly WHY every decision is made',
+    highlight: '💬 NEW: Natural Language Queries — ask about yields in plain English',
     endpoints: {
+      '⭐_ask_ai': {
+        '/api/ask': '💬 POST - Natural language yield queries ("What\'s the best stablecoin yield?")',
+      },
       '⭐_transparency': {
         '/api/explain': '🧠 Interactive reasoning explanation (visual UI)',
         '/api/reasoning': 'GET - Complete reasoning chain JSON (?mode=simple|full)',
