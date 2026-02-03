@@ -2055,19 +2055,23 @@
       const allocGrid = document.getElementById('allocation-grid');
       if (data.allocations && data.allocations.length > 0) {
         allocGrid.innerHTML = data.allocations.map(a => {
-          // Format protocol name nicely
-          const protocolName = a.protocol.split('-')[0].charAt(0).toUpperCase() + a.protocol.split('-')[0].slice(1);
+          // Format protocol name nicely (e.g., "kamino-liquidity" -> "Kamino")
+          const protocolRaw = a.protocol.split('-')[0];
+          const protocolName = protocolRaw.charAt(0).toUpperCase() + protocolRaw.slice(1);
+          // Pool/asset name (e.g., "JUP-SOL", "USDC", etc.)
           const poolName = a.asset || 'Vault';
+          // Combine for clear display: "Kamino: JUP-SOL LP"
+          const isLP = poolName.includes('-');
+          const poolDisplay = isLP ? `${poolName} LP` : `${poolName} Vault`;
           return `
             <div class="allocation-card">
               <div class="alloc-info">
-                <h4>${protocolName}</h4>
-                <p class="pool-name">${poolName}</p>
+                <h4>${protocolName}: ${poolDisplay}</h4>
+                <p class="pool-name">${a.apy?.toFixed(1) || '?'}% APY · ${a.risk || 'medium'} risk</p>
                 <p class="pool-amount">$${((a.allocation / 100) * amount).toFixed(0)} allocated</p>
               </div>
               <div class="alloc-amount">
                 <div class="pct">${a.allocation}%</div>
-                <div class="apy">${a.apy?.toFixed(1) || '?'}% APY</div>
               </div>
             </div>
           `;
