@@ -4,6 +4,12 @@ import { Keypair, Connection } from '@solana/web3.js';
 import { readFileSync } from 'fs';
 import { SolanaYield } from './lib/yield';
 import { YieldMonitor } from './lib/monitor';
+import { 
+  analyzeOpportunities, 
+  sortByRiskAdjustedReturn, 
+  getTopRecommendations,
+  RiskAdjustedOpportunity 
+} from './lib/risk';
 
 const program = new Command();
 
@@ -123,5 +129,107 @@ program
     const sy = new SolanaYield({ keypair });
     await sy.startAutoPilot(parseInt(options.interval));
   });
+
+program
+  .command('risk-analyze')
+  .description('Analyze yields with risk-adjusted scoring (not just highest APY)')
+  .option('--risk <level>', 'Max risk tolerance (low/medium/high)', 'medium')
+  .option('--top <n>', 'Number of top recommendations', '10')
+  .option('--json', 'Output as JSON')
+  .action(async (options) => {
+    const connection = new Connection('https://api.mainnet-beta.solana.com');
+    const monitor = new YieldMonitor(connection);
+    
+    console.log('🔍 Fetching yields and analyzing risk...\n');
+    
+    const opportunities = await monitor.fetchAllYields();
+    const maxRisk = options.risk === 'low' ? 35 : options.risk === 'high' ? 75 : 55;
+    const topN = parseInt(options.top);
+    
+    const recommendations = getTopRecommendations(opportunities, topN, maxRisk);
+
+    if (options.json) {
+      console.log(JSON.stringify(recommendations, null, 2));
+      return;
+    }
+
+    console.log('🎯 Risk-Adjusted Yield Recommendations');
+    console.log('━'.repeat(70));
+    console.log('(Sorted by risk-adjusted APY, not raw APY)\n');
+    
+    recommendations.forEach((opp, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+      const recEmoji = opp.recommendation === 'strong' ? '✅' : 
+                       opp.recommendation === 'moderate' ? '🟡' : 
+                       opp.recommendation === 'weak' ? '🟠' : '🔴';
+      
+      console.log(`${medal} ${opp.asset.padEnd(15)} ${recEmoji} ${opp.recommendation.toUpperCase()}`);
+      console.log(`   Protocol: ${opp.protocol}`);
+      console.log(`   APY: ${opp.apy.toFixed(2)}% raw → ${opp.adjustedApy.toFixed(2)}% risk-adjusted`);
+      console.log(`   Risk Score: ${opp.riskScore.overall}/100 | Sharpe: ${opp.sharpeRatio.toFixed(2)}`);
+      console.log(`   TVL: $${formatTvl(opp.tvl)}`);
+      
+      if (opp.riskScore.positives.length > 0) {
+        console.log(`   ✅ ${opp.riskScore.positives.join(', ')}`);
+      }
+      if (opp.riskScore.warnings.length > 0) {
+        console.log(`   ⚠️  ${opp.riskScore.warnings.join(', ')}`);
+      }
+      console.log('');
+    });
+
+    console.log('━'.repeat(70));
+    console.log('💡 Risk-adjusted APY = Raw APY penalized for risk factors');
+    console.log('   Sharpe Ratio = Return per unit of risk (higher is better)');
+  });
+
+program
+  .command('compare')
+  .description('Compare raw APY vs risk-adjusted rankings')
+  .option('--top <n>', 'Number to compare', '5')
+  .action(async (options) => {
+    const connection = new Connection('https://api.mainnet-beta.solana.com');
+    const monitor = new YieldMonitor(connection);
+    
+    console.log('📊 Comparing Raw APY vs Risk-Adjusted Rankings\n');
+    
+    const opportunities = await monitor.fetchAllYields();
+    const analyzed = analyzeOpportunities(opportunities);
+    const topN = parseInt(options.top);
+    
+    // Sort by raw APY
+    const byRawApy = [...analyzed].sort((a, b) => b.apy - a.apy).slice(0, topN);
+    
+    // Sort by risk-adjusted APY
+    const byAdjusted = sortByRiskAdjustedReturn(analyzed).slice(0, topN);
+    
+    console.log('🏆 TOP BY RAW APY (naive approach)');
+    console.log('─'.repeat(50));
+    byRawApy.forEach((o, i) => {
+      console.log(`${i + 1}. ${o.asset.padEnd(12)} ${o.apy.toFixed(2).padStart(7)}% | Risk: ${o.riskScore.overall}/100`);
+      if (o.riskScore.warnings.length > 0) {
+        console.log(`   ⚠️  ${o.riskScore.warnings[0]}`);
+      }
+    });
+    
+    console.log('\n🎯 TOP BY RISK-ADJUSTED APY (smart approach)');
+    console.log('─'.repeat(50));
+    byAdjusted.forEach((o, i) => {
+      console.log(`${i + 1}. ${o.asset.padEnd(12)} ${o.adjustedApy.toFixed(2).padStart(7)}% adj (${o.apy.toFixed(1)}% raw) | Risk: ${o.riskScore.overall}/100`);
+      if (o.riskScore.positives.length > 0) {
+        console.log(`   ✅ ${o.riskScore.positives[0]}`);
+      }
+    });
+    
+    console.log('\n💡 Notice how the naive approach picks high-risk yields that look');
+    console.log('   attractive but carry significant smart contract and liquidity risks.');
+  });
+
+function formatTvl(tvl: number): string {
+  if (tvl >= 1e9) return `${(tvl / 1e9).toFixed(2)}B`;
+  if (tvl >= 1e6) return `${(tvl / 1e6).toFixed(2)}M`;
+  if (tvl >= 1e3) return `${(tvl / 1e3).toFixed(2)}K`;
+  return tvl.toFixed(0);
+}
 
 program.parse();

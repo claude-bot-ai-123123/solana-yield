@@ -4,13 +4,21 @@
  * 
  * Runs continuously, monitors yields, makes decisions, executes trades
  * All decisions are logged with reasoning for transparency
+ * 
+ * Key feature: Risk-adjusted recommendations (not just highest APY)
  */
 
 import { Connection, Keypair } from '@solana/web3.js';
 import { fetchAllSolanaYields } from './defillama';
-import { StrategyEngine } from './strategy';
+import { StrategyEngine, StrategyDecision } from './strategy';
 import { Executor } from './executor';
 import { Strategy, Portfolio, YieldOpportunity, RebalanceAction } from '../types';
+import { 
+  analyzeOpportunities, 
+  sortByRiskAdjustedReturn,
+  getTopRecommendations,
+  RiskAdjustedOpportunity,
+} from './risk';
 
 export interface AutopilotDecision {
   timestamp: number;
@@ -21,6 +29,22 @@ export interface AutopilotDecision {
   executed: boolean;
   txIds?: string[];
   error?: string;
+  // New: risk analysis
+  riskAnalysis?: {
+    currentRiskScore: number;
+    proposedRiskScore: number;
+    riskChange: 'increased' | 'decreased' | 'unchanged';
+    topOpportunity?: {
+      protocol: string;
+      asset: string;
+      rawApy: number;
+      adjustedApy: number;
+      sharpeRatio: number;
+      riskScore: number;
+      warnings: string[];
+      positives: string[];
+    };
+  };
 }
 
 export interface AutopilotState {
@@ -29,6 +53,7 @@ export interface AutopilotState {
   lastDecision: AutopilotDecision | null;
   decisionHistory: AutopilotDecision[];
   currentYields: YieldOpportunity[];
+  riskAdjustedYields: RiskAdjustedOpportunity[];
   portfolio: Portfolio | null;
   stats: {
     totalDecisions: number;
@@ -36,6 +61,7 @@ export interface AutopilotState {
     holds: number;
     errors: number;
     totalApyGained: number;
+    totalRiskAdjustedApyGained: number;
   };
 }
 
@@ -65,6 +91,7 @@ export class Autopilot {
       lastDecision: null,
       decisionHistory: [],
       currentYields: [],
+      riskAdjustedYields: [],
       portfolio: null,
       stats: {
         totalDecisions: 0,
@@ -72,6 +99,7 @@ export class Autopilot {
         holds: 0,
         errors: 0,
         totalApyGained: 0,
+        totalRiskAdjustedApyGained: 0,
       },
     };
   }
@@ -115,16 +143,21 @@ export class Autopilot {
       // 1. Fetch current yields
       console.log('📊 Fetching yields...');
       const yields = await fetchAllSolanaYields();
-      this.state.currentYields = yields.slice(0, 50); // Top 50
+      this.state.currentYields = yields.slice(0, 50);
+      
+      // 2. Analyze with risk scoring
+      console.log('🔍 Analyzing risk-adjusted yields...');
+      const analyzed = analyzeOpportunities(yields);
+      this.state.riskAdjustedYields = sortByRiskAdjustedReturn(analyzed).slice(0, 50);
 
-      // 2. Get current portfolio (mock for now, would fetch on-chain)
+      // 3. Get current portfolio
       const portfolio = await this.getPortfolio();
       this.state.portfolio = portfolio;
 
-      // 3. Analyze and decide
+      // 4. Analyze and decide (using risk-adjusted strategy)
       const decision = await this.analyzeAndDecide(yields, portfolio);
       
-      // 4. Execute if confidence is high enough
+      // 5. Execute if confidence is high enough
       if (decision.confidence >= 0.7 && decision.actions.length > 0) {
         try {
           const txIds = await this.executor.executeActions(decision.actions, {
@@ -137,6 +170,7 @@ export class Autopilot {
           // Track APY gain
           const apyGain = decision.actions.reduce((sum, a) => sum + (a.expectedApyGain || 0), 0);
           this.state.stats.totalApyGained += apyGain;
+          this.state.stats.totalRiskAdjustedApyGained += apyGain; // Already risk-adjusted from strategy
         } catch (err) {
           decision.error = String(err);
           this.state.stats.errors++;
@@ -148,7 +182,7 @@ export class Autopilot {
         }
       }
 
-      // 5. Record decision
+      // 6. Record decision
       this.state.lastDecision = decision;
       this.state.decisionHistory.push(decision);
       this.state.stats.totalDecisions++;
@@ -180,7 +214,7 @@ export class Autopilot {
   }
 
   /**
-   * Core decision-making logic with explainable reasoning
+   * Core decision-making logic with risk-adjusted reasoning
    */
   private async analyzeAndDecide(
     yields: YieldOpportunity[],
@@ -190,15 +224,14 @@ export class Autopilot {
     const reasoning: string[] = [];
     let confidence = 0.5;
 
-    // Filter by risk tolerance
-    const eligible = yields.filter(y => {
-      const riskLevels = { low: 1, medium: 2, high: 3 };
-      return riskLevels[y.risk] <= riskLevels[this.strategy.riskTolerance];
-    });
-
-    reasoning.push(`Found ${eligible.length} opportunities within risk tolerance (${this.strategy.riskTolerance})`);
-
-    if (eligible.length === 0) {
+    // Use the full strategy engine analysis
+    const strategyDecision = this.strategyEngine.analyzeWithReasoning(portfolio, yields);
+    
+    // Get top risk-adjusted recommendations
+    const maxRiskScore = this.getRiskToleranceScore();
+    const topRecommendations = getTopRecommendations(yields, 5, maxRiskScore);
+    
+    if (topRecommendations.length === 0) {
       return {
         timestamp,
         type: 'hold',
@@ -206,88 +239,167 @@ export class Autopilot {
         confidence: 0.9,
         actions: [],
         executed: false,
+        riskAnalysis: {
+          currentRiskScore: strategyDecision.riskAnalysis.currentRiskScore,
+          proposedRiskScore: strategyDecision.riskAnalysis.currentRiskScore,
+          riskChange: 'unchanged',
+        },
       };
     }
 
-    // Sort by APY
-    const sorted = eligible.sort((a, b) => b.apy - a.apy);
-    const topOpp = sorted[0];
+    const topOpp = topRecommendations[0];
 
-    reasoning.push(`Best opportunity: ${topOpp.asset} at ${topOpp.apy.toFixed(2)}% APY on ${topOpp.protocol}`);
+    // Build comprehensive reasoning
+    reasoning.push(`📊 **Risk-Adjusted Analysis**`);
+    reasoning.push(`Found ${topRecommendations.length} opportunities within risk tolerance`);
+    reasoning.push('');
+    reasoning.push(`🏆 **Top Recommendation:** ${topOpp.asset} on ${topOpp.protocol}`);
+    reasoning.push(`   • Raw APY: ${topOpp.apy.toFixed(2)}%`);
+    reasoning.push(`   • Risk-adjusted APY: ${topOpp.adjustedApy.toFixed(2)}%`);
+    reasoning.push(`   • Risk Score: ${topOpp.riskScore.overall}/100`);
+    reasoning.push(`   • Sharpe Ratio: ${topOpp.sharpeRatio.toFixed(2)}`);
+    reasoning.push(`   • TVL: $${formatNumber(topOpp.tvl)}`);
+    
+    if (topOpp.riskScore.positives.length > 0) {
+      reasoning.push(`   ✅ ${topOpp.riskScore.positives.join(', ')}`);
+    }
+    if (topOpp.riskScore.warnings.length > 0) {
+      reasoning.push(`   ⚠️ ${topOpp.riskScore.warnings.join(', ')}`);
+    }
 
-    // Compare to portfolio
+    // Compare to current portfolio
+    reasoning.push('');
+    reasoning.push(`📈 **Portfolio Comparison**`);
+    reasoning.push(`   • Current APY: ${portfolio.weightedApy.toFixed(2)}%`);
+    reasoning.push(`   • Projected APY: ${strategyDecision.projectedApy.toFixed(2)}%`);
+    reasoning.push(`   • Risk-adjusted improvement: ${(strategyDecision.projectedRiskAdjustedApy - portfolio.weightedApy).toFixed(2)}%`);
+
+    // Check if portfolio is empty
     if (portfolio.totalValue === 0) {
-      reasoning.push('Portfolio is empty — recommending initial entry');
+      reasoning.push('');
+      reasoning.push('💡 Portfolio is empty — recommending initial entry');
       return {
         timestamp,
         type: 'enter',
-        reasoning: reasoning.join('. '),
+        reasoning: reasoning.join('\n'),
         confidence: 0.8,
         actions: [{
           type: 'deposit',
           to: {
             protocol: topOpp.protocol,
             asset: topOpp.asset,
-            amount: 0, // Would be filled by user input
+            amount: 0, // Filled by user input
           },
-          expectedApyGain: topOpp.apy,
+          expectedApyGain: topOpp.adjustedApy,
         }],
         executed: false,
+        riskAnalysis: {
+          currentRiskScore: 0,
+          proposedRiskScore: topOpp.riskScore.overall,
+          riskChange: 'increased',
+          topOpportunity: {
+            protocol: topOpp.protocol,
+            asset: topOpp.asset,
+            rawApy: topOpp.apy,
+            adjustedApy: topOpp.adjustedApy,
+            sharpeRatio: topOpp.sharpeRatio,
+            riskScore: topOpp.riskScore.overall,
+            warnings: topOpp.riskScore.warnings,
+            positives: topOpp.riskScore.positives,
+          },
+        },
       };
     }
 
-    // Calculate if rebalancing is worth it
-    const apyDiff = topOpp.apy - portfolio.weightedApy;
-    reasoning.push(`Current portfolio APY: ${portfolio.weightedApy.toFixed(2)}%, potential gain: ${apyDiff.toFixed(2)}%`);
-
-    // Check rebalance threshold
-    if (apyDiff < this.strategy.rebalanceThreshold) {
-      reasoning.push(`APY gain below threshold (${this.strategy.rebalanceThreshold}%) — holding`);
+    // Use strategy decision actions
+    if (strategyDecision.actions.length === 0) {
+      reasoning.push('');
+      reasoning.push('⏸️ **Decision: HOLD**');
+      reasoning.push('Risk-adjusted improvement below threshold — holding current positions');
+      
       return {
         timestamp,
         type: 'hold',
-        reasoning: reasoning.join('. '),
-        confidence: 0.85,
+        reasoning: reasoning.join('\n'),
+        confidence: strategyDecision.confidence,
         actions: [],
         executed: false,
+        riskAnalysis: {
+          currentRiskScore: strategyDecision.riskAnalysis.currentRiskScore,
+          proposedRiskScore: strategyDecision.riskAnalysis.proposedRiskScore,
+          riskChange: strategyDecision.riskAnalysis.riskChange,
+          topOpportunity: {
+            protocol: topOpp.protocol,
+            asset: topOpp.asset,
+            rawApy: topOpp.apy,
+            adjustedApy: topOpp.adjustedApy,
+            sharpeRatio: topOpp.sharpeRatio,
+            riskScore: topOpp.riskScore.overall,
+            warnings: topOpp.riskScore.warnings,
+            positives: topOpp.riskScore.positives,
+          },
+        },
       };
     }
 
-    // Check TVL for safety
-    if (topOpp.tvl < 100000) {
-      reasoning.push(`TVL too low ($${topOpp.tvl.toLocaleString()}) — avoiding for safety`);
-      confidence -= 0.3;
-    } else {
-      reasoning.push(`TVL looks healthy: $${topOpp.tvl.toLocaleString()}`);
+    // Rebalancing recommended
+    reasoning.push('');
+    reasoning.push('🔄 **Decision: REBALANCE**');
+    reasoning.push(`Moving to better risk-adjusted opportunities`);
+    reasoning.push(`Risk change: ${strategyDecision.riskAnalysis.riskChange}`);
+
+    // Add TVL safety check
+    if (topOpp.tvl < 1_000_000) {
+      confidence -= 0.15;
+      reasoning.push(`⚠️ Lower confidence due to TVL < $1M`);
+    }
+
+    // Add risk change to confidence
+    if (strategyDecision.riskAnalysis.riskChange === 'decreased') {
       confidence += 0.1;
+      reasoning.push(`✅ Risk decreasing — higher confidence`);
+    } else if (strategyDecision.riskAnalysis.riskChange === 'increased') {
+      confidence -= 0.1;
+      reasoning.push(`⚠️ Risk increasing — lower confidence`);
     }
 
-    // Generate rebalance actions
-    const actions = this.strategyEngine.calculateOptimalMoves(portfolio, sorted);
-    
-    if (actions.length === 0) {
-      reasoning.push('No beneficial moves found after analysis');
-      return {
-        timestamp,
-        type: 'hold',
-        reasoning: reasoning.join('. '),
-        confidence: 0.7,
-        actions: [],
-        executed: false,
-      };
-    }
-
-    reasoning.push(`Found ${actions.length} rebalance opportunities`);
-    confidence = Math.min(0.95, confidence + 0.1);
+    confidence = Math.min(0.95, Math.max(0.3, strategyDecision.confidence + (confidence - 0.5)));
 
     return {
       timestamp,
       type: 'rebalance',
-      reasoning: reasoning.join('. '),
+      reasoning: reasoning.join('\n'),
       confidence,
-      actions,
+      actions: strategyDecision.actions,
       executed: false,
+      riskAnalysis: {
+        currentRiskScore: strategyDecision.riskAnalysis.currentRiskScore,
+        proposedRiskScore: strategyDecision.riskAnalysis.proposedRiskScore,
+        riskChange: strategyDecision.riskAnalysis.riskChange,
+        topOpportunity: {
+          protocol: topOpp.protocol,
+          asset: topOpp.asset,
+          rawApy: topOpp.apy,
+          adjustedApy: topOpp.adjustedApy,
+          sharpeRatio: topOpp.sharpeRatio,
+          riskScore: topOpp.riskScore.overall,
+          warnings: topOpp.riskScore.warnings,
+          positives: topOpp.riskScore.positives,
+        },
+      },
     };
+  }
+
+  /**
+   * Convert risk tolerance to maximum risk score
+   */
+  private getRiskToleranceScore(): number {
+    switch (this.strategy.riskTolerance) {
+      case 'low': return 35;
+      case 'medium': return 55;
+      case 'high': return 75;
+      default: return 55;
+    }
   }
 
   /**
@@ -295,14 +407,12 @@ export class Autopilot {
    * In production, would fetch on-chain positions
    */
   private async getPortfolio(): Promise<Portfolio> {
-    // Check wallet balance
     const balance = await this.connection.getBalance(this.keypair.publicKey);
     const solBalance = balance / 1e9;
 
-    // Mock portfolio for demo
     return {
-      totalValue: solBalance * 180, // Rough SOL price
-      weightedApy: 5.2, // Assumed baseline (staking rate)
+      totalValue: solBalance * 180,
+      weightedApy: 5.2,
       positions: solBalance > 0.01 ? [{
         protocol: 'native',
         asset: 'SOL',
@@ -322,7 +432,7 @@ export class Autopilot {
   }
 
   /**
-   * Get human-readable status
+   * Get human-readable status with risk analysis
    */
   getStatusSummary(): string {
     const s = this.state;
@@ -331,21 +441,53 @@ export class Autopilot {
       `Status: ${s.isRunning ? '🟢 Running' : '🔴 Stopped'}`,
       `Last check: ${s.lastCheck ? new Date(s.lastCheck).toISOString() : 'Never'}`,
       ``,
-      `**Latest Decision:**`,
-      s.lastDecision ? [
-        `Type: ${s.lastDecision.type}`,
-        `Confidence: ${(s.lastDecision.confidence * 100).toFixed(0)}%`,
-        `Reasoning: ${s.lastDecision.reasoning}`,
-        s.lastDecision.executed ? `✅ Executed: ${s.lastDecision.txIds?.join(', ')}` : '⏸️ Not executed',
-      ].join('\n') : 'No decisions yet',
-      ``,
-      `**Stats:**`,
-      `Total decisions: ${s.stats.totalDecisions}`,
-      `Rebalances: ${s.stats.rebalances}`,
-      `Holds: ${s.stats.holds}`,
-      `Errors: ${s.stats.errors}`,
-      `Total APY gained: ${s.stats.totalApyGained.toFixed(2)}%`,
     ];
+
+    // Add top risk-adjusted yields
+    if (s.riskAdjustedYields.length > 0) {
+      lines.push(`**Top Risk-Adjusted Yields:**`);
+      s.riskAdjustedYields.slice(0, 3).forEach((y, i) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
+        lines.push(`${medal} ${y.asset} (${y.protocol}): ${y.adjustedApy.toFixed(2)}% adj | Risk: ${y.riskScore.overall}/100`);
+      });
+      lines.push('');
+    }
+
+    lines.push(`**Latest Decision:**`);
+    if (s.lastDecision) {
+      lines.push(`Type: ${s.lastDecision.type}`);
+      lines.push(`Confidence: ${(s.lastDecision.confidence * 100).toFixed(0)}%`);
+      
+      if (s.lastDecision.riskAnalysis) {
+        const ra = s.lastDecision.riskAnalysis;
+        lines.push(`Risk: ${ra.currentRiskScore} → ${ra.proposedRiskScore} (${ra.riskChange})`);
+        if (ra.topOpportunity) {
+          lines.push(`Top pick: ${ra.topOpportunity.asset} @ ${ra.topOpportunity.adjustedApy.toFixed(2)}% (Sharpe: ${ra.topOpportunity.sharpeRatio.toFixed(2)})`);
+        }
+      }
+      
+      lines.push(`Reasoning: ${s.lastDecision.reasoning.split('\n')[0]}`);
+      lines.push(s.lastDecision.executed ? `✅ Executed: ${s.lastDecision.txIds?.join(', ')}` : '⏸️ Not executed');
+    } else {
+      lines.push('No decisions yet');
+    }
+
+    lines.push('');
+    lines.push(`**Stats:**`);
+    lines.push(`Total decisions: ${s.stats.totalDecisions}`);
+    lines.push(`Rebalances: ${s.stats.rebalances}`);
+    lines.push(`Holds: ${s.stats.holds}`);
+    lines.push(`Errors: ${s.stats.errors}`);
+    lines.push(`Risk-adjusted APY gained: ${s.stats.totalRiskAdjustedApyGained.toFixed(2)}%`);
+    
     return lines.join('\n');
   }
+}
+
+// Utility
+function formatNumber(num: number): string {
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B`;
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+  return num.toFixed(0);
 }
