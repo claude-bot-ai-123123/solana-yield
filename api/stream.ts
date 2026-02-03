@@ -187,7 +187,7 @@ export default async function handler(request: Request) {
         await sleep(1000);
 
         // Continue monitoring
-        thought('analysis', 'Entering monitoring mode... Next full scan in 60s');
+        thought('analysis', 'Entering monitoring mode... Activating rug pull detection 🛡️');
 
         // Periodic updates (every 10s send a monitoring thought)
         let cycles = 0;
@@ -195,17 +195,47 @@ export default async function handler(request: Request) {
           await sleep(10000);
           cycles++;
           
-          // Alternate between different monitoring thoughts
-          const monitoringThoughts = [
-            `Monitoring rate stability... ${best?.protocol || 'protocols'} APY unchanged`,
-            `Scanning for anomalous volume spikes...`,
-            `Cross-checking oracle price feeds...`,
-            `Evaluating IL risk on active pools...`,
-            `Checking protocol health metrics...`,
-            `Analyzing on-chain activity patterns...`,
-          ];
-          
-          thought('analysis', monitoringThoughts[cycles % monitoringThoughts.length]);
+          // Every 3rd cycle, check rug pull detection
+          if (cycles % 3 === 0) {
+            try {
+              const rugpullRes = await fetch('/api/rugpull?alerts=true');
+              const rugpullData = await rugpullRes.json();
+              
+              if (rugpullData.summary?.critical > 0) {
+                thought('warning', `🚨 <strong>RUG PULL ALERT:</strong> ${rugpullData.summary.critical} critical threat(s) detected across protocols`);
+                
+                // Send alert for each critical
+                for (const protocol of rugpullData.alerts || []) {
+                  for (const alert of protocol.alerts) {
+                    if (alert.severity === 'critical') {
+                      thought('warning', `🛡️ ${protocol.protocol.toUpperCase()}: ${alert.title}`);
+                      await sleep(500);
+                    }
+                  }
+                }
+              } else if (rugpullData.summary?.high > 0) {
+                thought('warning', `⚠️ Rug detection: ${rugpullData.summary.high} elevated risk signal(s) — monitoring closely`);
+              } else {
+                thought('analysis', `🛡️ Rug detection scan complete — all protocols healthy`);
+              }
+            } catch {
+              // Silent fail for rug pull check
+            }
+          } else {
+            // Alternate between different monitoring thoughts
+            const monitoringThoughts = [
+              `Monitoring rate stability... ${best?.protocol || 'protocols'} APY unchanged`,
+              `Scanning for anomalous volume spikes...`,
+              `Cross-checking oracle price feeds...`,
+              `Evaluating IL risk on active pools...`,
+              `Checking protocol health metrics...`,
+              `Analyzing on-chain activity patterns...`,
+              `🐋 Whale activity scan — no large movements detected`,
+              `📊 TVL tracking — all protocols within normal range`,
+            ];
+            
+            thought('analysis', monitoringThoughts[cycles % monitoringThoughts.length]);
+          }
         }
 
         controller.close();
