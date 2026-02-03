@@ -35,6 +35,7 @@ export class StrategyEngine {
 
   /**
    * Calculate optimal moves using risk-adjusted analysis
+   * Enhanced with AEGIS!
    */
   calculateOptimalMoves(
     portfolio: Portfolio, 
@@ -46,6 +47,7 @@ export class StrategyEngine {
 
   /**
    * Full analysis with reasoning (for transparency)
+   * Enhanced with AEGIS Analyst Agent risk intelligence!
    */
   analyzeWithReasoning(
     portfolio: Portfolio,
@@ -54,7 +56,7 @@ export class StrategyEngine {
     const actions: RebalanceAction[] = [];
     const reasoning: string[] = [];
     
-    // Step 1: Analyze all opportunities with risk scoring
+    // Step 1: Analyze all opportunities with risk scoring (now enhanced with AEGIS!)
     const analyzed = analyzeOpportunities(opportunities);
     
     // Step 2: Filter by risk tolerance (but use actual risk scores, not simple categories)
@@ -184,6 +186,7 @@ export class StrategyEngine {
 
   /**
    * Compare multiple opportunities side-by-side
+   * Enhanced with AEGIS!
    */
   compareOpportunities(
     opportunities: YieldOpportunity[],

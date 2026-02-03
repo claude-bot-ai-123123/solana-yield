@@ -6,9 +6,12 @@
  * 
  * Key insight: A 10% APY on a battle-tested protocol with $500M TVL
  * is BETTER than 30% APY on an unaudited protocol with $1M TVL.
+ * 
+ * Now enhanced with AEGIS Analyst Agent risk scores for even more accurate assessments!
  */
 
 import { YieldOpportunity } from '../types';
+import { getAegisRiskScoreSync, combineRiskScores, mergeAegisInsights, type AegisRiskScore } from './aegis';
 
 // ============================================================================
 // Types
@@ -26,6 +29,7 @@ export interface RiskScore {
   confidence: number; // How confident are we in this assessment? 0-1
   warnings: string[];
   positives: string[];
+  aegisData?: AegisRiskScore; // AEGIS Analyst Agent risk assessment (if available)
 }
 
 export interface RiskAdjustedOpportunity extends YieldOpportunity {
@@ -122,11 +126,15 @@ const PROTOCOL_PROFILES: Record<string, ProtocolProfile> = {
 
 /**
  * Calculate comprehensive risk score for a yield opportunity
+ * Now enhanced with AEGIS Analyst Agent integration!
  */
 export function calculateRiskScore(opp: YieldOpportunity): RiskScore {
   const profile = PROTOCOL_PROFILES[opp.protocol] || PROTOCOL_PROFILES['unknown'];
-  const warnings: string[] = [];
-  const positives: string[] = [];
+  let warnings: string[] = [];
+  let positives: string[] = [];
+  
+  // Get AEGIS risk assessment (synchronously for now - mock data)
+  const aegisData = getAegisRiskScoreSync(opp.protocol);
   
   // 1. Smart Contract Risk (0-100)
   let smartContract = profile.baseRiskScore;
@@ -274,7 +282,7 @@ export function calculateRiskScore(opp: YieldOpportunity): RiskScore {
     assetVolatility: 0.15,
   };
   
-  const overall = Math.round(
+  let overall = Math.round(
     smartContract * weights.smartContract +
     liquidity * weights.liquidity +
     sustainability * weights.sustainability +
@@ -283,7 +291,20 @@ export function calculateRiskScore(opp: YieldOpportunity): RiskScore {
   );
   
   // Confidence based on how much data we have
-  const confidence = profile.name === 'Unknown Protocol' ? 0.4 : 0.8;
+  let confidence = profile.name === 'Unknown Protocol' ? 0.4 : 0.8;
+  
+  // Combine with AEGIS risk score if available
+  if (aegisData) {
+    overall = combineRiskScores(overall, aegisData);
+    
+    // Boost confidence when AEGIS data is available
+    confidence = Math.min(1, confidence + (aegisData.confidence * 0.2));
+    
+    // Merge AEGIS insights
+    const merged = mergeAegisInsights(warnings, positives, aegisData);
+    warnings = merged.warnings;
+    positives = merged.positives;
+  }
   
   return {
     overall,
@@ -297,6 +318,7 @@ export function calculateRiskScore(opp: YieldOpportunity): RiskScore {
     confidence,
     warnings,
     positives,
+    aegisData: aegisData || undefined,
   };
 }
 
@@ -359,11 +381,12 @@ export function getRecommendation(
 
 /**
  * Enhance yield opportunities with full risk analysis
+ * Now powered by AEGIS Analyst Agent!
  */
 export function analyzeOpportunities(
   opportunities: YieldOpportunity[]
 ): RiskAdjustedOpportunity[] {
-  return opportunities.map(opp => {
+  return opportunities.map((opp) => {
     const riskScore = calculateRiskScore(opp);
     const adjustedApy = calculateRiskAdjustedApy(opp.apy, riskScore.overall);
     const sharpeRatio = calculateSharpeRatio(opp.apy, riskScore.overall);
@@ -374,6 +397,10 @@ export function analyzeOpportunities(
     // Build reasoning
     reasoning.push(`Raw APY: ${opp.apy.toFixed(2)}% → Risk-adjusted: ${adjustedApy.toFixed(2)}%`);
     reasoning.push(`Risk score: ${riskScore.overall}/100 (Sharpe: ${sharpeRatio.toFixed(2)})`);
+    
+    if (riskScore.aegisData) {
+      reasoning.push(`🛡️ Enhanced by AEGIS Analyst Agent (confidence: ${(riskScore.aegisData.confidence * 100).toFixed(0)}%)`);
+    }
     
     if (riskScore.positives.length > 0) {
       reasoning.push(`✅ ${riskScore.positives.join(', ')}`);
@@ -411,6 +438,7 @@ export function sortByRiskAdjustedReturn(
 
 /**
  * Get top recommendations with reasoning
+ * Enhanced with AEGIS risk intelligence!
  */
 export function getTopRecommendations(
   opportunities: YieldOpportunity[],

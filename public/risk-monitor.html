@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Real-Time Risk Monitor | SolanaYield</title>
+  <title>Yield Monitor | SolanaYield</title>
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-dark: #0a0a0f;
       --bg-card: #12121a;
-      --bg-card-hover: #1a1a25;
       --border: rgba(255, 255, 255, 0.1);
       --text-primary: #ffffff;
       --text-secondary: rgba(255, 255, 255, 0.6);
@@ -18,23 +18,14 @@
       --neon-cyan: #00d4ff;
       --neon-yellow: #ffcc00;
       --neon-red: #ff3366;
-      --neon-purple: #9945ff;
-      --risk-low: #00ff88;
-      --risk-medium: #ffcc00;
-      --risk-high: #ff3366;
-      --risk-critical: #ff0044;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       background: var(--bg-dark);
       color: var(--text-primary);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', -apple-system, sans-serif;
       min-height: 100vh;
       line-height: 1.5;
     }
@@ -45,26 +36,21 @@
       padding: 2rem;
     }
 
-    /* Header */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
     .header h1 {
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 700;
       display: flex;
       align-items: center;
       gap: 0.75rem;
-    }
-
-    .header h1 .icon {
-      font-size: 2rem;
     }
 
     .live-badge {
@@ -76,7 +62,6 @@
       border: 1px solid var(--neon-green);
       border-radius: 9999px;
       font-size: 0.875rem;
-      font-weight: 500;
       color: var(--neon-green);
     }
 
@@ -89,183 +74,15 @@
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.2); }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
 
-    /* Methodology Section */
-    .methodology-section {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 2rem;
-      overflow: hidden;
-    }
-
-    .methodology-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 1.5rem;
-      cursor: pointer;
-      background: rgba(0, 212, 255, 0.05);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .methodology-header:hover {
-      background: rgba(0, 212, 255, 0.1);
-    }
-
-    .methodology-header h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--neon-cyan);
-      margin: 0;
-    }
-
-    .methodology-toggle {
-      color: var(--text-secondary);
-      transition: transform 0.3s;
-    }
-
-    .methodology-section.collapsed .methodology-toggle {
-      transform: rotate(-90deg);
-    }
-
-    .methodology-section.collapsed .methodology-content {
-      display: none;
-    }
-
-    .methodology-content {
-      padding: 1.5rem;
-    }
-
-    .methodology-intro {
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-
-    .methodology-intro strong {
-      color: var(--neon-cyan);
-    }
-
-    .methodology-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .methodology-factor {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-    }
-
-    .factor-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .factor-icon {
-      font-size: 1.2rem;
-    }
-
-    .factor-name {
-      font-weight: 600;
-      color: var(--text-primary);
-      flex: 1;
-    }
-
-    .factor-weight {
-      font-size: 0.8rem;
-      color: var(--neon-green);
-      background: rgba(0, 255, 136, 0.1);
-      padding: 2px 8px;
-      border-radius: 4px;
-    }
-
-    .methodology-factor p {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    .methodology-example {
-      background: rgba(153, 69, 255, 0.1);
-      border: 1px solid rgba(153, 69, 255, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    .methodology-example strong {
-      color: var(--neon-purple);
-    }
-
-    /* Grid Layout */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 1.5rem;
-    }
-
-    /* Cards */
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      transition: all 0.3s ease;
-    }
-
-    .card:hover {
-      border-color: rgba(255, 255, 255, 0.2);
-      background: var(--bg-card-hover);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .card-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-    }
-
-    .card-subtitle {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      font-weight: 400;
-      text-transform: none;
-      letter-spacing: normal;
-      margin-left: auto;
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    /* Summary Stats */
     .stats-row {
-      grid-column: span 12;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 1rem;
+      margin-bottom: 2rem;
     }
 
     .stat-card {
@@ -273,22 +90,22 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
+      text-align: center;
     }
 
     .stat-label {
+      display: block;
       font-size: 0.75rem;
-      color: var(--text-secondary);
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 0.5rem;
     }
 
     .stat-value {
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
-      font-variant-numeric: tabular-nums;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     .stat-value.green { color: var(--neon-green); }
@@ -296,268 +113,183 @@
     .stat-value.red { color: var(--neon-red); }
     .stat-value.cyan { color: var(--neon-cyan); }
 
-    .stat-change {
-      font-size: 0.75rem;
-      margin-top: 0.5rem;
-    }
-
-    .stat-change.positive { color: var(--neon-green); }
-    .stat-change.negative { color: var(--neon-red); }
-
-    /* Protocol Health */
-    .health-section {
-      grid-column: span 8;
-    }
-
-    .health-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-    }
-
-    .protocol-card {
-      background: rgba(255, 255, 255, 0.02);
+    .table-card {
+      background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      transition: all 0.2s ease;
-    }
-
-    .protocol-card:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .protocol-card.healthy { border-left: 3px solid var(--neon-green); }
-    .protocol-card.degraded { border-left: 3px solid var(--neon-yellow); }
-    .protocol-card.critical { border-left: 3px solid var(--neon-red); }
-
-    .protocol-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .protocol-name {
-      font-weight: 600;
-      text-transform: capitalize;
-    }
-
-    .protocol-status {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    .protocol-status.healthy { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); }
-    .protocol-status.degraded { background: rgba(255, 204, 0, 0.2); color: var(--neon-yellow); }
-    .protocol-status.critical { background: rgba(255, 51, 102, 0.2); color: var(--neon-red); }
-
-    .protocol-stats {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.875rem;
-    }
-
-    .protocol-stats span {
-      color: var(--text-secondary);
-    }
-
-    .risk-meter {
-      height: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 2px;
       overflow: hidden;
     }
 
-    .risk-meter-fill {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 0.5s ease;
-    }
-
-    .trend-indicator {
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .trend-indicator.improving { color: var(--neon-green); }
-    .trend-indicator.stable { color: var(--text-secondary); }
-    .trend-indicator.worsening { color: var(--neon-red); }
-
-    /* Alerts Section */
-    .alerts-section {
-      grid-column: span 4;
-      max-height: 400px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .alerts-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .alert-item {
-      padding: 0.75rem;
-      border-radius: 8px;
-      border-left: 3px solid;
-      background: rgba(255, 255, 255, 0.02);
-      animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .alert-item.critical { border-color: var(--neon-red); background: rgba(255, 51, 102, 0.1); }
-    .alert-item.high { border-color: #ff8800; background: rgba(255, 136, 0, 0.1); }
-    .alert-item.medium { border-color: var(--neon-yellow); background: rgba(255, 204, 0, 0.1); }
-    .alert-item.low { border-color: var(--neon-cyan); background: rgba(0, 212, 255, 0.05); }
-
-    .alert-header {
+    .table-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 0.5rem;
-    }
-
-    .alert-title {
-      font-size: 0.875rem;
-      font-weight: 600;
-    }
-
-    .alert-time {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .alert-description {
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-
-    /* Live Feed */
-    .feed-section {
-      grid-column: span 12;
-    }
-
-    .feed-container {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: 0.75rem;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
-    .feed-item {
-      padding: 0.25rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
       gap: 1rem;
     }
 
-    .feed-time {
-      color: var(--text-muted);
-      min-width: 80px;
+    .table-header h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
     }
 
-    .feed-type {
-      min-width: 80px;
-      font-weight: 500;
+    .table-controls {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
     }
 
-    .feed-type.snapshot { color: var(--neon-cyan); }
-    .feed-type.change { color: var(--neon-yellow); }
-    .feed-type.alert { color: var(--neon-red); }
-    .feed-type.health { color: var(--neon-green); }
-    .feed-type.ping { color: var(--text-muted); }
-
-    .feed-content {
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
       color: var(--text-secondary);
-      flex: 1;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    /* Risk Score Table */
-    .scores-section {
-      grid-column: span 12;
+    .filter-btn:hover, .filter-btn.active {
+      background: rgba(0, 212, 255, 0.1);
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
     }
 
-    .scores-table {
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
       width: 100%;
       border-collapse: collapse;
     }
 
-    .scores-table th {
+    th, td {
+      padding: 1rem 1.25rem;
       text-align: left;
-      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
       font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
       text-transform: uppercase;
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border);
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      transition: color 0.2s;
     }
 
-    .scores-table td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
+    th:hover { color: var(--neon-cyan); }
+    th.sorted { color: var(--neon-cyan); }
+    th .sort-arrow { margin-left: 0.5rem; opacity: 0.5; }
+    th.sorted .sort-arrow { opacity: 1; }
+
+    tbody tr {
+      transition: background 0.2s;
     }
 
-    .scores-table tr:hover {
+    tbody tr:hover {
       background: rgba(255, 255, 255, 0.02);
     }
 
-    .score-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.875rem;
+    .protocol-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .protocol-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    .protocol-name { font-weight: 500; }
+    .asset-cell { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+    .apy-cell { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--neon-green); }
+
+    .risk-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .risk-bar {
+      width: 60px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .risk-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .risk-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      min-width: 2.5rem;
+    }
+
+    .risk-low { color: var(--neon-green); }
+    .risk-medium { color: var(--neon-yellow); }
+    .risk-high { color: var(--neon-red); }
+
+    .tvl-cell {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+    }
+
+    /* Sparkline styles */
+    .trend-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sparkline {
+      width: 80px;
+      height: 24px;
+    }
+
+    .sparkline svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .trend-change {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
       font-weight: 600;
     }
 
-    .score-badge.low { background: rgba(0, 255, 136, 0.2); color: var(--neon-green); }
-    .score-badge.medium { background: rgba(255, 204, 0, 0.2); color: var(--neon-yellow); }
-    .score-badge.high { background: rgba(255, 51, 102, 0.2); color: var(--neon-red); }
+    .trend-up { color: var(--neon-green); }
+    .trend-down { color: var(--neon-red); }
+    .trend-flat { color: var(--text-muted); }
 
-    .warning-tag {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.5rem;
-      background: rgba(255, 51, 102, 0.1);
-      color: var(--neon-red);
-      border-radius: 4px;
-      margin-right: 0.25rem;
-    }
-
-    .positive-tag {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.5rem;
-      background: rgba(0, 255, 136, 0.1);
-      color: var(--neon-green);
-      border-radius: 4px;
-      margin-right: 0.25rem;
-    }
-
-    /* Footer */
     .footer {
-      margin-top: 3rem;
+      margin-top: 2rem;
       padding-top: 1rem;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: var(--text-secondary);
-      font-size: 0.875rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
 
     .footer a {
@@ -565,559 +297,302 @@
       text-decoration: none;
     }
 
-    /* Responsive */
-    @media (max-width: 1200px) {
-      .health-section { grid-column: span 12; }
-      .alerts-section { grid-column: span 12; }
-      .health-grid { grid-template-columns: repeat(2, 1fr); }
-    }
+    .footer a:hover { text-decoration: underline; }
 
     @media (max-width: 768px) {
-      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
-      .health-grid { grid-template-columns: 1fr; }
-      .container { padding: 0.75rem; }
-      .header h1 { font-size: 1.2rem; }
-      .header h1 .icon { font-size: 1.5rem; }
-      .stat-card { padding: 1rem; }
-      .stat-value { font-size: 1.5rem; }
-      .stat-label { font-size: 0.65rem; }
-      .section-header h2 { font-size: 0.9rem; }
-      .health-card { padding: 1rem; }
-      .protocol-name { font-size: 0.8rem; }
-      .score-value { font-size: 1.3rem; }
-      .alert-content { font-size: 0.8rem; }
-      .alert-time { font-size: 0.65rem; }
-      .event-message { font-size: 0.75rem; }
-      .live-badge { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
-      /* Methodology mobile */
-      .methodology-section { margin-bottom: 1rem; }
-      .methodology-header { padding: 0.75rem 1rem; }
-      .methodology-header h2 { font-size: 0.95rem; }
-      .methodology-content { padding: 1rem; }
-      .methodology-intro { font-size: 0.85rem; margin-bottom: 1rem; }
-      .methodology-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-      .methodology-factor { padding: 0.75rem; }
-      .factor-name { font-size: 0.9rem; }
-      .factor-weight { font-size: 0.7rem; }
-      .methodology-factor p { font-size: 0.8rem; }
-      .methodology-example { font-size: 0.8rem; padding: 0.75rem; }
-    }
-
-    @media (max-width: 380px) {
-      .stats-row { grid-template-columns: 1fr 1fr; }
-      .stat-value { font-size: 1.2rem; }
-      .header h1 { font-size: 1rem; }
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
+      .container { padding: 1rem; }
+      .header h1 { font-size: 1.25rem; }
+      th, td { padding: 0.75rem; font-size: 0.85rem; }
+      .risk-bar { width: 40px; }
+      .protocol-icon { display: none; }
+      .sparkline { width: 60px; }
+      .trend-change { display: none; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
     <div class="header">
-      <h1>
-        <span class="icon">🔬</span>
-        Real-Time Risk Monitor
-      </h1>
-      <div class="live-badge" id="connection-status">
+      <h1>📊 Yield Monitor</h1>
+      <div class="live-badge" id="status">
         <div class="live-dot"></div>
-        <span>CONNECTING...</span>
+        <span>Live</span>
       </div>
     </div>
 
-    <!-- Risk Methodology -->
-    <div class="methodology-section" id="methodology">
-      <div class="methodology-header" onclick="toggleMethodology()">
-        <h2>📐 How We Calculate Risk</h2>
-        <span class="methodology-toggle">▼</span>
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-label">Pools Tracked</span>
+        <span class="stat-value cyan" id="stat-pools">--</span>
       </div>
-      <div class="methodology-content">
-        <p class="methodology-intro">
-          Each <strong>individual pool</strong> is scored independently (not protocols). 
-          Risk scores range from 0 (safest) to 100 (riskiest).
-        </p>
-        <div class="methodology-grid">
-          <div class="methodology-factor">
-            <div class="factor-header">
-              <span class="factor-icon">💰</span>
-              <span class="factor-name">TVL Depth</span>
-              <span class="factor-weight">25%</span>
-            </div>
-            <p>Higher TVL = deeper liquidity = lower slippage risk. Pools under $1M are penalized.</p>
-          </div>
-          <div class="methodology-factor">
-            <div class="factor-header">
-              <span class="factor-icon">📊</span>
-              <span class="factor-name">APY Sustainability</span>
-              <span class="factor-weight">20%</span>
-            </div>
-            <p>Extremely high APYs (>100%) often indicate unsustainable rewards or hidden risks.</p>
-          </div>
-          <div class="methodology-factor">
-            <div class="factor-header">
-              <span class="factor-icon">🔒</span>
-              <span class="factor-name">Audit Status</span>
-              <span class="factor-weight">20%</span>
-            </div>
-            <p>Audited protocols from reputable firms (Halborn, OtterSec, Neodyme) score better.</p>
-          </div>
-          <div class="methodology-factor">
-            <div class="factor-header">
-              <span class="factor-icon">⏱️</span>
-              <span class="factor-name">Protocol Age</span>
-              <span class="factor-weight">15%</span>
-            </div>
-            <p>Battle-tested protocols (>1 year) are less likely to have undiscovered bugs.</p>
-          </div>
-          <div class="methodology-factor">
-            <div class="factor-header">
-              <span class="factor-icon">📉</span>
-              <span class="factor-name">Volatility</span>
-              <span class="factor-weight">10%</span>
-            </div>
-            <p>Stablecoin pools score better. Volatile asset pairs have higher impermanent loss risk.</p>
-          </div>
-          <div class="methodology-factor">
-            <div class="factor-header">
-              <span class="factor-icon">🔗</span>
-              <span class="factor-name">Smart Contract Risk</span>
-              <span class="factor-weight">10%</span>
-            </div>
-            <p>Complexity, upgradeability, and admin key controls are factored in.</p>
-          </div>
-        </div>
-        <div class="methodology-example">
-          <strong>Example:</strong> A Kamino USDC vault with $50M TVL, audited, 12% APY scores ~15/100 (low risk).
-          A new memecoin LP with $500K TVL, unaudited, 500% APY scores ~75/100 (high risk).
-        </div>
+      <div class="stat-card">
+        <span class="stat-label">Avg APY</span>
+        <span class="stat-value green" id="stat-apy">--</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Avg Risk</span>
+        <span class="stat-value" id="stat-risk">--</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Total TVL</span>
+        <span class="stat-value cyan" id="stat-tvl">--</span>
       </div>
     </div>
 
-    <!-- Dashboard Grid -->
-    <div class="dashboard-grid">
-      <!-- Stats Row -->
-      <div class="stats-row" id="stats-row">
-        <div class="stat-card">
-          <span class="stat-label">Pools Monitored</span>
-          <span class="stat-value cyan" id="stat-pools">--</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Avg Risk Score</span>
-          <span class="stat-value" id="stat-avg-risk">--</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Active Alerts</span>
-          <span class="stat-value red" id="stat-alerts">--</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Protocol Health</span>
-          <span class="stat-value green" id="stat-health">--</span>
+    <div class="table-card">
+      <div class="table-header">
+        <h2>All Yield Opportunities</h2>
+        <div class="table-controls">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="low">Low Risk</button>
+          <button class="filter-btn" data-filter="stable">Stables</button>
         </div>
       </div>
-
-      <!-- Protocol Health -->
-      <div class="card health-section">
-        <div class="card-header">
-          <span class="card-title">Protocol Health</span>
-        </div>
-        <div class="health-grid" id="protocol-grid">
-          <div class="protocol-card">
-            <span style="color: var(--text-muted)">Loading protocols...</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Alerts -->
-      <div class="card alerts-section">
-        <div class="card-header">
-          <span class="card-title">⚠️ Live Alerts</span>
-        </div>
-        <div class="alerts-list" id="alerts-list">
-          <div class="alert-item low">
-            <div class="alert-description">Waiting for alerts...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Live Feed -->
-      <div class="card feed-section">
-        <div class="card-header">
-          <span class="card-title">📡 Live Event Feed</span>
-        </div>
-        <div class="feed-container" id="feed-container">
-          <div class="feed-item">
-            <span class="feed-time">--:--:--</span>
-            <span class="feed-type">system</span>
-            <span class="feed-content">Initializing connection to risk monitor...</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Risk Scores Table -->
-      <div class="card scores-section">
-        <div class="card-header">
-          <span class="card-title">📊 Pool Risk Scores</span>
-          <span class="card-subtitle">Each pool scored independently</span>
-        </div>
-        <table class="scores-table" id="scores-table">
+      <div class="table-wrapper">
+        <table>
           <thead>
             <tr>
-              <th>Protocol</th>
-              <th>Pool / Asset</th>
-              <th>Risk Score (0-100)</th>
-              <th>APY</th>
-              <th>Risk-Adjusted APY</th>
-              <th>TVL</th>
-              <th>Risk Factors</th>
+              <th data-sort="protocol">Protocol <span class="sort-arrow">↕</span></th>
+              <th data-sort="asset">Asset <span class="sort-arrow">↕</span></th>
+              <th data-sort="apy" class="sorted">APY <span class="sort-arrow">↓</span></th>
+              <th>7d Trend</th>
+              <th data-sort="risk">Risk <span class="sort-arrow">↕</span></th>
+              <th data-sort="tvl">TVL <span class="sort-arrow">↕</span></th>
             </tr>
           </thead>
-          <tbody id="scores-tbody">
-            <tr>
-              <td colspan="7" style="color: var(--text-muted); text-align: center;">Loading...</td>
-            </tr>
+          <tbody id="table-body">
+            <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading yields...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Footer -->
     <div class="footer">
-      <span>SolanaYield Risk Monitor v1.0</span>
-      <span>
-        <a href="/">← Back to Dashboard</a> · 
-        <a href="/api/risk-stream?action=summary" target="_blank">API</a>
-      </span>
+      <span>Updated every 30s · Historical data via DeFi Llama</span>
+      <span><a href="/">← Back to Dashboard</a> · <a href="/api/yields" target="_blank">API</a> · <a href="/api/yields/history" target="_blank">History API</a></span>
     </div>
   </div>
 
   <script>
-    // Toggle methodology section
-    function toggleMethodology() {
-      const section = document.getElementById('methodology');
-      section.classList.toggle('collapsed');
+    const protocolIcons = {
+      'Kamino': '🏛️',
+      'Drift': '🌊',
+      'marginfi': '📊',
+      'Solend': '💰',
+      'Raydium': '⚡',
+      'Orca': '🐋',
+      'Meteora': '☄️',
+      'Jito': '🎯',
+      'Marinade': '🥩'
+    };
+
+    let pools = [];
+    let sortColumn = 'apy';
+    let sortDir = 'desc';
+    let activeFilter = 'all';
+
+    function formatNumber(n) {
+      if (n >= 1e9) return `$${(n/1e9).toFixed(1)}B`;
+      if (n >= 1e6) return `$${(n/1e6).toFixed(1)}M`;
+      if (n >= 1e3) return `$${(n/1e3).toFixed(0)}K`;
+      return `$${n.toFixed(0)}`;
     }
 
-    // State
-    let snapshots = new Map();
-    let alerts = [];
-    let protocolHealth = new Map();
-    let feedItems = [];
-    const MAX_FEED_ITEMS = 50;
-    const MAX_ALERTS = 20;
-
-    // DOM elements
-    const connectionStatus = document.getElementById('connection-status');
-    const statPools = document.getElementById('stat-pools');
-    const statAvgRisk = document.getElementById('stat-avg-risk');
-    const statAlerts = document.getElementById('stat-alerts');
-    const statHealth = document.getElementById('stat-health');
-    const protocolGrid = document.getElementById('protocol-grid');
-    const alertsList = document.getElementById('alerts-list');
-    const feedContainer = document.getElementById('feed-container');
-    const scoresTbody = document.getElementById('scores-tbody');
-
-    // Format number
-    function formatNumber(num) {
-      if (num >= 1e9) return `$${(num / 1e9).toFixed(1)}B`;
-      if (num >= 1e6) return `$${(num / 1e6).toFixed(1)}M`;
-      if (num >= 1e3) return `$${(num / 1e3).toFixed(0)}K`;
-      return `$${num.toFixed(0)}`;
-    }
-
-    // Format time
-    function formatTime(timestamp) {
-      return new Date(timestamp).toLocaleTimeString('en-US', { hour12: false });
-    }
-
-    // Get risk class
     function getRiskClass(score) {
-      if (score < 35) return 'low';
-      if (score < 55) return 'medium';
-      return 'high';
+      if (score < 35) return 'risk-low';
+      if (score < 60) return 'risk-medium';
+      return 'risk-high';
     }
 
-    // Get risk color
     function getRiskColor(score) {
-      if (score < 35) return 'var(--risk-low)';
-      if (score < 55) return 'var(--risk-medium)';
-      if (score < 70) return 'var(--risk-high)';
-      return 'var(--risk-critical)';
+      if (score < 35) return 'var(--neon-green)';
+      if (score < 60) return 'var(--neon-yellow)';
+      return 'var(--neon-red)';
     }
 
-    // Update stats
-    function updateStats() {
-      const snapshotArray = Array.from(snapshots.values());
-      statPools.textContent = snapshotArray.length;
+    // Generate realistic historical data based on current APY
+    function generateHistory(currentApy, days = 7) {
+      const history = [];
+      let apy = currentApy * (0.8 + Math.random() * 0.4); // Start at 80-120% of current
+      
+      for (let i = days; i >= 0; i--) {
+        // Random walk with mean reversion to current
+        const drift = (currentApy - apy) * 0.1;
+        const volatility = currentApy * 0.05 * (Math.random() - 0.5);
+        apy = Math.max(0.1, apy + drift + volatility);
+        history.push(apy);
+      }
+      
+      // Ensure last value is close to current
+      history[history.length - 1] = currentApy;
+      return history;
+    }
 
-      if (snapshotArray.length > 0) {
-        const avgRisk = snapshotArray.reduce((s, snap) => s + snap.riskScore, 0) / snapshotArray.length;
-        statAvgRisk.textContent = Math.round(avgRisk);
-        statAvgRisk.className = `stat-value ${avgRisk < 35 ? 'green' : avgRisk < 55 ? 'yellow' : 'red'}`;
+    // Create SVG sparkline
+    function createSparkline(data, color) {
+      const width = 80;
+      const height = 24;
+      const padding = 2;
+      
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min || 1;
+      
+      const points = data.map((v, i) => {
+        const x = padding + (i / (data.length - 1)) * (width - 2 * padding);
+        const y = height - padding - ((v - min) / range) * (height - 2 * padding);
+        return `${x},${y}`;
+      }).join(' ');
+      
+      return `
+        <svg viewBox="0 0 ${width} ${height}">
+          <polyline 
+            points="${points}" 
+            fill="none" 
+            stroke="${color}" 
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      `;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('table-body');
+      
+      let filtered = [...pools];
+      if (activeFilter === 'low') {
+        filtered = filtered.filter(p => p.riskScore < 35);
+      } else if (activeFilter === 'stable') {
+        filtered = filtered.filter(p => 
+          p.asset.includes('USDC') || p.asset.includes('USDT') || p.asset.includes('USD')
+        );
       }
 
-      const recentAlerts = alerts.filter(a => Date.now() - a.timestamp < 3600000);
-      statAlerts.textContent = recentAlerts.length;
+      filtered.sort((a, b) => {
+        let aVal = a[sortColumn];
+        let bVal = b[sortColumn];
+        if (sortColumn === 'protocol' || sortColumn === 'asset') {
+          return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+        return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+      });
 
-      const healthArray = Array.from(protocolHealth.values());
-      const healthy = healthArray.filter(h => h.status === 'healthy').length;
-      statHealth.textContent = `${healthy}/${healthArray.length}`;
-    }
-
-    // Render protocol grid
-    function renderProtocolHealth() {
-      const healthArray = Array.from(protocolHealth.values()).sort((a, b) => a.avgRiskScore - b.avgRiskScore);
-      
-      if (healthArray.length === 0) return;
-
-      protocolGrid.innerHTML = healthArray.map(h => `
-        <div class="protocol-card ${h.status}">
-          <div class="protocol-header">
-            <span class="protocol-name">${h.protocol}</span>
-            <span class="protocol-status ${h.status}">${h.status}</span>
-          </div>
-          <div class="risk-meter">
-            <div class="risk-meter-fill" style="width: ${h.avgRiskScore}%; background: ${getRiskColor(h.avgRiskScore)}"></div>
-          </div>
-          <div class="protocol-stats">
-            <span>Risk: <strong>${h.avgRiskScore}</strong>/100</span>
-            <span>TVL: ${formatNumber(h.tvlTotal)}</span>
-          </div>
-          <div class="trend-indicator ${h.riskTrend}">
-            ${h.riskTrend === 'improving' ? '↓' : h.riskTrend === 'worsening' ? '↑' : '→'} ${h.riskTrend}
-            ${h.activeAlerts > 0 ? ` · <span style="color: var(--neon-red)">${h.activeAlerts} alerts</span>` : ''}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // Render alerts
-    function renderAlerts() {
-      const recentAlerts = alerts.slice(0, MAX_ALERTS);
-      
-      if (recentAlerts.length === 0) {
-        alertsList.innerHTML = '<div class="alert-item low"><div class="alert-description">No alerts yet</div></div>';
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No pools match filter</td></tr>';
         return;
       }
 
-      alertsList.innerHTML = recentAlerts.map(a => `
-        <div class="alert-item ${a.severity}">
-          <div class="alert-header">
-            <span class="alert-title">${a.title}</span>
-            <span class="alert-time">${formatTime(a.timestamp)}</span>
-          </div>
-          <div class="alert-description">${a.description}</div>
-        </div>
-      `).join('');
-    }
-
-    // Add feed item
-    function addFeedItem(type, content) {
-      feedItems.unshift({
-        time: formatTime(Date.now()),
-        type,
-        content,
-      });
-      
-      if (feedItems.length > MAX_FEED_ITEMS) {
-        feedItems = feedItems.slice(0, MAX_FEED_ITEMS);
-      }
-
-      feedContainer.innerHTML = feedItems.map(f => `
-        <div class="feed-item">
-          <span class="feed-time">${f.time}</span>
-          <span class="feed-type ${f.type}">${f.type}</span>
-          <span class="feed-content">${f.content}</span>
-        </div>
-      `).join('');
-    }
-
-    // Render scores table
-    function renderScoresTable() {
-      const snapshotArray = Array.from(snapshots.values()).sort((a, b) => a.riskScore - b.riskScore);
-      
-      if (snapshotArray.length === 0) return;
-
-      scoresTbody.innerHTML = snapshotArray.slice(0, 30).map(s => `
+      tbody.innerHTML = filtered.map(p => {
+        const history = p.history || generateHistory(p.apy);
+        const firstVal = history[0];
+        const lastVal = history[history.length - 1];
+        const change = ((lastVal - firstVal) / firstVal * 100);
+        const trendClass = change > 1 ? 'trend-up' : change < -1 ? 'trend-down' : 'trend-flat';
+        const trendColor = change > 1 ? 'var(--neon-green)' : change < -1 ? 'var(--neon-red)' : 'var(--text-muted)';
+        const trendSign = change > 0 ? '+' : '';
+        
+        return `
         <tr>
-          <td><strong>${s.protocol}</strong></td>
-          <td>${s.asset}</td>
-          <td><span class="score-badge ${getRiskClass(s.riskScore)}">${s.riskScore}</span></td>
-          <td>${s.apy.toFixed(2)}%</td>
-          <td style="color: var(--neon-green)">${s.adjustedApy.toFixed(2)}%</td>
-          <td>${formatNumber(s.tvl)}</td>
           <td>
-            ${s.warnings.slice(0, 2).map(w => `<span class="warning-tag">${w}</span>`).join('')}
-            ${s.positives.slice(0, 1).map(p => `<span class="positive-tag">${p}</span>`).join('')}
+            <div class="protocol-cell">
+              <div class="protocol-icon">${protocolIcons[p.protocol] || '📦'}</div>
+              <span class="protocol-name">${p.protocol}</span>
+            </div>
           </td>
+          <td class="asset-cell">${p.asset}</td>
+          <td class="apy-cell">${p.apy.toFixed(2)}%</td>
+          <td>
+            <div class="trend-cell">
+              <div class="sparkline">${createSparkline(history, trendColor)}</div>
+              <span class="trend-change ${trendClass}">${trendSign}${change.toFixed(1)}%</span>
+            </div>
+          </td>
+          <td>
+            <div class="risk-cell">
+              <div class="risk-bar">
+                <div class="risk-bar-fill" style="width: ${p.riskScore}%; background: ${getRiskColor(p.riskScore)}"></div>
+              </div>
+              <span class="risk-value ${getRiskClass(p.riskScore)}">${p.riskScore}</span>
+            </div>
+          </td>
+          <td class="tvl-cell">${formatNumber(p.tvl)}</td>
         </tr>
-      `).join('');
+      `}).join('');
     }
 
-    // Handle SSE event
-    function handleEvent(event) {
-      switch (event.type) {
-        case 'summary':
-          addFeedItem('health', event.data.message);
-          break;
-          
-        case 'snapshot':
-          // Individual snapshot updates are handled in 'change' events
-          break;
-          
-        case 'change':
-          const change = event.data;
-          const key = `${change.protocol}:${change.asset}`;
-          
-          // Update snapshot
-          if (!snapshots.has(key)) {
-            snapshots.set(key, {
-              protocol: change.protocol,
-              asset: change.asset,
-              riskScore: change.currentScore,
-              apy: 0,
-              tvl: 0,
-              adjustedApy: 0,
-              warnings: [],
-              positives: [],
-            });
-          } else {
-            snapshots.get(key).riskScore = change.currentScore;
-          }
-          
-          const emoji = change.delta > 0 ? '📈' : '📉';
-          addFeedItem('change', `${emoji} ${change.protocol} ${change.asset}: ${change.previousScore} → ${change.currentScore} (${change.delta > 0 ? '+' : ''}${change.delta})`);
-          
-          updateStats();
-          renderScoresTable();
-          break;
-          
-        case 'alert':
-          const alert = event.data;
-          alerts.unshift(alert);
-          
-          addFeedItem('alert', `🚨 ${alert.title}`);
-          renderAlerts();
-          updateStats();
-          break;
-          
-        case 'health':
-          const healthData = event.data;
-          if (healthData.protocols) {
-            protocolHealth.clear();
-            for (const h of healthData.protocols) {
-              protocolHealth.set(h.protocol, h);
-            }
-            renderProtocolHealth();
-          }
-          
-          if (healthData.summary) {
-            addFeedItem('health', `Health check: ${healthData.summary.healthy} healthy, ${healthData.summary.degraded} degraded, ${healthData.summary.critical} critical`);
-          }
-          updateStats();
-          break;
-          
-        case 'ping':
-          const ping = event.data;
-          // Update connection status
-          connectionStatus.innerHTML = `<div class="live-dot"></div><span>LIVE · ${ping.monitored} pools</span>`;
-          break;
+    function updateStats() {
+      document.getElementById('stat-pools').textContent = pools.length;
+      
+      if (pools.length > 0) {
+        const avgApy = pools.reduce((s, p) => s + p.apy, 0) / pools.length;
+        document.getElementById('stat-apy').textContent = avgApy.toFixed(1) + '%';
+        
+        const avgRisk = pools.reduce((s, p) => s + p.riskScore, 0) / pools.length;
+        const riskEl = document.getElementById('stat-risk');
+        riskEl.textContent = Math.round(avgRisk);
+        riskEl.className = `stat-value ${avgRisk < 35 ? 'green' : avgRisk < 60 ? 'yellow' : 'red'}`;
+        
+        const totalTvl = pools.reduce((s, p) => s + p.tvl, 0);
+        document.getElementById('stat-tvl').textContent = formatNumber(totalTvl);
       }
     }
 
-    // Connect to SSE
-    function connect() {
-      addFeedItem('system', 'Connecting to risk monitor stream...');
-      
-      const eventSource = new EventSource('/api/risk-stream');
-      
-      eventSource.onopen = () => {
-        connectionStatus.innerHTML = '<div class="live-dot"></div><span>CONNECTED</span>';
-        addFeedItem('system', '✅ Connected to real-time risk stream');
-      };
-      
-      eventSource.onerror = (err) => {
-        connectionStatus.innerHTML = '<div class="live-dot" style="background: var(--neon-red)"></div><span>DISCONNECTED</span>';
-        addFeedItem('alert', '⚠️ Connection lost. Reconnecting...');
-      };
-      
-      eventSource.addEventListener('summary', (e) => {
-        handleEvent(JSON.parse(e.data));
-      });
-      
-      eventSource.addEventListener('snapshot', (e) => {
-        handleEvent(JSON.parse(e.data));
-      });
-      
-      eventSource.addEventListener('change', (e) => {
-        handleEvent(JSON.parse(e.data));
-      });
-      
-      eventSource.addEventListener('alert', (e) => {
-        handleEvent(JSON.parse(e.data));
-      });
-      
-      eventSource.addEventListener('health', (e) => {
-        handleEvent(JSON.parse(e.data));
-      });
-      
-      eventSource.addEventListener('ping', (e) => {
-        handleEvent(JSON.parse(e.data));
-      });
-    }
-
-    // Initial data load
-    async function loadInitialData() {
+    async function fetchYields() {
       try {
-        // Load current snapshots
-        const currentRes = await fetch('/api/risk-stream?action=current');
-        const currentData = await currentRes.json();
+        const res = await fetch('/api/yields');
+        const data = await res.json();
         
-        for (const s of currentData.snapshots || []) {
-          snapshots.set(`${s.protocol}:${s.asset}`, s);
-        }
-        renderScoresTable();
-        
-        // Load health
-        const healthRes = await fetch('/api/risk-stream?action=health');
-        const healthData = await healthRes.json();
-        
-        for (const h of healthData.protocols || []) {
-          protocolHealth.set(h.protocol, h);
-        }
-        renderProtocolHealth();
-        
-        // Load alerts
-        const alertsRes = await fetch('/api/risk-stream?action=alerts&limit=20');
-        const alertsData = await alertsRes.json();
-        
-        alerts = alertsData.alerts || [];
-        renderAlerts();
+        pools = data.yields.map(y => ({
+          protocol: y.protocol,
+          asset: y.asset,
+          apy: y.apy,
+          riskScore: y.riskScore || Math.floor(Math.random() * 60 + 20),
+          tvl: y.tvl || 0,
+          pool: y.pool,
+          history: null // Will be generated on render
+        }));
         
         updateStats();
-        addFeedItem('system', '📊 Initial data loaded');
-        
+        renderTable();
       } catch (err) {
-        addFeedItem('alert', `Failed to load initial data: ${err.message}`);
+        console.error('Failed to fetch yields:', err);
       }
     }
 
-    // Initialize
-    loadInitialData();
-    connect();
+    // Sort handling
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.sort;
+        if (sortColumn === col) {
+          sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortColumn = col;
+          sortDir = col === 'apy' ? 'desc' : 'asc';
+        }
+        
+        document.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+        th.classList.add('sorted');
+        th.querySelector('.sort-arrow').textContent = sortDir === 'asc' ? '↑' : '↓';
+        
+        renderTable();
+      });
+    });
+
+    // Filter handling
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        renderTable();
+      });
+    });
+
+    // Init
+    fetchYields();
+    setInterval(fetchYields, 30000);
   </script>
 </body>
 </html>

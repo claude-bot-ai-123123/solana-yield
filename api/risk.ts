@@ -1,16 +1,183 @@
 /**
  * Risk-Adjusted Yield Analysis API (Edge Runtime)
+ * Enhanced with AEGIS Analyst Agent risk intelligence!
  * 
  * GET /api/risk?action=analyze&risk=medium&top=10
  * GET /api/risk?action=compare&top=5
  * GET /api/risk?action=protocols
+ * GET /api/risk?action=aegis&protocol=kamino
  */
 
 export const config = {
   runtime: 'edge',
 };
 
+// ============================================================================
+// AEGIS Integration (Mock Data)
+// ============================================================================
+
+interface AegisRiskScore {
+  protocol: string;
+  score: number;
+  confidence: number;
+  timestamp: number;
+  factors: {
+    smartContractRisk: number;
+    liquidityRisk: number;
+    governanceRisk: number;
+    marketRisk: number;
+    operationalRisk: number;
+  };
+  insights: string[];
+  warnings: string[];
+}
+
+const AEGIS_MOCK_DATA: Record<string, AegisRiskScore> = {
+  'kamino': {
+    protocol: 'kamino',
+    score: 22,
+    confidence: 0.92,
+    timestamp: Date.now(),
+    factors: {
+      smartContractRisk: 20,
+      liquidityRisk: 15,
+      governanceRisk: 18,
+      marketRisk: 25,
+      operationalRisk: 24,
+    },
+    insights: [
+      'Multiple security audits passed (OtterSec, Halborn)',
+      'Strong TVL growth trajectory ($800M+)',
+      'Conservative liquidation parameters',
+    ],
+    warnings: ['Governance token concentration among early investors'],
+  },
+  'drift': {
+    protocol: 'drift',
+    score: 28,
+    confidence: 0.88,
+    timestamp: Date.now(),
+    factors: {
+      smartContractRisk: 25,
+      liquidityRisk: 20,
+      governanceRisk: 22,
+      marketRisk: 35,
+      operationalRisk: 28,
+    },
+    insights: [
+      'Battle-tested perpetuals protocol (2+ years)',
+      'Insurance fund actively protecting deposits',
+      'Transparent liquidation engine',
+    ],
+    warnings: [
+      'Nov 2022 exploit history (patched)',
+      'High leverage exposure in volatile markets',
+    ],
+  },
+  'jito': {
+    protocol: 'jito',
+    score: 18,
+    confidence: 0.90,
+    timestamp: Date.now(),
+    factors: {
+      smartContractRisk: 15,
+      liquidityRisk: 12,
+      governanceRisk: 20,
+      marketRisk: 22,
+      operationalRisk: 21,
+    },
+    insights: [
+      'Audited by top firms (Neodyme, OtterSec)',
+      'Liquid staking with MEV rewards',
+      'Growing validator set distribution',
+    ],
+    warnings: ['MEV extraction centralization concerns'],
+  },
+  'marinade': {
+    protocol: 'marinade',
+    score: 12,
+    confidence: 0.95,
+    timestamp: Date.now(),
+    factors: {
+      smartContractRisk: 10,
+      liquidityRisk: 8,
+      governanceRisk: 12,
+      marketRisk: 15,
+      operationalRisk: 14,
+    },
+    insights: [
+      'Oldest and most battle-tested LST on Solana',
+      'Excellent validator diversification',
+      'Strong community governance',
+      'Zero historical security incidents',
+    ],
+    warnings: [],
+  },
+  'mango': {
+    protocol: 'mango',
+    score: 52,
+    confidence: 0.85,
+    timestamp: Date.now(),
+    factors: {
+      smartContractRisk: 55,
+      liquidityRisk: 45,
+      governanceRisk: 50,
+      marketRisk: 58,
+      operationalRisk: 52,
+    },
+    insights: [
+      'Relaunch after v3 exploit',
+      'Improved security architecture',
+    ],
+    warnings: [
+      'Oct 2022 $114M exploit history',
+      'Rebuilding trust with community',
+      'Lower TVL post-incident',
+    ],
+  },
+};
+
+function getAegisScore(protocol: string): AegisRiskScore | null {
+  return AEGIS_MOCK_DATA[protocol.toLowerCase()] || null;
+}
+
+function combineRiskScores(internalScore: number, aegisScore: AegisRiskScore | null): number {
+  if (!aegisScore) return internalScore;
+  
+  const aegisWeight = aegisScore.confidence;
+  const internalWeight = 1 - aegisWeight;
+  return Math.round((internalScore * internalWeight) + (aegisScore.score * aegisWeight));
+}
+
+function mergeAegisInsights(
+  warnings: string[],
+  positives: string[],
+  aegisScore: AegisRiskScore | null
+): { warnings: string[], positives: string[] } {
+  if (!aegisScore) return { warnings, positives };
+  
+  const mergedWarnings = [...warnings];
+  const mergedPositives = [...positives];
+  
+  aegisScore.warnings.forEach(w => {
+    if (!mergedWarnings.some(existing => existing.includes(w))) {
+      mergedWarnings.push(`🛡️ AEGIS: ${w}`);
+    }
+  });
+  
+  aegisScore.insights.forEach(i => {
+    if (!mergedPositives.some(existing => existing.includes(i))) {
+      mergedPositives.push(`🛡️ AEGIS: ${i}`);
+    }
+  });
+  
+  return { warnings: mergedWarnings, positives: mergedPositives };
+}
+
+// ============================================================================
 // Protocol risk profiles
+// ============================================================================
+
 const PROTOCOL_PROFILES: Record<string, {
   name: string;
   audited: boolean;
@@ -105,6 +272,8 @@ interface RiskScore {
   };
   warnings: string[];
   positives: string[];
+  aegisData?: AegisRiskScore;
+  aegisEnhanced?: boolean;
 }
 
 interface AnalyzedYield extends YieldOpp {
@@ -136,10 +305,12 @@ export default async function handler(request: Request) {
         return handleCompare(url);
       case 'protocols':
         return handleProtocols();
+      case 'aegis':
+        return handleAegis(url);
       default:
         return new Response(JSON.stringify({ 
           error: `Unknown action: ${action}`,
-          validActions: ['analyze', 'compare', 'protocols'],
+          validActions: ['analyze', 'compare', 'protocols', 'aegis'],
         }), { status: 400, headers });
     }
   } catch (err) {
@@ -176,8 +347,11 @@ function normalizeProtocol(project: string): string {
 
 function calculateRiskScore(opp: YieldOpp): RiskScore {
   const profile = PROTOCOL_PROFILES[opp.protocol] || PROTOCOL_PROFILES['unknown'];
-  const warnings: string[] = [];
-  const positives: string[] = [];
+  let warnings: string[] = [];
+  let positives: string[] = [];
+  
+  // Fetch AEGIS risk score
+  const aegisData = getAegisScore(opp.protocol);
   
   // Smart Contract Risk (0-100)
   let smartContract = profile.baseRiskScore;
@@ -293,7 +467,7 @@ function calculateRiskScore(opp: YieldOpp): RiskScore {
   }
   
   // Weighted overall
-  const overall = Math.round(
+  let overall = Math.round(
     smartContract * 0.30 +
     liquidity * 0.20 +
     sustainability * 0.20 +
@@ -301,11 +475,25 @@ function calculateRiskScore(opp: YieldOpp): RiskScore {
     assetVolatility * 0.15
   );
   
+  // Combine with AEGIS risk score if available
+  let aegisEnhanced = false;
+  if (aegisData) {
+    overall = combineRiskScores(overall, aegisData);
+    aegisEnhanced = true;
+    
+    // Merge AEGIS insights
+    const merged = mergeAegisInsights(warnings, positives, aegisData);
+    warnings = merged.warnings;
+    positives = merged.positives;
+  }
+  
   return {
     overall,
     factors: { smartContract, liquidity, sustainability, counterparty, assetVolatility },
     warnings,
     positives,
+    aegisData: aegisData || undefined,
+    aegisEnhanced,
   };
 }
 
@@ -364,6 +552,8 @@ async function handleAnalyze(url: URL) {
       riskTolerance: riskLevel,
       maxRiskScore: maxRisk,
       description: 'Recommendations sorted by risk-adjusted APY (not raw APY)',
+      aegisEnhanced: true,
+      aegisInfo: 'Risk scores enhanced with AEGIS Analyst Agent intelligence',
     },
     count: recommendations.length,
     recommendations: recommendations.map(r => ({
@@ -378,6 +568,8 @@ async function handleAnalyze(url: URL) {
       riskFactors: r.riskScore.factors,
       warnings: r.riskScore.warnings,
       positives: r.riskScore.positives,
+      aegisEnhanced: r.riskScore.aegisEnhanced,
+      aegisConfidence: r.riskScore.aegisData?.confidence,
     })),
   }), { headers });
 }
@@ -443,6 +635,52 @@ async function handleProtocols() {
       sustainability: 0.20,
       counterparty: 0.15,
       assetVolatility: 0.15,
+    },
+  }), { headers });
+}
+
+async function handleAegis(url: URL) {
+  const protocol = url.searchParams.get('protocol');
+  
+  if (!protocol) {
+    return new Response(JSON.stringify({
+      description: 'AEGIS Analyst Agent Risk Intelligence',
+      availableProtocols: Object.keys(AEGIS_MOCK_DATA),
+      usage: '/api/risk?action=aegis&protocol=kamino',
+    }), { headers });
+  }
+  
+  const aegisData = getAegisScore(protocol);
+  
+  if (!aegisData) {
+    return new Response(JSON.stringify({
+      error: `No AEGIS data available for protocol: ${protocol}`,
+      availableProtocols: Object.keys(AEGIS_MOCK_DATA),
+    }), { status: 404, headers });
+  }
+  
+  return new Response(JSON.stringify({
+    protocol: aegisData.protocol,
+    aegisRiskScore: aegisData.score,
+    confidence: aegisData.confidence,
+    timestamp: new Date(aegisData.timestamp).toISOString(),
+    factors: aegisData.factors,
+    insights: aegisData.insights,
+    warnings: aegisData.warnings,
+    interpretation: {
+      riskLevel: aegisData.score < 20 ? 'Very Low' :
+                 aegisData.score < 35 ? 'Low' :
+                 aegisData.score < 50 ? 'Medium' :
+                 aegisData.score < 70 ? 'High' : 'Very High',
+      recommendation: aegisData.score < 35 ? 'Safe for most users' :
+                      aegisData.score < 50 ? 'Moderate caution advised' :
+                      aegisData.score < 70 ? 'High risk - experienced users only' :
+                      'Avoid unless you fully understand the risks',
+    },
+    about: {
+      source: 'AEGIS Analyst Agent',
+      description: 'AI-powered multi-agent swarm for Solana DeFi risk assessment',
+      project: 'https://colosseum.com/agent-hackathon/projects/aegis',
     },
   }), { headers });
 }

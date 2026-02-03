@@ -118,6 +118,7 @@ export const PREDEFINED_SCENARIOS: WhatIfScenario[] = [
 export class WhatIfEngine {
   /**
    * Run a what-if simulation on a historical decision
+   * Enhanced with AEGIS!
    */
   simulate(
     record: DecisionRecord,
@@ -135,11 +136,11 @@ export class WhatIfEngine {
     // Create a new strategy engine with modified parameters
     const engine = new StrategyEngine(modifiedStrategy);
     
-    // Re-analyze with original market data but new strategy
+    // Re-analyze with original market data but new strategy (enhanced with AEGIS!)
     const yields: YieldOpportunity[] = ctx.yieldSnapshot || [];
     const simulatedDecision = engine.analyzeWithReasoning(ctx.portfolioSnapshot, yields);
     
-    // Analyze what opportunities would have been available
+    // Analyze what opportunities would have been available (enhanced with AEGIS!)
     const analyzed = analyzeOpportunities(yields);
     const maxRiskScore = this.getRiskToleranceScore(modifiedStrategy.riskTolerance);
     const eligible = analyzed.filter(o => o.riskScore.overall <= maxRiskScore);
@@ -194,6 +195,7 @@ export class WhatIfEngine {
 
   /**
    * Run multiple scenarios and compare
+   * Enhanced with AEGIS!
    */
   compareScenarios(
     record: DecisionRecord,
@@ -223,6 +225,7 @@ export class WhatIfEngine {
 
   /**
    * Simulate a custom scenario with arbitrary strategy changes
+   * Enhanced with AEGIS!
    */
   simulateCustom(
     record: DecisionRecord,
@@ -239,6 +242,7 @@ export class WhatIfEngine {
 
   /**
    * Quick what-if: Just change risk tolerance
+   * Enhanced with AEGIS!
    */
   whatIfRisk(
     record: DecisionRecord,

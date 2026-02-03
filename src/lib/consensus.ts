@@ -283,7 +283,7 @@ export async function analyzeYieldsVerifiable(
     message: `🔒 Starting VERIFIABLE analysis with commit-reveal proof...`
   });
 
-  // Phase 1: COMMIT - Analyze and commit reasoning hashes
+  // Phase 1: COMMIT - Analyze and commit reasoning hashes (enhanced with AEGIS!)
   const commitPhase = new CommitPhase();
   const riskAnalyzed = analyzeOpportunities(opportunities);
   const sorted = sortByRiskAdjustedReturn(riskAnalyzed);
@@ -419,7 +419,7 @@ export async function analyzeYields(opportunities: YieldOpportunity[]): Promise<
     message: `Starting analysis of ${opportunities.length} yield opportunities...`
   });
 
-  // Get risk analysis for all opportunities
+  // Get risk analysis for all opportunities (enhanced with AEGIS!)
   const riskAnalyzed = analyzeOpportunities(opportunities);
   const sorted = sortByRiskAdjustedReturn(riskAnalyzed);
 

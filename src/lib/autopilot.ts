@@ -147,7 +147,7 @@ export class Autopilot {
       const yields = await fetchAllSolanaYields();
       this.state.currentYields = yields.slice(0, 50);
       
-      // 2. Analyze with risk scoring
+      // 2. Analyze with risk scoring (enhanced with AEGIS!)
       console.log('🔍 Analyzing risk-adjusted yields...');
       const analyzed = analyzeOpportunities(yields);
       this.state.riskAdjustedYields = sortByRiskAdjustedReturn(analyzed).slice(0, 50);
@@ -243,10 +243,10 @@ export class Autopilot {
     const reasoning: string[] = [];
     let confidence = 0.5;
 
-    // Use the full strategy engine analysis
+    // Use the full strategy engine analysis (enhanced with AEGIS!)
     const strategyDecision = this.strategyEngine.analyzeWithReasoning(portfolio, yields);
     
-    // Get top risk-adjusted recommendations
+    // Get top risk-adjusted recommendations (enhanced with AEGIS!)
     const maxRiskScore = this.getRiskToleranceScore();
     const topRecommendations = getTopRecommendations(yields, 5, maxRiskScore);
     

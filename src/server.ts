@@ -231,7 +231,7 @@ const routes: Record<string, RouteHandler> = {
         strategy: {
           riskTolerance: riskLevel,
           maxRiskScore: maxRisk,
-          description: 'Recommendations sorted by risk-adjusted APY (not raw APY)',
+          description: 'Recommendations sorted by risk-adjusted APY (not raw APY) - Enhanced with AEGIS',
         },
         count: recommendations.length,
         recommendations: recommendations.map(r => ({
