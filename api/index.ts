@@ -15,10 +15,10 @@ export default function handler(request: Request) {
         '/api/reasoning': 'GET - Complete reasoning chain JSON (?mode=simple|full)',
         '/api/reasoning?whatif=high': 'GET - "What if I chose high risk?" counterfactual',
         '/api/confidence': '🎯 Confidence scoring system (0-100 with factor breakdown)',
-        '/api/confidence?format=json': 'GET - Raw confidence scores JSON',
-        '/api/whatif/demo': '🔮 NEW: What-If Simulator - explore alternate realities',
+        '/api/compare': '🎯 NEW: Protocol Comparison - Why This One? with pros/cons',
+        '/api/compare?risk=high': 'GET - Compare alternatives for high risk tolerance',
+        '/api/whatif/demo': '🔮 What-If Simulator - explore alternate realities',
         '/api/whatif/scenarios': 'GET - List available what-if scenarios',
-        '/api/whatif/quick?risk=high': 'GET - Quick what-if risk comparison',
       },
       core: {
         '/api/yields': 'GET - Yield opportunities from Kamino, Drift, Jito, Marinade',
@@ -36,6 +36,7 @@ export default function handler(request: Request) {
         '/api/alerts': 'GET - Rug pull detection dashboard',
         '/api/autopilot': 'GET - Autonomous decision analysis',
         '/replay.html': '🔮 What-If Simulator UI - interactive scenario explorer',
+        '/compare.html': '🎯 Protocol Comparison UI - Why This One?',
       },
       audit_trail: {
         '/api/audit/decisions': 'GET - Query decision history',
@@ -66,6 +67,14 @@ export default function handler(request: Request) {
         '🎯 Concentrated vs diversified portfolios',
         '📊 Side-by-side original vs simulated comparison',
         '💡 Cross-scenario learnings & recommendations',
+      ],
+      '🎯_protocol_comparison': [
+        '📊 Head-to-head protocol comparison with pros/cons',
+        '❓ "Why not Drift?" - explicit reasoning for each alternative',
+        '📈 Factor-by-factor comparison matrix',
+        '🏆 Clear winner indicators per metric',
+        '❔ Built-in FAQs answering common questions',
+        '🔒 Filtered options that exceed risk tolerance',
       ],
       '🎯_confidence_scoring': [
         '📈 0-100 confidence score for every analysis',

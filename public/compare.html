@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolanaYield // Why This Protocol?</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-cyan: #00fff9;
+      --neon-pink: #ff00ff;
+      --neon-green: #39ff14;
+      --neon-yellow: #ffff00;
+      --dark-bg: #0a0a0f;
+      --card-bg: rgba(10, 10, 15, 0.95);
+      --border-subtle: rgba(0, 255, 249, 0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark-bg);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .grid-bg {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 200%;
+      height: 80%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 249, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 249, 0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      transform: perspective(400px) rotateX(65deg);
+      transform-origin: bottom center;
+      z-index: -1;
+      margin-left: -50%;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+
+    header {
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(5, 5, 8, 0.95);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links { display: flex; gap: 25px; }
+    .nav-links a {
+      color: #666;
+      text-decoration: none;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--neon-cyan); }
+
+    .page-header { text-align: center; padding: 40px 0 20px; }
+    .page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      background: linear-gradient(180deg, #fff 0%, var(--neon-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .page-subtitle { color: #666; font-size: 0.9rem; }
+
+    /* Risk Selector */
+    .risk-selector {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 30px 0;
+    }
+    .risk-btn {
+      padding: 12px 30px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: #888;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .risk-btn:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); }
+    .risk-btn.active {
+      border-color: var(--neon-green);
+      color: var(--neon-green);
+      background: rgba(57, 255, 20, 0.1);
+    }
+
+    /* Recommendation Card */
+    .recommendation-card {
+      background: var(--card-bg);
+      border: 2px solid var(--neon-green);
+      border-radius: 8px;
+      padding: 30px;
+      margin-bottom: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    .recommendation-card::before {
+      content: '✅ RECOMMENDED';
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--neon-green);
+      color: var(--dark-bg);
+      padding: 5px 15px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .rec-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+    .rec-rank {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      color: var(--neon-green);
+    }
+    .rec-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      color: #fff;
+    }
+    .rec-subtitle { color: #888; font-size: 0.85rem; margin-top: 5px; }
+
+    .rec-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin: 25px 0;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+    .stat { text-align: center; }
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      color: var(--neon-cyan);
+    }
+    .stat-value.green { color: var(--neon-green); }
+    .stat-label {
+      font-size: 0.7rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 5px;
+    }
+
+    .pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .pros-box, .cons-box {
+      padding: 15px;
+      border-radius: 4px;
+    }
+    .pros-box { background: rgba(57, 255, 20, 0.1); border-left: 3px solid var(--neon-green); }
+    .cons-box { background: rgba(255, 255, 0, 0.05); border-left: 3px solid var(--neon-yellow); }
+    .pros-box h4 { color: var(--neon-green); margin-bottom: 10px; }
+    .cons-box h4 { color: var(--neon-yellow); margin-bottom: 10px; }
+    .pros-box li, .cons-box li {
+      font-size: 0.85rem;
+      color: #bbb;
+      margin: 8px 0;
+      padding-left: 15px;
+      list-style: none;
+      position: relative;
+    }
+    .pros-box li::before { content: '✓'; position: absolute; left: 0; color: var(--neon-green); }
+    .cons-box li::before { content: '⚠'; position: absolute; left: 0; color: var(--neon-yellow); }
+
+    /* Alternative Cards */
+    .alternatives-section {
+      margin-top: 40px;
+    }
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: var(--neon-pink);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--neon-pink), transparent);
+    }
+
+    .alt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    
+    .alt-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 20px;
+      transition: all 0.3s;
+    }
+    .alt-card:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(0, 255, 249, 0.1);
+    }
+    .alt-card.filtered {
+      border-color: rgba(255, 68, 68, 0.3);
+      background: rgba(255, 68, 68, 0.02);
+    }
+    .alt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .alt-rank {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: #666;
+    }
+    .alt-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      color: #fff;
+    }
+    .alt-asset { color: #888; font-size: 0.8rem; }
+    .alt-stats { display: flex; gap: 20px; margin: 15px 0; }
+    .alt-stat { text-align: center; }
+    .alt-stat-value { font-size: 1.2rem; color: var(--neon-cyan); }
+    .alt-stat-label { font-size: 0.65rem; color: #666; text-transform: uppercase; }
+    
+    .why-not {
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(255, 0, 255, 0.05);
+      border-left: 2px solid var(--neon-pink);
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+    .why-not strong { color: var(--neon-pink); }
+
+    /* Comparison Matrix */
+    .matrix-section { margin-top: 40px; }
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .matrix-table th, .matrix-table td {
+      padding: 15px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .matrix-table th {
+      background: rgba(0, 0, 0, 0.3);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+    }
+    .matrix-table th:first-child { text-align: left; }
+    .matrix-table td:first-child {
+      text-align: left;
+      color: var(--neon-cyan);
+      font-weight: bold;
+    }
+    .cell-green { color: var(--neon-green); font-weight: bold; }
+    .cell-yellow { color: var(--neon-yellow); }
+    .cell-red { color: #ff4444; }
+    .winner-badge {
+      display: inline-block;
+      background: var(--neon-green);
+      color: var(--dark-bg);
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border-radius: 2px;
+      margin-left: 8px;
+    }
+
+    /* FAQ Section */
+    .faq-section { margin-top: 40px; }
+    .faq-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    .faq-question {
+      padding: 20px;
+      font-size: 0.95rem;
+      color: var(--neon-cyan);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-question:hover { background: rgba(0, 255, 249, 0.03); }
+    .faq-toggle { font-size: 1.2rem; transition: transform 0.3s; }
+    .faq-item.open .faq-toggle { transform: rotate(45deg); }
+    .faq-answer {
+      padding: 0 20px 20px;
+      color: #aaa;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      display: none;
+    }
+    .faq-item.open .faq-answer { display: block; }
+
+    /* Summary Banner */
+    .summary-banner {
+      background: linear-gradient(135deg, rgba(0, 255, 249, 0.1), rgba(255, 0, 255, 0.1));
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 25px;
+      margin-top: 40px;
+    }
+    .summary-headline {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      color: #fff;
+      margin-bottom: 15px;
+    }
+    .summary-text { color: #aaa; font-size: 0.9rem; line-height: 1.8; }
+    .confidence-badge {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 8px 20px;
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px;
+      border-top: 1px solid var(--border-subtle);
+      margin-top: 60px;
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      .rec-stats { grid-template-columns: repeat(2, 1fr); }
+      .pros-cons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <header>
+    <div class="logo">SOLANA_YIELD</div>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/live.html">Live Feed</a>
+      <a href="/replay.html">What-If</a>
+      <a href="/compare.html" class="active">Why This?</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">🎯 WHY THIS PROTOCOL?</h1>
+      <p class="page-subtitle">See exactly why we chose this recommendation over the alternatives</p>
+    </div>
+
+    <div class="risk-selector">
+      <button class="risk-btn" data-risk="low">🛡️ Low Risk</button>
+      <button class="risk-btn active" data-risk="medium">⚖️ Medium Risk</button>
+      <button class="risk-btn" data-risk="high">🚀 High Risk</button>
+    </div>
+
+    <div id="content">
+      <div style="text-align: center; padding: 60px; color: #666;">
+        Loading comparison data...
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built by <a href="https://github.com/claude-bot-ai-123123/solana-yield" style="color: var(--neon-pink); text-decoration: none;">jeeves</a> — Transparency builds trust.
+  </footer>
+
+  <script>
+    let currentRisk = 'medium';
+
+    document.querySelectorAll('.risk-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentRisk = btn.dataset.risk;
+        loadComparison();
+      });
+    });
+
+    async function loadComparison() {
+      const content = document.getElementById('content');
+      content.innerHTML = '<div style="text-align: center; padding: 60px; color: #666;">Loading...</div>';
+
+      try {
+        const res = await fetch(`/api/compare?risk=${currentRisk}`);
+        const data = await res.json();
+        renderComparison(data);
+      } catch (err) {
+        content.innerHTML = `<div style="color: #ff4444; text-align: center; padding: 60px;">Error: ${err.message}</div>`;
+      }
+    }
+
+    function renderComparison(data) {
+      const { recommendation, alternatives, comparisonMatrix, summary, faqs } = data;
+      const content = document.getElementById('content');
+
+      content.innerHTML = `
+        <!-- Recommendation Card -->
+        <div class="recommendation-card">
+          <div class="rec-header">
+            <div class="rec-rank">#1</div>
+            <div>
+              <div class="rec-title">${recommendation.asset} on ${recommendation.protocol.toUpperCase()}</div>
+              <div class="rec-subtitle">${recommendation.whyChosen}</div>
+            </div>
+          </div>
+          <div class="rec-stats">
+            <div class="stat">
+              <div class="stat-value green">${recommendation.rawApy}%</div>
+              <div class="stat-label">Raw APY</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${recommendation.adjustedApy}%</div>
+              <div class="stat-label">Risk-Adj APY</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${recommendation.riskScore}/100</div>
+              <div class="stat-label">Risk Score</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">$${(recommendation.tvl / 1e6).toFixed(0)}M</div>
+              <div class="stat-label">TVL</div>
+            </div>
+          </div>
+          <div class="pros-cons">
+            <div class="pros-box">
+              <h4>✅ Strengths</h4>
+              <ul>${recommendation.pros.map(p => `<li>${p}</li>`).join('')}</ul>
+            </div>
+            <div class="cons-box">
+              <h4>⚠️ Considerations</h4>
+              <ul>${recommendation.cons.length > 0 ? recommendation.cons.map(c => `<li>${c}</li>`).join('') : '<li>None significant</li>'}</ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alternatives -->
+        <div class="alternatives-section">
+          <div class="section-title">🔀 Alternatives Considered</div>
+          <div class="alt-grid">
+            ${alternatives.map(alt => `
+              <div class="alt-card ${alt.riskScore > (currentRisk === 'low' ? 35 : currentRisk === 'medium' ? 55 : 75) ? 'filtered' : ''}">
+                <div class="alt-header">
+                  <div>
+                    <div class="alt-title">${alt.protocol.toUpperCase()}</div>
+                    <div class="alt-asset">${alt.asset}</div>
+                  </div>
+                  <div class="alt-rank">#${alt.rank}</div>
+                </div>
+                <div class="alt-stats">
+                  <div class="alt-stat">
+                    <div class="alt-stat-value">${alt.rawApy}%</div>
+                    <div class="alt-stat-label">Raw APY</div>
+                  </div>
+                  <div class="alt-stat">
+                    <div class="alt-stat-value">${alt.adjustedApy}%</div>
+                    <div class="alt-stat-label">Risk-Adj</div>
+                  </div>
+                  <div class="alt-stat">
+                    <div class="alt-stat-value">${alt.riskScore}</div>
+                    <div class="alt-stat-label">Risk</div>
+                  </div>
+                </div>
+                <div class="why-not">
+                  <strong>Why not chosen:</strong> ${alt.whyNotChosen}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Comparison Matrix -->
+        <div class="matrix-section">
+          <div class="section-title">📊 Factor Comparison</div>
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>Factor</th>
+                <th>Weight</th>
+                ${[recommendation, ...alternatives.slice(0, 2)].map(p => `<th>${p.protocol.toUpperCase()}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${comparisonMatrix.map(row => `
+                <tr>
+                  <td>${row.factor}</td>
+                  <td>${row.weight}</td>
+                  ${[recommendation.protocol, ...alternatives.slice(0, 2).map(a => a.protocol)].map(p => {
+                    const score = row.scores[p];
+                    if (!score) return '<td>-</td>';
+                    return `<td class="cell-${score.color}">${score.value}${row.winner === p ? '<span class="winner-badge">BEST</span>' : ''}</td>`;
+                  }).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-banner">
+          <div class="summary-headline">${summary.headline}</div>
+          <div class="summary-text">${summary.reasoning}</div>
+          <div class="confidence-badge">${summary.confidenceStatement}</div>
+        </div>
+
+        <!-- FAQs -->
+        <div class="faq-section">
+          <div class="section-title">❓ Common Questions</div>
+          ${faqs.map((faq, i) => `
+            <div class="faq-item" onclick="this.classList.toggle('open')">
+              <div class="faq-question">
+                ${faq.question}
+                <span class="faq-toggle">+</span>
+              </div>
+              <div class="faq-answer">${faq.answer}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    loadComparison();
+  </script>
+</body>
+</html>
