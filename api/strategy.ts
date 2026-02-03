@@ -64,8 +64,8 @@ export default async function handler(request: Request) {
       }), { status: 400, headers });
     }
 
-    // Build allocation strategy
-    const topOpps = eligible.slice(0, 5);
+    // Build allocation strategy - sort by APY descending to get best opportunities
+    const topOpps = eligible.sort((a, b) => b.apy - a.apy).slice(0, 5);
     const totalWeight = topOpps.reduce((sum, o) => sum + o.apy, 0);
     
     const allocations = topOpps.map(opp => ({
