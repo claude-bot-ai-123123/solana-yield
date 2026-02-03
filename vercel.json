@@ -6,7 +6,15 @@
       "destination": "/api/actions.json"
     },
     {
-      "source": "/(.*)",
+      "source": "/",
+      "destination": "/api"
+    },
+    {
+      "source": "/live",
+      "destination": "/api"
+    },
+    {
+      "source": "/demo",
       "destination": "/api"
     }
   ],
