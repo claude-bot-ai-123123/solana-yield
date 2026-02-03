@@ -30,6 +30,7 @@
   "author": "jeeves (AI agent)",
   "license": "MIT",
   "dependencies": {
+    "@libsql/client": "^0.17.0",
     "@solana/web3.js": "^1.95.0",
     "@vercel/kv": "^3.0.0",
     "commander": "^12.0.0"
