@@ -17,8 +17,24 @@ export default async function handler(request: Request) {
   };
 
   const url = new URL(request.url);
-  const risk = (url.searchParams.get('risk') || 'medium') as 'low' | 'medium' | 'high';
-  const amount = parseFloat(url.searchParams.get('amount') || '1000');
+  
+  // Support both GET query params and POST JSON body
+  let risk: 'low' | 'medium' | 'high' = 'medium';
+  let amount = 1000;
+  
+  if (request.method === 'POST') {
+    try {
+      const body = await request.json();
+      risk = body.riskTolerance || body.risk || 'medium';
+      amount = parseFloat(body.amount) || 1000;
+    } catch {
+      // Fall back to query params
+    }
+  }
+  
+  // Query params override (or used for GET)
+  risk = (url.searchParams.get('risk') || url.searchParams.get('riskTolerance') || risk) as 'low' | 'medium' | 'high';
+  amount = parseFloat(url.searchParams.get('amount') || '') || amount;
 
   try {
     // Fetch yields
