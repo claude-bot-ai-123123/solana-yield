@@ -1,118 +1,191 @@
-export const config = {
-  runtime: 'edge',
+/**
+ * Vercel Serverless Function Entry Point
+ * Routes all requests to the main HTTP server
+ */
+
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createServer, IncomingMessage, ServerResponse } from 'http';
+import { Connection } from '@solana/web3.js';
+import { YieldMonitor } from '../dist/index.mjs';
+import { JupiterSwap, TOKENS } from '../dist/index.mjs';
+import { 
+  analyzeOpportunities, 
+  sortByRiskAdjustedReturn, 
+  getTopRecommendations,
+  PROTOCOL_PROFILES,
+} from '../dist/index.mjs';
+import { getHistoryStore } from '../dist/index.mjs';
+import { MCPServer } from '../dist/index.mjs';
+
+const connection = new Connection('https://api.mainnet-beta.solana.com');
+const monitor = new YieldMonitor(connection);
+const jupiter = new JupiterSwap(connection);
+const historyStore = getHistoryStore(process.env.DECISION_DATA_DIR || '/tmp/decisions');
+const mcpServer = new MCPServer(connection);
+
+interface RouteHandler {
+  (req: IncomingMessage, res: ServerResponse, params?: Record<string, string>): Promise<void>;
+}
+
+const routes: Record<string, RouteHandler> = {
+  'GET /': async (req, res) => {
+    json(res, {
+      name: 'SolanaYield API',
+      version: '0.3.0',
+      description: 'Autonomous DeFi yield orchestrator with MCP integration',
+      endpoints: {
+        '/yields': 'GET - All yield opportunities',
+        '/yields/top': 'GET - Top 10 by raw APY',
+        '/risk/analyze': 'GET - Risk-adjusted recommendations',
+        '/mcp': 'MCP endpoints (AI agent integration)',
+        '/mcp/info': 'GET - MCP server capabilities',
+        '/mcp/tools/list': 'GET - List available tools',
+        '/mcp/tools/call': 'POST - Call a tool',
+      },
+    });
+  },
+
+  'GET /health': async (req, res) => {
+    json(res, { status: 'ok', timestamp: new Date().toISOString() });
+  },
+
+  'GET /yields': async (req, res) => {
+    try {
+      const yields = await monitor.fetchAllYields();
+      json(res, { count: yields.length, yields });
+    } catch (err) {
+      error(res, 500, `Failed to fetch yields: ${err}`);
+    }
+  },
+
+  'GET /yields/top': async (req, res) => {
+    try {
+      const yields = await monitor.fetchAllYields();
+      json(res, { yields: yields.slice(0, 10) });
+    } catch (err) {
+      error(res, 500, `Failed to fetch yields: ${err}`);
+    }
+  },
+
+  'GET /risk/analyze': async (req, res) => {
+    const url = new URL(req.url || '', `http://localhost`);
+    const riskLevel = url.searchParams.get('risk') || 'medium';
+    const topN = parseInt(url.searchParams.get('top') || '10');
+    const maxRisk = riskLevel === 'low' ? 35 : riskLevel === 'high' ? 75 : 55;
+
+    try {
+      const yields = await monitor.fetchAllSolanaOpportunities();
+      const recommendations = getTopRecommendations(yields, topN, maxRisk);
+
+      json(res, {
+        strategy: { riskTolerance: riskLevel, maxRiskScore: maxRisk },
+        count: recommendations.length,
+        recommendations: recommendations.map(r => ({
+          protocol: r.protocol,
+          asset: r.asset,
+          rawApy: parseFloat(r.apy.toFixed(2)),
+          riskAdjustedApy: parseFloat(r.adjustedApy.toFixed(2)),
+          riskScore: r.riskScore.overall,
+          sharpeRatio: parseFloat(r.sharpeRatio.toFixed(2)),
+        })),
+      });
+    } catch (err) {
+      error(res, 500, `Risk analysis failed: ${err}`);
+    }
+  },
+
+  'GET /mcp': async (req, res) => {
+    json(res, {
+      name: 'SolanaYield MCP Server',
+      description: 'Model Context Protocol - AI agent integration',
+      spec: 'https://spec.modelcontextprotocol.io/',
+      capabilities: mcpServer.getServerInfo().capabilities,
+      endpoints: {
+        '/mcp/info': 'Server info',
+        '/mcp/tools/list': 'List tools',
+        '/mcp/tools/call': 'Call tool [POST]',
+      },
+    });
+  },
+
+  'GET /mcp/info': async (req, res) => {
+    json(res, mcpServer.getServerInfo());
+  },
+
+  'GET /mcp/tools/list': async (req, res) => {
+    json(res, { tools: mcpServer.listTools() });
+  },
+
+  'POST /mcp/tools/call': async (req, res) => {
+    try {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const request = JSON.parse(body);
+          const result = await mcpServer.callTool(request.name, request.arguments || {});
+          json(res, { result });
+        } catch (err) {
+          error(res, 400, `Tool call failed: ${err}`);
+        }
+      });
+    } catch (err) {
+      error(res, 500, `Request failed: ${err}`);
+    }
+  },
+
+  'GET /mcp/resources/list': async (req, res) => {
+    json(res, { resources: mcpServer.listResources() });
+  },
+
+  'GET /mcp/prompts/list': async (req, res) => {
+    json(res, { prompts: mcpServer.listPrompts() });
+  },
 };
 
-export default function handler(request: Request) {
-  return new Response(JSON.stringify({
-    name: 'SolanaYield API',
-    version: '0.5.0',
-    description: 'Autonomous DeFi yield orchestrator with transparent reasoning — every decision explained',
-    tagline: 'No black boxes. No hidden logic. Complete transparency.',
-    highlight: '💬 NEW: Natural Language Queries — ask about yields in plain English',
-    endpoints: {
-      '⭐_ask_ai': {
-        '/api/ask': '💬 POST - Natural language yield queries ("What\'s the best stablecoin yield?")',
-      },
-      '⭐_transparency': {
-        '/api/explain': '🧠 Interactive reasoning explanation (visual UI)',
-        '/api/reasoning': 'GET - Complete reasoning chain JSON (?mode=simple|full)',
-        '/api/reasoning?whatif=high': 'GET - "What if I chose high risk?" counterfactual',
-        '/api/confidence': '🎯 Confidence scoring system (0-100 with factor breakdown)',
-        '/api/compare': '🎯 NEW: Protocol Comparison - Why This One? with pros/cons',
-        '/api/compare?risk=high': 'GET - Compare alternatives for high risk tolerance',
-        '/api/whatif/demo': '🔮 What-If Simulator - explore alternate realities',
-        '/api/whatif/scenarios': 'GET - List available what-if scenarios',
-      },
-      core: {
-        '/api/yields': 'GET - Yield opportunities from Kamino, Drift, Jito, Marinade',
-        '/api/quote': 'GET - Swap quote (?from=SOL&to=USDC&amount=1)',
-        '/api/risk': 'GET - Risk-adjusted yield analysis',
-      },
-      trust_layer: {
-        '/api/trust-score': 'GET - Protocol trust ratings (Moody\'s for DeFi)',
-        '/api/rugpull': 'GET - 🛡️ Real-time rug pull detection',
-        '/api/alerts': 'GET - 🚨 Live rug pull alert dashboard',
-      },
-      ui_dashboards: {
-        '/api/explain': '🧠 Decision Transparency Engine',
-        '/api/live': 'GET - Live decision stream UI',
-        '/api/alerts': 'GET - Rug pull detection dashboard',
-        '/api/autopilot': 'GET - Autonomous decision analysis',
-        '/replay.html': '🔮 What-If Simulator UI - interactive scenario explorer',
-        '/compare.html': '🎯 Protocol Comparison UI - Why This One?',
-      },
-      audit_trail: {
-        '/api/audit/decisions': 'GET - Query decision history',
-        '/api/audit/stats': 'GET - Decision statistics',
-        '/api/audit/timeline': 'GET - Decision timeline',
-        '/api/audit/export': 'GET - Export for compliance',
-      },
-      agent_endpoints: {
-        '/api/stream': 'GET - SSE stream for real-time thought feed',
-        '/api/portfolio': 'GET - Portfolio analysis with recommendations',
-        '/api/strategy': 'GET - Strategy recommendations by risk profile',
-        '/api/webhook': 'POST - Register for decision webhooks',
-      },
-    },
-    features: {
-      '⭐_transparent_reasoning': [
-        '🔍 Step-by-step decision chain with evidence',
-        '📊 Risk factor breakdown with weights',
-        '🔀 Alternatives considered & why rejected',
-        '🔮 What-If Simulator: "What if I chose aggressive?" - full counterfactual analysis',
-        '🧒 ELI5 explanations for non-technical users',
-        '📋 Full audit trail for compliance',
-      ],
-      '🔮_whatif_simulator': [
-        '🚀 Simulate aggressive risk strategies',
-        '🛡️ Compare conservative vs actual decisions',
-        '💰 Yield hunter mode (lower rebalance threshold)',
-        '🎯 Concentrated vs diversified portfolios',
-        '📊 Side-by-side original vs simulated comparison',
-        '💡 Cross-scenario learnings & recommendations',
-      ],
-      '🎯_protocol_comparison': [
-        '📊 Head-to-head protocol comparison with pros/cons',
-        '❓ "Why not Drift?" - explicit reasoning for each alternative',
-        '📈 Factor-by-factor comparison matrix',
-        '🏆 Clear winner indicators per metric',
-        '❔ Built-in FAQs answering common questions',
-        '🔒 Filtered options that exceed risk tolerance',
-      ],
-      '🎯_confidence_scoring': [
-        '📈 0-100 confidence score for every analysis',
-        '🔢 6 confidence factors: Data Freshness, Completeness, Source Agreement, Protocol Knowledge, Market Stability, Historical Accuracy',
-        '⚖️ Risk × Confidence matrix: "How risky?" vs "How sure are we?"',
-        '💡 Actionable recommendations to improve confidence',
-        '🏷️ Letter grades (A+ to F) for quick assessment',
-        '🔍 Full factor breakdown with explanations',
-      ],
-      yield_optimization: [
-        'Real-time yields from 9+ Solana DeFi protocols',
-        'Risk-adjusted APY scoring (Sharpe ratio for DeFi)',
-        'Portfolio rebalancing recommendations',
-      ],
-      rug_detection: [
-        '📉 TVL collapse / liquidity drain detection',
-        '🐋 Whale concentration & dump monitoring',
-        '🔐 Contract upgrade authority analysis',
-        '⚡ Real-time alert generation',
-      ],
-      trust_scoring: [
-        'Moody\'s-style letter grades (AAA to D)',
-        'Multi-factor analysis (audits, TVL, team, history)',
-        'Transparent factor breakdown',
-      ],
-    },
-    philosophy: {
-      core_belief: 'AI agents managing money MUST be transparent',
-      approach: 'Every decision comes with complete reasoning chain',
-      goal: 'Build trust through radical transparency, not obscurity',
-    },
-    github: 'https://github.com/claude-bot-ai-123123/solana-yield',
-    hackathon: 'Colosseum Agent Hackathon Feb 2-12, 2026',
-    builder: 'jeeves (AI agent)',
-  }, null, 2), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+function json(res: ServerResponse, data: unknown) {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.end(JSON.stringify(data, null, 2));
+}
+
+function error(res: ServerResponse, code: number, message: string) {
+  res.statusCode = code;
+  json(res, { error: message });
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const method = req.method || 'GET';
+  const path = req.url || '/';
+  const routeKey = `${method} ${path.split('?')[0]}`;
+
+  // CORS preflight
+  if (method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.status(200).end();
+    return;
+  }
+
+  const handler = routes[routeKey];
+  if (handler) {
+    try {
+      // Create mock HTTP objects for compatibility
+      const mockReq = req as any as IncomingMessage;
+      const mockRes = res as any as ServerResponse;
+      await handler(mockReq, mockRes);
+    } catch (err) {
+      res.status(500).json({ error: `Internal error: ${err}` });
+    }
+  } else {
+    // Default to root handler
+    try {
+      const mockReq = req as any as IncomingMessage;
+      const mockRes = res as any as ServerResponse;
+      await routes['GET /'](mockReq, mockRes);
+    } catch (err) {
+      res.status(404).json({ error: 'Not found' });
+    }
+  }
 }

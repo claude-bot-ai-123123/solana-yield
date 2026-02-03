@@ -20,11 +20,13 @@ import {
   DecisionQuery,
   DecisionRecord,
 } from './lib/history';
+import { MCPServer } from './lib/mcp';
 
 const connection = new Connection('https://api.mainnet-beta.solana.com');
 const monitor = new YieldMonitor(connection);
 const jupiter = new JupiterSwap(connection);
 const historyStore = getHistoryStore(process.env.DECISION_DATA_DIR || './data/decisions');
+const mcpServer = new MCPServer(connection);
 
 const PORT = process.env.PORT || 3000;
 
@@ -51,6 +53,13 @@ const routes: Record<string, RouteHandler> = {
         '/audit/timeline': 'GET - Decision timeline (?groupBy=hour|day)',
         '/audit/export': 'GET - Export decisions for compliance (?startDate=2024-01-01)',
         '/health': 'GET - Health check',
+        '/mcp': 'MCP (Model Context Protocol) - AI agent integration',
+        '/mcp/info': 'GET - MCP server capabilities',
+        '/mcp/tools/list': 'GET - List available tools',
+        '/mcp/tools/call': 'POST - Call a tool',
+        '/mcp/resources/list': 'GET - List available resources',
+        '/mcp/prompts/list': 'GET - List available prompts',
+        '/mcp/stream': 'GET - SSE stream for real-time updates',
       },
     });
   },
@@ -415,6 +424,79 @@ const routes: Record<string, RouteHandler> = {
     } catch (err) {
       error(res, 500, `Export failed: ${err}`);
     }
+  },
+
+  // ============================================================================
+  // MCP (Model Context Protocol) - AI Agent Integration
+  // ============================================================================
+
+  'GET /mcp': async (req, res) => {
+    json(res, {
+      name: 'SolanaYield MCP Server',
+      description: 'Model Context Protocol integration - allows other AI agents to query yield recommendations',
+      spec: 'https://spec.modelcontextprotocol.io/',
+      capabilities: mcpServer.getServerInfo().capabilities,
+      endpoints: {
+        '/mcp/info': 'Server capabilities and version',
+        '/mcp/tools/list': 'List available tools (functions agents can call)',
+        '/mcp/tools/call': 'Execute a tool [POST]',
+        '/mcp/resources/list': 'List available resources (data agents can access)',
+        '/mcp/prompts/list': 'List available prompt templates',
+        '/mcp/stream': 'Server-Sent Events for real-time yield updates',
+      },
+      example: {
+        tool_call: {
+          method: 'POST',
+          url: '/mcp/tools/call',
+          body: {
+            name: 'get_yield_recommendations',
+            arguments: {
+              riskTolerance: 'medium',
+              topN: 5,
+            },
+          },
+        },
+      },
+    });
+  },
+
+  'GET /mcp/info': async (req, res) => {
+    json(res, mcpServer.getServerInfo());
+  },
+
+  'GET /mcp/tools/list': async (req, res) => {
+    json(res, { tools: mcpServer.listTools() });
+  },
+
+  'POST /mcp/tools/call': async (req, res) => {
+    try {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const request = JSON.parse(body);
+          const result = await mcpServer.callTool(request.name, request.arguments || {});
+          json(res, { result });
+        } catch (err) {
+          error(res, 400, `Tool call failed: ${err}`);
+        }
+      });
+    } catch (err) {
+      error(res, 500, `Request failed: ${err}`);
+    }
+  },
+
+  'GET /mcp/resources/list': async (req, res) => {
+    json(res, { resources: mcpServer.listResources() });
+  },
+
+  'GET /mcp/prompts/list': async (req, res) => {
+    json(res, { prompts: mcpServer.listPrompts() });
+  },
+
+  'GET /mcp/stream': async (req, res) => {
+    // Delegate to MCP server's SSE handler
+    await mcpServer.handleMCPRequest(req, res);
   },
 };
 

@@ -68,5 +68,8 @@ export {
   type AnalysisFactor,
 } from './lib/consensus';
 
+// MCP (Model Context Protocol) Integration
+export { MCPServer } from './lib/mcp';
+
 // Types
 export * from './types';

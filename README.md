@@ -19,6 +19,9 @@ SolanaYield monitors yield opportunities across Solana's DeFi ecosystem and auto
 - Risk-adjusted yield scoring
 - API-first design for agent integration
 - Full transaction execution on Solana
+- **MCP (Model Context Protocol) integration** — AI agents can query our reasoning engine
+- Full decision audit trail with replay capabilities
+- Real-time SSE streaming for live updates
 
 ## Quick Start
 
@@ -52,6 +55,41 @@ await yield.optimize({
   rebalanceThreshold: 0.5 // 0.5% yield difference triggers rebalance
 });
 ```
+
+## MCP Integration (AI Agent Interoperability)
+
+SolanaYield implements the [Model Context Protocol (MCP)](https://spec.modelcontextprotocol.io/), allowing other AI agents to query our reasoning engine.
+
+### Example: Get risk-adjusted yield recommendations
+
+```bash
+curl -X POST https://solana-yield.vercel.app/mcp/tools/call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_yield_recommendations",
+    "arguments": {
+      "riskTolerance": "medium",
+      "topN": 5
+    }
+  }'
+```
+
+### Available Tools
+- `get_yield_recommendations` — Risk-adjusted yield recommendations
+- `analyze_protocol_risk` — Detailed protocol risk analysis
+- `query_decision_history` — Audit trail with full reasoning
+- `get_market_snapshot` — Real-time snapshot of all opportunities
+- `compare_strategies` — Naive vs smart strategy comparison
+
+### Real-Time Updates
+
+Subscribe to live yield updates via Server-Sent Events:
+
+```bash
+curl -N https://solana-yield.vercel.app/mcp/stream
+```
+
+**Why MCP?** It positions SolanaYield as **infrastructure** that other agents can build on, creating network effects. [Full MCP documentation →](docs/MCP_INTEGRATION.md)
 
 ## Architecture
 
