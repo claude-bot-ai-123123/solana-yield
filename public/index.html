@@ -52,23 +52,7 @@
       100% { background-position: 0 80px; }
     }
 
-    /* Horizon glow - animated */
-    .horizon-glow {
-      position: fixed;
-      bottom: 32%;
-      left: 0;
-      width: 100%;
-      height: 3px;
-      background: linear-gradient(90deg, transparent 5%, var(--neon-cyan), var(--neon-pink), var(--neon-cyan), transparent 95%);
-      box-shadow: 0 0 80px 30px rgba(0, 255, 249, 0.4);
-      z-index: -2;
-      animation: horizonPulse 4s ease-in-out infinite;
-    }
-
-    @keyframes horizonPulse {
-      0%, 100% { opacity: 0.8; box-shadow: 0 0 60px 20px rgba(0, 255, 249, 0.3); }
-      50% { opacity: 1; box-shadow: 0 0 100px 40px rgba(255, 0, 255, 0.4); }
-    }
+    /* Horizon glow - removed per feedback, was obstructing content */
 
     /* Particle canvas */
     #particles {
@@ -586,21 +570,27 @@
     }
 
     .protocol-icon {
-      width: 60px;
-      height: 60px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 12px 20px;
+      border: 1px solid rgba(0, 255, 249, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--neon-cyan);
       transition: all 0.3s;
-      background: rgba(5, 5, 8, 0.8);
+      background: rgba(0, 255, 249, 0.05);
     }
 
     .protocol-icon:hover {
-      border-color: var(--neon-cyan);
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 255, 249, 0.2);
+      border-color: var(--neon-pink);
+      color: var(--neon-pink);
+      background: rgba(255, 0, 255, 0.1);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 0, 255, 0.2);
     }
 
     /* Footer */
@@ -671,7 +661,6 @@
 </head>
 <body>
   <div class="grid-bg" id="grid"></div>
-  <div class="horizon-glow"></div>
   <canvas id="particles"></canvas>
   <div class="floating-orbs">
     <div class="orb orb1"></div>
@@ -773,14 +762,15 @@
         <div class="section-line"></div>
       </div>
       <div class="protocols">
-        <div class="protocol-icon" title="Kamino">💎</div>
-        <div class="protocol-icon" title="Drift">🏃</div>
-        <div class="protocol-icon" title="Jito">⚡</div>
-        <div class="protocol-icon" title="Marinade">🔱</div>
-        <div class="protocol-icon" title="Sanctum">🏛️</div>
-        <div class="protocol-icon" title="Raydium">🌊</div>
-        <div class="protocol-icon" title="Jupiter">🪐</div>
-        <div class="protocol-icon" title="Tensor">📐</div>
+        <div class="protocol-icon">Kamino</div>
+        <div class="protocol-icon">Drift</div>
+        <div class="protocol-icon">Jito</div>
+        <div class="protocol-icon">Marinade</div>
+        <div class="protocol-icon">Sanctum</div>
+        <div class="protocol-icon">Raydium</div>
+        <div class="protocol-icon">Jupiter</div>
+        <div class="protocol-icon">Orca</div>
+        <div class="protocol-icon">Lulo</div>
       </div>
     </section>
 

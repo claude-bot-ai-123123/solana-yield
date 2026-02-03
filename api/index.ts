@@ -5,7 +5,7 @@ export const config = {
 export default function handler(request: Request) {
   return new Response(JSON.stringify({
     name: 'SolanaYield API',
-    version: '0.3.0',
+    version: '0.4.0',
     description: 'Autonomous DeFi yield orchestrator with transparent reasoning — every decision explained',
     tagline: 'No black boxes. No hidden logic. Complete transparency.',
     highlight: '🧠 NEW: Transparent Reasoning Engine — see exactly WHY every decision is made',
@@ -14,6 +14,8 @@ export default function handler(request: Request) {
         '/api/explain': '🧠 Interactive reasoning explanation (visual UI)',
         '/api/reasoning': 'GET - Complete reasoning chain JSON (?mode=simple|full)',
         '/api/reasoning?whatif=high': 'GET - "What if I chose high risk?" counterfactual',
+        '/api/confidence': '🎯 NEW: Confidence scoring system (0-100 with factor breakdown)',
+        '/api/confidence?format=json': 'GET - Raw confidence scores JSON',
       },
       core: {
         '/api/yields': 'GET - Yield opportunities from Kamino, Drift, Jito, Marinade',
@@ -52,6 +54,14 @@ export default function handler(request: Request) {
         '🔮 "What-if" counterfactual scenarios',
         '🧒 ELI5 explanations for non-technical users',
         '📋 Full audit trail for compliance',
+      ],
+      '🎯_confidence_scoring': [
+        '📈 0-100 confidence score for every analysis',
+        '🔢 6 confidence factors: Data Freshness, Completeness, Source Agreement, Protocol Knowledge, Market Stability, Historical Accuracy',
+        '⚖️ Risk × Confidence matrix: "How risky?" vs "How sure are we?"',
+        '💡 Actionable recommendations to improve confidence',
+        '🏷️ Letter grades (A+ to F) for quick assessment',
+        '🔍 Full factor breakdown with explanations',
       ],
       yield_optimization: [
         'Real-time yields from 9+ Solana DeFi protocols',
