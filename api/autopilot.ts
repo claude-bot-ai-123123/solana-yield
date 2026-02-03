@@ -14,7 +14,7 @@ import { notifyWebhooks, createDecisionEvent } from './lib/webhook-notifier';
  */
 
 // Protocols we support
-const SUPPORTED_PROTOCOLS = ['kamino', 'drift', 'jito', 'marinade'];
+const SUPPORTED_PROTOCOLS = ['kamino', 'drift', 'jito', 'marinade', 'orca', 'lulo'];
 
 // Demo strategy config
 const DEMO_STRATEGY = {

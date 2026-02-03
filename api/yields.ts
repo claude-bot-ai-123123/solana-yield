@@ -3,7 +3,7 @@ export const config = {
 };
 
 // Protocols we actively support with full integration
-const SUPPORTED_PROTOCOLS = ['kamino', 'drift', 'jito', 'marinade', 'orca'];
+const SUPPORTED_PROTOCOLS = ['kamino', 'drift', 'jito', 'marinade', 'orca', 'lulo'];
 
 // Additional protocols to show (read-only yield data)
 const EXTENDED_PROTOCOLS = ['raydium', 'sanctum', 'marginfi', 'solend', 'pump'];

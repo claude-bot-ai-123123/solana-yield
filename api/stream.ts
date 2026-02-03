@@ -7,7 +7,7 @@ export const config = {
  * Streams real-time analysis as the agent processes yield data
  */
 
-const SUPPORTED_PROTOCOLS = ['kamino', 'drift', 'jito', 'marinade', 'raydium', 'orca', 'meteora'];
+const SUPPORTED_PROTOCOLS = ['kamino', 'drift', 'jito', 'marinade', 'raydium', 'orca', 'meteora', 'lulo'];
 
 interface ThoughtEvent {
   id: string;
