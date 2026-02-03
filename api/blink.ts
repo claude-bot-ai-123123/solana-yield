@@ -112,7 +112,20 @@ export default async function handler(request: Request) {
     const amount = parseFloat(url.searchParams.get('amount') || '100');
 
     try {
-      const strategy = await fetchStrategy(risk, amount);
+      let strategy;
+      try {
+        strategy = await fetchStrategy(risk, amount);
+      } catch (fetchError) {
+        const response: BlinkResponse = {
+          icon: ICON_URL,
+          title: 'SolanaYield Strategy',
+          description: 'Error fetching strategy data',
+          label: 'Error',
+          disabled: true,
+          error: { message: `Fetch error: ${String(fetchError)}` }
+        };
+        return new Response(JSON.stringify(response), { status: 500, headers });
+      }
 
       if (!strategy) {
         const response: BlinkResponse = {
