@@ -659,11 +659,11 @@
       const altGrid = document.getElementById('alternatives-grid');
       altGrid.innerHTML = (alternatives || []).map(alt => `
         <div class="alt-card">
-          <div class="alt-protocol">${alt.protocol || 'Unknown'}</div>
-          <div class="alt-reason">${alt.reason || 'Not evaluated'}</div>
+          <div class="alt-protocol">${alt.choice || alt.protocol || 'Unknown'}</div>
+          <div class="alt-reason">${alt.whyNotChosen || alt.reason || 'Not evaluated'}</div>
           <div class="alt-score">
-            <span>Score</span>
-            <span class="score">${alt.score ? (alt.score * 100).toFixed(0) + '%' : '—'}</span>
+            <span>Expected APY</span>
+            <span class="score">${alt.outcome?.expectedApy ? alt.outcome.expectedApy.toFixed(1) + '%' : (alt.score ? (alt.score * 100).toFixed(0) + '%' : '—')}</span>
           </div>
         </div>
       `).join('');
