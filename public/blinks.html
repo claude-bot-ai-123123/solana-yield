@@ -759,9 +759,12 @@ Drift: SOL @ 6.1%</div>
               <input type="number" id="preview-amount" value="1" min="0.01" step="0.1">
             </div>
             <div class="preview-actions">
-              <button class="preview-action-btn" id="execute-action">Deploy Capital</button>
+              <button class="preview-action-btn" id="execute-action">🚀 Execute via dial.to</button>
               <button class="preview-action-btn secondary" onclick="window.location='/live'">View Live Analysis</button>
             </div>
+            <p style="margin-top: 12px; color: #666; font-size: 0.75rem; text-align: center;">
+              Opens dial.to for secure wallet execution
+            </p>
           </div>
         </div>
       </div>
@@ -919,25 +922,38 @@ Drift: SOL @ 6.1%</div>
       document.getElementById('modal-close').addEventListener('click', closeModal);
     });
 
+    // Protocol blink endpoints (direct to source - more reliable)
+    const PROTOCOL_BLINKS = {
+      'jito': (amount) => `https://dial.to/?action=solana-action:https://jito.network/api/v1/actions/stake?amount=${amount}`,
+      'marinade': (amount) => `https://dial.to/?action=solana-action:https://marinade.finance/api/blink?amount=${amount}`,
+      'kamino': (amount) => `https://dial.to/?action=solana-action:https://app.kamino.finance/api/blink/lend/jlp/deposit?amount=${amount}`,
+      'drift': (amount) => `https://dial.to/?action=solana-action:https://app.drift.trade/api/blinks/deposit?amount=${amount}`,
+      'jupiter': (amount) => `https://dial.to/?action=solana-action:https://worker.jup.ag/blinks/swap/SOL-USDC?amount=${amount}`,
+    };
+
     function updateBlinkUrl() {
       const actionType = actionTypeEl.value;
       const amount = defaultAmountEl.value;
       
-      let url;
+      let blinkUrl;
       if (actionType === 'strategy') {
-        url = `${BASE_URL}/api/actions?type=strategy&risk=${selectedRisk}&amount=${amount}`;
+        // AI strategy links to our analysis, shows recommended protocol
+        const url = `${BASE_URL}/api/actions?type=strategy&risk=${selectedRisk}&amount=${amount}`;
+        blinkUrl = `https://dial.to/?action=solana-action:${encodeURIComponent(url)}`;
       } else if (actionType.startsWith('stake-')) {
         const protocol = actionType.split('-')[1];
-        url = `${BASE_URL}/api/actions?type=stake&protocol=${protocol}&amount=${amount}`;
+        // Direct to protocol blinks for better reliability
+        blinkUrl = PROTOCOL_BLINKS[protocol]?.(amount) || 
+          `https://dial.to/?action=solana-action:${BASE_URL}/api/actions?type=stake&protocol=${protocol}&amount=${amount}`;
       } else if (actionType.startsWith('deposit-')) {
         const protocol = actionType.split('-')[1];
-        url = `${BASE_URL}/api/actions?type=deposit&protocol=${protocol}&amount=${amount}`;
+        blinkUrl = PROTOCOL_BLINKS[protocol]?.(amount) ||
+          `https://dial.to/?action=solana-action:${BASE_URL}/api/actions?type=deposit&protocol=${protocol}&amount=${amount}`;
       } else if (actionType === 'swap') {
-        url = `${BASE_URL}/api/actions?type=swap&protocol=jupiter&amount=${amount}`;
+        blinkUrl = PROTOCOL_BLINKS['jupiter']?.(amount) ||
+          `https://dial.to/?action=solana-action:${BASE_URL}/api/actions?type=swap&protocol=jupiter&amount=${amount}`;
       }
       
-      // Convert to blink URL format (solana-action:)
-      const blinkUrl = `https://dial.to/?action=solana-action:${encodeURIComponent(url)}`;
       blinkUrlEl.value = blinkUrl;
     }
 
@@ -1016,84 +1032,59 @@ Drift: SOL @ 6.1%</div>
     }
 
     async function executeAction() {
-      if (!walletConnected) {
-        showToast('Please connect your wallet first');
-        document.getElementById('connect-wallet').click();
-        return;
-      }
-
       const amount = parseFloat(previewAmountEl.value);
       if (!amount || amount <= 0) {
         showToast('Please enter a valid amount');
         return;
       }
 
-      showModal('Building Transaction', 'Fetching optimal route...');
+      const actionType = actionTypeEl.value;
+      
+      // For protocol-specific actions, open dial.to directly (most reliable)
+      if (actionType !== 'strategy') {
+        const blinkUrl = blinkUrlEl.value;
+        showToast('Opening in dial.to...');
+        window.open(blinkUrl, '_blank');
+        return;
+      }
+
+      // For AI strategy, show recommendation and open best option
+      showModal('Analyzing Yields...', 'Finding optimal allocation...');
 
       try {
-        const actionType = actionTypeEl.value;
-        let apiUrl;
-        
-        if (actionType === 'strategy') {
-          apiUrl = `${BASE_URL}/api/actions?type=strategy&risk=${selectedRisk}&amount=${amount}`;
-        } else if (actionType.startsWith('stake-')) {
-          const protocol = actionType.split('-')[1];
-          apiUrl = `${BASE_URL}/api/actions?type=stake&protocol=${protocol}&amount=${amount}`;
-        } else if (actionType.startsWith('deposit-')) {
-          const protocol = actionType.split('-')[1];
-          apiUrl = `${BASE_URL}/api/actions?type=deposit&protocol=${protocol}&amount=${amount}`;
-        } else {
-          apiUrl = `${BASE_URL}/api/actions?type=swap&protocol=jupiter&amount=${amount}`;
-        }
-
-        // POST to get transaction
-        const res = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            account: walletAddress,
-            amount,
-          }),
-        });
-
+        // Fetch our strategy recommendation
+        const res = await fetch(`${BASE_URL}/api/actions?type=strategy&risk=${selectedRisk}`);
         const data = await res.json();
-
-        if (data.error) {
-          throw new Error(data.error.message);
+        
+        // Extract recommended protocol from description
+        const description = data.description || '';
+        let recommendedBlink = blinkUrlEl.value;
+        
+        // Detect best protocol from our analysis
+        if (description.toLowerCase().includes('jito')) {
+          recommendedBlink = PROTOCOL_BLINKS['jito'](amount);
+        } else if (description.toLowerCase().includes('marinade')) {
+          recommendedBlink = PROTOCOL_BLINKS['marinade'](amount);
+        } else if (description.toLowerCase().includes('kamino')) {
+          recommendedBlink = PROTOCOL_BLINKS['kamino'](amount);
+        } else if (description.toLowerCase().includes('drift')) {
+          recommendedBlink = PROTOCOL_BLINKS['drift'](amount);
         }
 
-        updateModal('Sign Transaction', 'Please approve in your wallet...');
-
-        // Decode and sign transaction
-        const provider = window.solana || window.phantom?.solana;
-        const tx = data.transaction;
-        
-        // If it's a versioned transaction (base64), use signAndSendTransaction
-        const signedTx = await provider.signAndSendTransaction(
-          // Decode base64 transaction
-          {
-            serialize: () => Uint8Array.from(atob(tx), c => c.charCodeAt(0)),
-          }
-        ).catch(async () => {
-          // Fallback: try legacy signing
-          const connection = new (await import('https://esm.sh/@solana/web3.js')).Connection(
-            'https://api.mainnet-beta.solana.com'
-          );
-          const txBuffer = Buffer.from(tx, 'base64');
-          const transaction = (await import('https://esm.sh/@solana/web3.js')).Transaction.from(txBuffer);
-          const signed = await provider.signTransaction(transaction);
-          return await connection.sendRawTransaction(signed.serialize());
-        });
-
-        updateModal('Success! 🎉', `Transaction sent!\n\n${data.message || ''}`);
+        updateModal('AI Recommendation', `${data.description}\n\nOpening dial.to to execute...`);
         document.getElementById('modal-spinner').style.display = 'none';
-        document.getElementById('modal-close').style.display = 'block';
+        
+        // Brief delay to show recommendation
+        setTimeout(() => {
+          closeModal();
+          window.open(recommendedBlink, '_blank');
+        }, 2000);
 
       } catch (err) {
-        console.error('Transaction failed:', err);
-        updateModal('Transaction Failed', err.message || 'Something went wrong');
-        document.getElementById('modal-spinner').style.display = 'none';
-        document.getElementById('modal-close').style.display = 'block';
+        console.error('Strategy fetch failed:', err);
+        // Fallback: just open the blink URL
+        closeModal();
+        window.open(blinkUrlEl.value, '_blank');
       }
     }
 
