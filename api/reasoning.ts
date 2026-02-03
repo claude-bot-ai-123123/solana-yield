@@ -586,7 +586,7 @@ function buildDecisionFactors(
 
   // Protocol trust factor
   const protocolContext = best ? PROTOCOL_CONTEXT[best.protocol] : null;
-  const trustImpact = protocolContext?.audits?.length >= 2 ? 'positive' : protocolContext ? 'neutral' : 'negative';
+  const trustImpact = (protocolContext?.audits?.length ?? 0) >= 2 ? 'positive' : protocolContext ? 'neutral' : 'negative';
   factors.push({
     factor: 'Protocol Trust',
     impact: trustImpact,
