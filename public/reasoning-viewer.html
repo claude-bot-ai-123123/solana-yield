@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SolanaYield // REASONING ENGINE</title>
+  <title>SolanaYield // AI BRAIN</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -11,18 +11,14 @@
       --neon-pink: #ff00ff;
       --neon-green: #39ff14;
       --neon-yellow: #ffff00;
-      --neon-orange: #ff6600;
+      --neon-purple: #9945FF;
       --dark-bg: #0a0a0f;
       --darker-bg: #050508;
-      --card-bg: rgba(20, 20, 30, 0.8);
-      --grid-color: rgba(0, 255, 249, 0.1);
+      --card-bg: rgba(10, 10, 15, 0.9);
+      --grid-color: rgba(0, 255, 249, 0.08);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       background: var(--dark-bg);
@@ -32,27 +28,30 @@
       overflow-x: hidden;
     }
 
-    /* Cyberpunk grid background */
+    /* Cyberpunk grid */
     .grid-bg {
       position: fixed;
-      top: 0;
+      bottom: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 200%;
+      height: 80%;
       background-image: 
         linear-gradient(var(--grid-color) 1px, transparent 1px),
         linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-      background-size: 50px 50px;
-      z-index: -1;
-      animation: gridMove 20s linear infinite;
+      background-size: 80px 80px;
+      transform: perspective(400px) rotateX(65deg) translateZ(0);
+      transform-origin: bottom center;
+      z-index: -3;
+      animation: gridScroll 20s linear infinite;
+      margin-left: -50%;
     }
 
-    @keyframes gridMove {
-      0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
-      100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+    @keyframes gridScroll {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 80px; }
     }
 
-    /* Scanlines overlay */
+    /* Scanlines */
     .scanlines {
       position: fixed;
       top: 0;
@@ -86,74 +85,30 @@
       position: absolute;
       border-radius: 50%;
       filter: blur(80px);
-      opacity: 0.15;
+      opacity: 0.2;
       animation: orbFloat 25s ease-in-out infinite;
     }
 
     .orb1 {
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
-      top: -10%;
-      left: -10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--neon-purple) 0%, transparent 70%);
+      top: -20%;
+      right: -10%;
     }
 
     .orb2 {
       width: 400px;
       height: 400px;
-      background: radial-gradient(circle, var(--neon-pink) 0%, transparent 70%);
-      bottom: -10%;
-      right: -10%;
+      background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
+      bottom: 10%;
+      left: -5%;
       animation-delay: -10s;
-    }
-
-    .orb3 {
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, var(--neon-green) 0%, transparent 70%);
-      top: 50%;
-      left: 50%;
-      animation-delay: -5s;
     }
 
     @keyframes orbFloat {
       0%, 100% { transform: translate(0, 0) scale(1); }
-      25% { transform: translate(50px, 30px) scale(1.1); }
-      50% { transform: translate(-30px, 60px) scale(0.9); }
-      75% { transform: translate(-60px, -40px) scale(1.05); }
-    }
-
-    /* Glitch effect */
-    .glitch {
-      position: relative;
-    }
-    .glitch::before, .glitch::after {
-      content: attr(data-text);
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: transparent;
-    }
-    .glitch::before {
-      left: 2px;
-      text-shadow: -2px 0 var(--neon-pink);
-      clip: rect(24px, 550px, 90px, 0);
-      animation: glitch-anim 3s infinite linear alternate-reverse;
-    }
-    .glitch::after {
-      left: -2px;
-      text-shadow: -2px 0 var(--neon-cyan);
-      clip: rect(85px, 550px, 140px, 0);
-      animation: glitch-anim 2s infinite linear alternate-reverse;
-    }
-    @keyframes glitch-anim {
-      0% { clip: rect(30px, 9999px, 10px, 0); }
-      25% { clip: rect(70px, 9999px, 60px, 0); }
-      50% { clip: rect(20px, 9999px, 80px, 0); }
-      75% { clip: rect(50px, 9999px, 30px, 0); }
-      100% { clip: rect(10px, 9999px, 90px, 0); }
+      50% { transform: translate(-30px, 30px) scale(1.1); }
     }
 
     /* Header */
@@ -203,394 +158,382 @@
     .header-controls {
       display: flex;
       gap: 10px;
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.5rem;
-      font-weight: 900;
-      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 30px rgba(0, 255, 249, 0.5);
-    }
-
-    .controls {
-      display: flex;
-      gap: 15px;
-      align-items: center;
     }
 
     .toggle-btn {
-      background: rgba(0, 255, 249, 0.1);
+      background: transparent;
       border: 1px solid var(--neon-cyan);
       color: var(--neon-cyan);
-      padding: 8px 16px;
-      border-radius: 4px;
+      padding: 8px 15px;
+      font-family: inherit;
+      font-size: 0.75rem;
       cursor: pointer;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
       transition: all 0.3s;
     }
 
     .toggle-btn:hover {
-      background: rgba(0, 255, 249, 0.2);
-      box-shadow: 0 0 15px rgba(0, 255, 249, 0.5);
-    }
-
-    .toggle-btn.active {
       background: var(--neon-cyan);
       color: var(--dark-bg);
-      box-shadow: 0 0 20px rgba(0, 255, 249, 0.8);
+      box-shadow: 0 0 20px rgba(0, 255, 249, 0.5);
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 4rem;
+      font-weight: 900;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink), var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 60px rgba(0, 255, 249, 0.5);
+      animation: titleGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes titleGlow {
+      0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 255, 249, 0.5)); }
+      50% { filter: drop-shadow(0 0 40px rgba(255, 0, 255, 0.5)); }
+    }
+
+    .hero .subtitle {
+      font-size: 1rem;
+      color: #888;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 255, 249, 0.3);
+      padding: 25px 40px;
+      min-width: 180px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+    }
+
+    .stat-value {
+      display: block;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 20px rgba(0, 255, 249, 0.5);
+    }
+
+    .stat-value.decision-rebalance { color: var(--neon-green); text-shadow: 0 0 20px rgba(57, 255, 20, 0.5); }
+    .stat-value.decision-hold { color: var(--neon-yellow); text-shadow: 0 0 20px rgba(255, 255, 0, 0.5); }
+    .stat-value.decision-withdraw { color: var(--neon-pink); text-shadow: 0 0 20px rgba(255, 0, 255, 0.5); }
+
+    .stat-label {
+      display: block;
+      font-size: 0.7rem;
+      color: #666;
+      letter-spacing: 2px;
+      margin-top: 8px;
     }
 
     /* Container */
     .container {
-      max-width: 1400px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 40px;
+      padding: 0 40px 60px;
     }
 
-    /* Summary Card */
-    .summary-card {
-      background: var(--card-bg);
-      border: 1px solid var(--neon-cyan);
-      border-radius: 8px;
-      padding: 30px;
-      margin-bottom: 30px;
-      box-shadow: 0 0 30px rgba(0, 255, 249, 0.2);
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 100px 20px;
     }
 
-    .decision-badge {
-      display: inline-block;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 1.2rem;
-      margin-bottom: 15px;
-      animation: pulse 2s infinite;
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(0, 255, 249, 0.2);
+      border-top-color: var(--neon-cyan);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      animation: spin 1s linear infinite;
     }
 
-    .decision-badge.rebalance {
-      background: var(--neon-green);
-      color: var(--dark-bg);
-      box-shadow: 0 0 20px rgba(57, 255, 20, 0.6);
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    .decision-badge.hold {
-      background: var(--neon-yellow);
-      color: var(--dark-bg);
-      box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+    .loading-text {
+      color: var(--neon-cyan);
+      font-size: 0.9rem;
+      letter-spacing: 3px;
+      animation: blink 1s infinite;
     }
 
-    @keyframes pulse {
+    @keyframes blink {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
+      50% { opacity: 0.5; }
     }
 
-    .confidence-meter {
-      margin-top: 20px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .meter-bar {
-      flex: 1;
-      height: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      overflow: hidden;
+    /* ELI5 Card */
+    .eli5-card {
+      background: linear-gradient(135deg, rgba(153, 69, 255, 0.2), rgba(0, 255, 249, 0.1));
+      border: 1px solid var(--neon-purple);
+      padding: 25px 30px;
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+      line-height: 1.8;
+      display: none;
       position: relative;
     }
 
-    .meter-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan));
-      transition: width 1s ease;
-      box-shadow: 0 0 15px rgba(0, 255, 249, 0.6);
+    .eli5-card.visible { display: block; }
+
+    .eli5-card::before {
+      content: '👶 EXPLAIN LIKE I\'M 5';
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: var(--dark-bg);
+      padding: 0 10px;
+      font-size: 0.7rem;
+      color: var(--neon-purple);
+      letter-spacing: 2px;
     }
 
-    .meter-label {
-      font-size: 1rem;
-      color: var(--neon-cyan);
-      font-weight: 700;
+    /* Reasoning Chain */
+    .reasoning-chain {
+      position: relative;
     }
 
-    /* Phase Steps */
-    .phase-section {
-      margin: 30px 0;
+    .reasoning-chain::before {
+      content: '';
+      position: absolute;
+      left: 30px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--neon-cyan), var(--neon-pink), var(--neon-purple));
+    }
+
+    .phase-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 20px;
+      margin-left: 60px;
+      position: relative;
+      transition: all 0.3s;
+      overflow: hidden;
+    }
+
+    .phase-card::before {
+      content: '';
+      position: absolute;
+      left: -32px;
+      top: 25px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--dark-bg);
+      border: 3px solid var(--neon-cyan);
+      box-shadow: 0 0 15px var(--neon-cyan);
+    }
+
+    .phase-card.observe::before { border-color: var(--neon-cyan); box-shadow: 0 0 15px var(--neon-cyan); }
+    .phase-card.analyze::before { border-color: var(--neon-pink); box-shadow: 0 0 15px var(--neon-pink); }
+    .phase-card.evaluate::before { border-color: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); }
+    .phase-card.decide::before { border-color: var(--neon-green); box-shadow: 0 0 15px var(--neon-green); }
+    .phase-card.verify::before { border-color: var(--neon-purple); box-shadow: 0 0 15px var(--neon-purple); }
+
+    .phase-card:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 30px rgba(0, 255, 249, 0.2);
     }
 
     .phase-header {
       display: flex;
       align-items: center;
       gap: 15px;
-      padding: 15px 20px;
-      background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
+      padding: 20px 25px;
       cursor: pointer;
-      transition: all 0.3s;
-      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
-
-    .phase-header:hover {
-      border-color: var(--neon-cyan);
-      box-shadow: 0 0 15px rgba(0, 255, 249, 0.3);
-    }
-
-    .phase-header.observe { border-left: 4px solid var(--neon-cyan); }
-    .phase-header.analyze { border-left: 4px solid var(--neon-pink); }
-    .phase-header.evaluate { border-left: 4px solid var(--neon-yellow); }
-    .phase-header.decide { border-left: 4px solid var(--neon-green); }
-    .phase-header.verify { border-left: 4px solid var(--neon-orange); }
 
     .phase-emoji {
-      font-size: 2rem;
+      font-size: 1.5rem;
     }
 
     .phase-title {
       flex: 1;
-      font-size: 1.2rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
       font-weight: 700;
     }
 
     .phase-confidence {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       color: var(--neon-green);
+      padding: 4px 12px;
+      border: 1px solid var(--neon-green);
+      border-radius: 20px;
     }
 
     .phase-expand {
+      color: #666;
       transition: transform 0.3s;
     }
 
-    .phase-header.collapsed .phase-expand {
-      transform: rotate(-90deg);
+    .phase-card.expanded .phase-expand {
+      transform: rotate(180deg);
     }
 
-    .step-content {
-      margin-left: 20px;
-      padding: 20px;
-      border-left: 2px solid rgba(255, 255, 255, 0.1);
-      display: none;
-    }
-
-    .step-content.expanded {
-      display: block;
-      animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .explanation {
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 20px;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    /* Evidence Cards */
-    .evidence-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .evidence-card {
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      padding: 15px;
+    .phase-content {
+      padding: 0 25px;
+      max-height: 0;
+      overflow: hidden;
       transition: all 0.3s;
     }
 
-    .evidence-card:hover {
-      border-color: var(--neon-cyan);
-      box-shadow: 0 0 10px rgba(0, 255, 249, 0.3);
+    .phase-card.expanded .phase-content {
+      padding: 20px 25px;
+      max-height: 1000px;
     }
 
-    .evidence-type {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      color: var(--neon-pink);
-      margin-bottom: 5px;
-      letter-spacing: 1px;
+    .explanation {
+      color: #ccc;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .evidence-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(0, 255, 249, 0.2);
+      padding: 15px;
     }
 
     .evidence-label {
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.7rem;
+      color: #666;
+      letter-spacing: 1px;
       margin-bottom: 5px;
     }
 
     .evidence-value {
-      font-size: 1rem;
-      font-weight: 700;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
       color: var(--neon-cyan);
     }
 
     .evidence-source {
-      font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.65rem;
+      color: #444;
       margin-top: 5px;
     }
 
-    /* Alternatives Section */
+    /* Alternatives */
     .alternatives-section {
-      margin-top: 40px;
+      margin-top: 60px;
     }
 
     .section-title {
+      font-family: 'Orbitron', sans-serif;
       font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
+      color: var(--neon-pink);
+    }
+
+    .alt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .alt-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 0, 255, 0.2);
+      padding: 25px;
+      position: relative;
+    }
+
+    .alt-card::before {
+      content: 'NOT CHOSEN';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.6rem;
+      color: #666;
+      letter-spacing: 1px;
+    }
+
+    .alt-protocol {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .alt-reason {
+      color: #888;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .alt-score {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .alt-score span {
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .alt-score .score {
       color: var(--neon-pink);
       font-family: 'Orbitron', sans-serif;
     }
 
-    .alternative-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 15px;
-      transition: all 0.3s;
-    }
-
-    .alternative-card:hover {
-      border-color: var(--neon-pink);
-      box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
-    }
-
-    .alt-choice {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--neon-cyan);
-      margin-bottom: 10px;
-    }
-
-    .alt-reasoning {
-      color: rgba(255, 255, 255, 0.8);
-      margin-bottom: 10px;
-    }
-
-    .alt-outcome {
-      display: flex;
-      gap: 20px;
-      margin: 15px 0;
-    }
-
-    .outcome-metric {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .outcome-label {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .outcome-value {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--neon-green);
-    }
-
-    .alt-why-not {
-      font-size: 0.85rem;
-      color: var(--neon-orange);
-      padding: 10px;
-      background: rgba(255, 102, 0, 0.1);
-      border-radius: 4px;
-      border-left: 3px solid var(--neon-orange);
-    }
-
-    /* ELI5 Mode */
-    .eli5-card {
-      background: linear-gradient(135deg, rgba(57, 255, 20, 0.1), rgba(0, 255, 249, 0.1));
-      border: 2px solid var(--neon-green);
-      border-radius: 8px;
-      padding: 25px;
-      margin: 20px 0;
-      display: none;
-      font-size: 1.05rem;
-      line-height: 1.8;
-    }
-
-    .eli5-card.active {
-      display: block;
-      animation: fadeIn 0.5s;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    /* Loading State */
-    .loading {
-      text-align: center;
-      padding: 100px 0;
-    }
-
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(0, 255, 249, 0.2);
-      border-top: 4px solid var(--neon-cyan);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Nested Steps */
-    .nested-step {
-      margin-left: 20px;
-      padding-left: 20px;
-      border-left: 2px solid rgba(255, 0, 255, 0.3);
-      margin-top: 15px;
-    }
-
-    .nested-step .phase-header {
-      padding: 10px 15px;
-      font-size: 0.9rem;
-    }
-
-    /* Responsive */
+    /* Mobile */
     @media (max-width: 768px) {
-      .container {
-        padding: 20px;
-      }
-
-      .header {
-        flex-direction: column;
-        gap: 15px;
-      }
-
-      .evidence-grid {
-        grid-template-columns: 1fr;
-      }
+      header { padding: 15px 20px; flex-wrap: wrap; gap: 10px; }
+      .nav-links { display: none; }
+      .hero h1 { font-size: 2rem; }
+      .hero .subtitle { font-size: 0.8rem; letter-spacing: 2px; }
+      .hero-stats { gap: 15px; }
+      .stat-box { padding: 15px 25px; min-width: 140px; }
+      .stat-value { font-size: 1.5rem; }
+      .container { padding: 0 20px 40px; }
+      .reasoning-chain::before { left: 15px; }
+      .phase-card { margin-left: 40px; }
+      .phase-card::before { left: -27px; width: 12px; height: 12px; }
     }
   </style>
 </head>
@@ -599,14 +542,13 @@
   <div class="floating-orbs">
     <div class="orb orb1"></div>
     <div class="orb orb2"></div>
-    <div class="orb orb3"></div>
   </div>
   <div class="scanlines"></div>
 
   <header>
-    <a href="/" class="logo glitch" data-text="SOLANAYIELD">SOLANAYIELD</a>
+    <a href="/" class="logo">SOLANA_YIELD</a>
     <nav class="nav-links">
-      <a href="/live.html">⚡ Live</a>
+      <a href="/live.html">⚡ Live Feed</a>
       <a href="/risk-monitor.html">📊 Yields</a>
       <a href="/reasoning-viewer.html" class="active">🧠 AI Brain</a>
       <a href="/blinks.html">🔗 Blinks</a>
@@ -614,56 +556,57 @@
     </nav>
     <div class="header-controls">
       <button class="toggle-btn" id="eli5-toggle">👶 ELI5</button>
-      <button class="toggle-btn" id="refresh-btn">🔄</button>
+      <button class="toggle-btn" id="refresh-btn">🔄 REFRESH</button>
     </div>
   </header>
+
+  <section class="hero">
+    <h1>AI BRAIN</h1>
+    <p class="subtitle">WATCH THE MACHINE THINK IN REAL-TIME</p>
+    <div class="hero-stats">
+      <div class="stat-box">
+        <span class="stat-value" id="hero-decision">—</span>
+        <span class="stat-label">DECISION</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-value" id="hero-confidence">—%</span>
+        <span class="stat-label">CONFIDENCE</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-value" id="hero-apy">—%</span>
+        <span class="stat-label">TARGET APY</span>
+      </div>
+    </div>
+  </section>
 
   <div class="container">
     <div id="loading" class="loading">
       <div class="spinner"></div>
-      <p>Analyzing DeFi landscape...</p>
+      <p class="loading-text">⚡ SCANNING DEFI LANDSCAPE...</p>
     </div>
 
     <div id="content" style="display: none;">
-      <!-- Summary Card -->
-      <div class="summary-card">
-        <div id="decision-badge" class="decision-badge"></div>
-        <h2 id="one-line-summary"></h2>
-        <div class="confidence-meter">
-          <span class="meter-label">Confidence:</span>
-          <div class="meter-bar">
-            <div class="meter-fill" id="confidence-fill"></div>
-          </div>
-          <span class="meter-label" id="confidence-value"></span>
-        </div>
-      </div>
-
-      <!-- ELI5 Card -->
       <div class="eli5-card" id="eli5-card"></div>
 
-      <!-- Reasoning Steps -->
-      <div id="reasoning-steps"></div>
+      <div class="reasoning-chain" id="reasoning-chain"></div>
 
-      <!-- Alternatives -->
       <div class="alternatives-section">
-        <h2 class="section-title">🔀 Alternative Paths</h2>
-        <div id="alternatives-list"></div>
+        <h2 class="section-title">🔀 PATHS NOT TAKEN</h2>
+        <div class="alt-grid" id="alternatives-grid"></div>
       </div>
     </div>
   </div>
 
   <script>
     let reasoningData = null;
+    let eli5Visible = false;
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', () => {
       loadReasoning();
-      
       document.getElementById('eli5-toggle').addEventListener('click', toggleELI5);
       document.getElementById('refresh-btn').addEventListener('click', loadReasoning);
     });
 
-    // Load reasoning data
     async function loadReasoning() {
       const loading = document.getElementById('loading');
       const content = document.getElementById('content');
@@ -680,149 +623,88 @@
         content.style.display = 'block';
       } catch (err) {
         console.error('Failed to load reasoning:', err);
-        loading.innerHTML = `<p style="color: #ff6600;">❌ Failed to load reasoning data</p>`;
+        loading.innerHTML = `<p style="color: var(--neon-pink);">❌ SIGNAL LOST — RETRY</p>`;
       }
     }
 
-    // Render reasoning
     function renderReasoning() {
       const { summary, steps, alternatives } = reasoningData;
 
-      // Summary
-      const badge = document.getElementById('decision-badge');
-      badge.textContent = `${summary.decision}`;
-      badge.className = `decision-badge ${summary.decision.toLowerCase()}`;
-
-      document.getElementById('one-line-summary').textContent = summary.oneLineSummary;
-      document.getElementById('confidence-value').textContent = `${summary.confidence}%`;
-      document.getElementById('confidence-fill').style.width = `${summary.confidence}%`;
+      // Hero stats
+      const decisionEl = document.getElementById('hero-decision');
+      decisionEl.textContent = summary.decision;
+      decisionEl.className = `stat-value decision-${summary.decision.toLowerCase()}`;
+      
+      document.getElementById('hero-confidence').textContent = `${summary.confidence}%`;
+      
+      // Extract APY from summary
+      const apyMatch = summary.oneLineSummary.match(/(\d+\.?\d*)%\s*APY/i);
+      document.getElementById('hero-apy').textContent = apyMatch ? `${apyMatch[1]}%` : '—';
 
       // ELI5
-      document.getElementById('eli5-card').textContent = `👶 ${summary.eli5}`;
+      document.getElementById('eli5-card').innerHTML = summary.eli5;
 
-      // Steps
-      const stepsContainer = document.getElementById('reasoning-steps');
-      stepsContainer.innerHTML = '';
+      // Reasoning chain
+      const chain = document.getElementById('reasoning-chain');
+      chain.innerHTML = steps.map(step => renderPhaseCard(step)).join('');
 
-      // Group by phase
-      const phases = ['observe', 'analyze', 'evaluate', 'decide', 'verify'];
-      phases.forEach(phase => {
-        const phaseSteps = steps.filter(s => s.phase === phase);
-        if (phaseSteps.length === 0) return;
-
-        const phaseSection = document.createElement('div');
-        phaseSection.className = 'phase-section';
-        phaseSection.innerHTML = renderPhaseSteps(phaseSteps);
-        stepsContainer.appendChild(phaseSection);
+      // Add click handlers
+      document.querySelectorAll('.phase-card').forEach(card => {
+        card.querySelector('.phase-header').addEventListener('click', () => {
+          card.classList.toggle('expanded');
+        });
       });
 
       // Alternatives
-      const altList = document.getElementById('alternatives-list');
-      altList.innerHTML = alternatives.map(alt => renderAlternative(alt)).join('');
-
-      // Add click handlers
-      document.querySelectorAll('.phase-header').forEach(header => {
-        header.addEventListener('click', () => togglePhase(header));
-      });
-    }
-
-    // Render phase steps
-    function renderPhaseSteps(steps) {
-      const mainStep = steps[0];
-      const children = mainStep.children || [];
-
-      return `
-        <div class="phase-header ${mainStep.phase} collapsed" data-phase="${mainStep.id}">
-          <div class="phase-emoji">${mainStep.emoji}</div>
-          <div class="phase-title">${mainStep.title}</div>
-          <div class="phase-confidence">${mainStep.confidence}% confidence</div>
-          <div class="phase-expand">▼</div>
-        </div>
-        <div class="step-content" data-content="${mainStep.id}">
-          <p class="explanation">${mainStep.explanation}</p>
-          ${renderEvidence(mainStep.evidence)}
-          ${children.length > 0 ? renderNestedSteps(children) : ''}
-        </div>
-      `;
-    }
-
-    // Render nested steps
-    function renderNestedSteps(children) {
-      return children.map(child => `
-        <div class="nested-step">
-          <div class="phase-header ${child.phase} collapsed" data-phase="${child.id}">
-            <div class="phase-emoji">${child.emoji}</div>
-            <div class="phase-title">${child.title}</div>
-            <div class="phase-confidence">${child.confidence}% confidence</div>
-            <div class="phase-expand">▼</div>
-          </div>
-          <div class="step-content" data-content="${child.id}">
-            <p class="explanation">${child.explanation}</p>
-            ${renderEvidence(child.evidence)}
+      const altGrid = document.getElementById('alternatives-grid');
+      altGrid.innerHTML = (alternatives || []).map(alt => `
+        <div class="alt-card">
+          <div class="alt-protocol">${alt.protocol || 'Unknown'}</div>
+          <div class="alt-reason">${alt.reason || 'Not evaluated'}</div>
+          <div class="alt-score">
+            <span>Score</span>
+            <span class="score">${alt.score ? (alt.score * 100).toFixed(0) + '%' : '—'}</span>
           </div>
         </div>
       `).join('');
     }
 
-    // Render evidence
+    function renderPhaseCard(step) {
+      return `
+        <div class="phase-card ${step.phase}">
+          <div class="phase-header">
+            <span class="phase-emoji">${step.emoji}</span>
+            <span class="phase-title">${step.title}</span>
+            <span class="phase-confidence">${step.confidence}%</span>
+            <span class="phase-expand">▼</span>
+          </div>
+          <div class="phase-content">
+            <p class="explanation">${step.explanation}</p>
+            ${step.evidence ? renderEvidence(step.evidence) : ''}
+          </div>
+        </div>
+      `;
+    }
+
     function renderEvidence(evidence) {
       if (!evidence || evidence.length === 0) return '';
-
       return `
         <div class="evidence-grid">
           ${evidence.map(e => `
-            <div class="evidence-card">
-              <div class="evidence-type">${e.type}</div>
+            <div class="evidence-item">
               <div class="evidence-label">${e.label}</div>
               <div class="evidence-value">${e.value}</div>
-              ${e.source ? `<div class="evidence-source">Source: ${e.source}</div>` : ''}
+              <div class="evidence-source">${e.source}</div>
             </div>
           `).join('')}
         </div>
       `;
     }
 
-    // Render alternative
-    function renderAlternative(alt) {
-      return `
-        <div class="alternative-card">
-          <div class="alt-choice">${alt.choice}</div>
-          <div class="alt-reasoning">${alt.reasoning}</div>
-          <div class="alt-outcome">
-            <div class="outcome-metric">
-              <span class="outcome-label">Expected APY</span>
-              <span class="outcome-value">${alt.outcome.expectedApy.toFixed(2)}%</span>
-            </div>
-            <div class="outcome-metric">
-              <span class="outcome-label">Risk Level</span>
-              <span class="outcome-value">${alt.outcome.riskLevel}</span>
-            </div>
-            <div class="outcome-metric">
-              <span class="outcome-label">Confidence</span>
-              <span class="outcome-value">${alt.outcome.confidence}%</span>
-            </div>
-          </div>
-          <div class="alt-why-not">⚠️ ${alt.whyNotChosen}</div>
-        </div>
-      `;
-    }
-
-    // Toggle phase expansion
-    function togglePhase(header) {
-      const phaseId = header.dataset.phase;
-      const content = document.querySelector(`[data-content="${phaseId}"]`);
-      
-      header.classList.toggle('collapsed');
-      content.classList.toggle('expanded');
-    }
-
-    // Toggle ELI5 mode
     function toggleELI5() {
-      const card = document.getElementById('eli5-card');
-      const btn = document.getElementById('eli5-toggle');
-      
-      card.classList.toggle('active');
-      btn.classList.toggle('active');
+      eli5Visible = !eli5Visible;
+      document.getElementById('eli5-card').classList.toggle('visible', eli5Visible);
+      document.getElementById('eli5-toggle').textContent = eli5Visible ? '🧠 FULL' : '👶 ELI5';
     }
   </script>
 </body>
