@@ -15,6 +15,14 @@ import {
   runMultiAgentAnalysis,
   AGENT_PERSONAS,
 } from './lib/consensus';
+import {
+  BacktestEngine,
+  BacktestConfig,
+  runQuickBacktest,
+  compareStrategies,
+  generateComparisonReport,
+} from './lib/backtest';
+import { Strategy } from './types';
 
 const program = new Command();
 
@@ -321,5 +329,176 @@ function formatTvl(tvl: number): string {
   if (tvl >= 1e3) return `${(tvl / 1e3).toFixed(2)}K`;
   return tvl.toFixed(0);
 }
+
+// ============================================================================
+// BACKTESTING COMMANDS
+// ============================================================================
+
+program
+  .command('backtest')
+  .description('📈 Backtest a yield strategy against historical data')
+  .option('--capital <usd>', 'Initial capital in USD', '10000')
+  .option('--months <n>', 'Backtest period in months', '6')
+  .option('--risk <level>', 'Risk tolerance (low/medium/high)', 'medium')
+  .option('--rebalance-days <n>', 'Rebalance frequency in days', '7')
+  .option('--threshold <percent>', 'Min APY improvement to rebalance', '1')
+  .option('--benchmark <type>', 'Benchmark comparison (hold-sol/hold-usdc/top-apy)')
+  .option('--protocols <list>', 'Comma-separated protocol whitelist')
+  .option('--json', 'Output as JSON')
+  .option('--verbose', 'Show detailed trade log')
+  .action(async (options) => {
+    const initialCapital = parseFloat(options.capital);
+    const months = parseInt(options.months);
+    const riskTolerance = options.risk as 'low' | 'medium' | 'high';
+    
+    const strategy: Strategy = {
+      name: `${riskTolerance}-risk-yield`,
+      riskTolerance,
+      rebalanceThreshold: parseFloat(options.threshold),
+      maxProtocolConcentration: 0.5,
+      maxSlippage: 0.01,
+    };
+    
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    
+    const config: BacktestConfig = {
+      initialCapital,
+      strategy,
+      startDate,
+      endDate,
+      rebalanceFrequencyDays: parseInt(options.rebalanceDays),
+      benchmark: options.benchmark,
+      protocols: options.protocols?.split(','),
+    };
+    
+    console.log('🔬 Starting backtest simulation...\n');
+    
+    const engine = new BacktestEngine(config);
+    const result = await engine.run();
+    
+    if (options.json) {
+      console.log(JSON.stringify({
+        metrics: result.metrics,
+        trades: result.trades.length,
+        summary: result.summary,
+      }, null, 2));
+      return;
+    }
+    
+    // Print summary
+    console.log(result.summary);
+    
+    // Verbose trade log
+    if (options.verbose && result.trades.length > 0) {
+      console.log('\n📋 TRADE LOG');
+      console.log('───────────────────────────────────────────────────────────────');
+      for (const trade of result.trades.slice(-10)) {
+        console.log(`  ${trade.date.toISOString().split('T')[0]} | ${trade.type.toUpperCase()}`);
+        if (trade.from) {
+          console.log(`    From: ${trade.from.protocol}/${trade.from.asset} @ ${trade.from.apy.toFixed(1)}%`);
+        }
+        console.log(`    To: ${trade.to.protocol}/${trade.to.asset} @ ${trade.to.apy.toFixed(1)}%`);
+        console.log(`    Value: $${trade.capitalMoved.toFixed(2)} | Gas: $${trade.gasCost.toFixed(2)}`);
+      }
+      if (result.trades.length > 10) {
+        console.log(`  ... and ${result.trades.length - 10} more trades`);
+      }
+    }
+  });
+
+program
+  .command('backtest-compare')
+  .description('📊 Compare multiple strategies via backtesting')
+  .option('--capital <usd>', 'Initial capital in USD', '10000')
+  .option('--months <n>', 'Backtest period in months', '6')
+  .option('--benchmark <type>', 'Benchmark comparison (hold-sol/hold-usdc/top-apy)')
+  .action(async (options) => {
+    const initialCapital = parseFloat(options.capital);
+    const months = parseInt(options.months);
+    
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    
+    const strategies: Strategy[] = [
+      {
+        name: 'Conservative',
+        riskTolerance: 'low',
+        rebalanceThreshold: 2,
+        maxProtocolConcentration: 0.4,
+        maxSlippage: 0.01,
+      },
+      {
+        name: 'Balanced',
+        riskTolerance: 'medium',
+        rebalanceThreshold: 1,
+        maxProtocolConcentration: 0.5,
+        maxSlippage: 0.01,
+      },
+      {
+        name: 'Aggressive',
+        riskTolerance: 'high',
+        rebalanceThreshold: 0.5,
+        maxProtocolConcentration: 0.6,
+        maxSlippage: 0.02,
+      },
+      {
+        name: 'Risk-Adjusted Focus',
+        riskTolerance: 'medium',
+        rebalanceThreshold: 1.5,
+        maxProtocolConcentration: 0.4,
+        maxSlippage: 0.01,
+      },
+    ];
+    
+    console.log('🔬 Comparing strategies via backtesting...\n');
+    console.log(`Period: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
+    console.log(`Initial Capital: $${initialCapital.toLocaleString()}\n`);
+    
+    const results = await compareStrategies(strategies, {
+      initialCapital,
+      startDate,
+      endDate,
+      benchmark: options.benchmark,
+    });
+    
+    console.log('\n' + generateComparisonReport(results));
+    
+    // Detailed breakdown
+    console.log('\n📈 DETAILED BREAKDOWN\n');
+    for (const result of results) {
+      console.log(`${result.config.strategy.name}:`);
+      console.log(`  Final Value: $${result.metrics.finalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`);
+      console.log(`  Avg Yield: ${result.metrics.averageYield.toFixed(2)}%`);
+      console.log(`  Volatility: ${result.metrics.volatility.toFixed(2)}%`);
+      console.log(`  Best/Worst Day: +${result.metrics.bestDay.toFixed(2)}% / ${result.metrics.worstDay.toFixed(2)}%`);
+      console.log('');
+    }
+  });
+
+program
+  .command('backtest-quick')
+  .description('⚡ Quick 6-month backtest with default settings')
+  .option('--capital <usd>', 'Initial capital in USD', '10000')
+  .option('--risk <level>', 'Risk tolerance (low/medium/high)', 'medium')
+  .action(async (options) => {
+    const initialCapital = parseFloat(options.capital);
+    const riskTolerance = options.risk as 'low' | 'medium' | 'high';
+    
+    const strategy: Strategy = {
+      name: `${riskTolerance}-risk`,
+      riskTolerance,
+      rebalanceThreshold: 1,
+      maxProtocolConcentration: 0.5,
+      maxSlippage: 0.01,
+    };
+    
+    console.log('⚡ Running quick 6-month backtest...\n');
+    
+    const result = await runQuickBacktest(initialCapital, strategy, 6);
+    console.log(result.summary);
+  });
 
 program.parse();

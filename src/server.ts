@@ -23,6 +23,14 @@ import {
 import { MCPServer } from './lib/mcp';
 import { TradingModeManager, DEFAULT_TRADING_CONFIG } from './lib/trading-mode';
 import { TradingWebSocketServer, createTradingRoutes } from './lib/websocket';
+import {
+  BacktestEngine,
+  runQuickBacktest,
+  compareStrategies,
+  generateComparisonReport,
+  BacktestConfig,
+} from './lib/backtest';
+import { Strategy } from './types';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -133,6 +141,11 @@ const routes: Record<string, RouteHandler> = {
         '/audit/stats': 'GET - Decision statistics summary',
         '/audit/timeline': 'GET - Decision timeline (?groupBy=hour|day)',
         '/audit/export': 'GET - Export decisions for compliance (?startDate=2024-01-01)',
+        // 📈 Strategy Backtesting (NEW!)
+        '/backtest': 'GET - Backtesting API overview',
+        '/backtest/quick': 'GET - Quick 6-month backtest (?capital=10000&risk=medium)',
+        '/backtest/compare': 'GET - Compare multiple strategies (?months=6)',
+        '/backtest/run': 'POST - Run custom backtest with configuration',
         // Health & MCP
         '/health': 'GET - Health check',
         '/mcp': 'MCP (Model Context Protocol) - AI agent integration',
@@ -579,6 +592,214 @@ const routes: Record<string, RouteHandler> = {
   'GET /mcp/stream': async (req, res) => {
     // Delegate to MCP server's SSE handler
     await mcpServer.handleMCPRequest(req, res);
+  },
+
+  // ============================================================================
+  // 📈 Strategy Backtesting Endpoints (NEW!)
+  // ============================================================================
+
+  'GET /backtest': async (req, res) => {
+    json(res, {
+      name: 'Strategy Backtesting API',
+      description: 'Backtest yield strategies against historical DeFi Llama data',
+      endpoints: {
+        '/backtest/run': 'POST - Run a backtest with custom configuration',
+        '/backtest/quick': 'GET - Quick 6-month backtest (?capital=10000&risk=medium)',
+        '/backtest/compare': 'GET - Compare multiple strategies (?months=6&capital=10000)',
+      },
+      exampleConfig: {
+        initialCapital: 10000,
+        strategy: {
+          name: 'balanced',
+          riskTolerance: 'medium',
+          rebalanceThreshold: 1,
+          maxProtocolConcentration: 0.5,
+          maxSlippage: 0.01,
+        },
+        startDate: '2024-07-01',
+        endDate: '2025-01-01',
+        rebalanceFrequencyDays: 7,
+        benchmark: 'hold-sol',
+      },
+    });
+  },
+
+  'GET /backtest/quick': async (req, res) => {
+    const url = new URL(req.url || '', `http://localhost:${PORT}`);
+    const initialCapital = parseFloat(url.searchParams.get('capital') || '10000');
+    const riskTolerance = (url.searchParams.get('risk') || 'medium') as 'low' | 'medium' | 'high';
+    const months = parseInt(url.searchParams.get('months') || '6');
+    
+    const strategy: Strategy = {
+      name: `${riskTolerance}-risk`,
+      riskTolerance,
+      rebalanceThreshold: 1,
+      maxProtocolConcentration: 0.5,
+      maxSlippage: 0.01,
+    };
+    
+    try {
+      console.log(`🔬 Running quick backtest: $${initialCapital}, ${riskTolerance} risk, ${months} months`);
+      const result = await runQuickBacktest(initialCapital, strategy, months);
+      
+      json(res, {
+        config: {
+          initialCapital,
+          strategy: result.config.strategy,
+          period: {
+            start: result.config.startDate.toISOString().split('T')[0],
+            end: result.config.endDate.toISOString().split('T')[0],
+            months,
+          },
+        },
+        metrics: result.metrics,
+        trades: result.trades.length,
+        summary: result.summary,
+        benchmarkComparison: result.benchmarkComparison,
+      });
+    } catch (err) {
+      error(res, 500, `Backtest failed: ${err}`);
+    }
+  },
+
+  'GET /backtest/compare': async (req, res) => {
+    const url = new URL(req.url || '', `http://localhost:${PORT}`);
+    const initialCapital = parseFloat(url.searchParams.get('capital') || '10000');
+    const months = parseInt(url.searchParams.get('months') || '6');
+    
+    const strategies: Strategy[] = [
+      {
+        name: 'Conservative',
+        riskTolerance: 'low',
+        rebalanceThreshold: 2,
+        maxProtocolConcentration: 0.4,
+        maxSlippage: 0.01,
+      },
+      {
+        name: 'Balanced',
+        riskTolerance: 'medium',
+        rebalanceThreshold: 1,
+        maxProtocolConcentration: 0.5,
+        maxSlippage: 0.01,
+      },
+      {
+        name: 'Aggressive',
+        riskTolerance: 'high',
+        rebalanceThreshold: 0.5,
+        maxProtocolConcentration: 0.6,
+        maxSlippage: 0.02,
+      },
+    ];
+    
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    
+    try {
+      console.log(`🔬 Comparing ${strategies.length} strategies over ${months} months`);
+      const results = await compareStrategies(strategies, {
+        initialCapital,
+        startDate,
+        endDate,
+        benchmark: 'hold-sol',
+      });
+      
+      const comparison = results.map(r => ({
+        strategy: r.config.strategy.name,
+        riskTolerance: r.config.strategy.riskTolerance,
+        totalReturn: parseFloat(r.metrics.totalReturn.toFixed(2)),
+        annualizedReturn: parseFloat(r.metrics.annualizedReturn.toFixed(2)),
+        sharpeRatio: parseFloat(r.metrics.sharpeRatio.toFixed(2)),
+        maxDrawdown: parseFloat(r.metrics.maxDrawdown.toFixed(2)),
+        volatility: parseFloat(r.metrics.volatility.toFixed(2)),
+        totalRebalances: r.metrics.totalRebalances,
+        winRate: parseFloat(r.metrics.winRate.toFixed(1)),
+        finalValue: parseFloat(r.metrics.finalValue.toFixed(2)),
+      }));
+      
+      const report = generateComparisonReport(results);
+      
+      json(res, {
+        period: {
+          start: startDate.toISOString().split('T')[0],
+          end: endDate.toISOString().split('T')[0],
+          months,
+        },
+        initialCapital,
+        comparison,
+        report,
+        winner: {
+          byReturn: comparison.sort((a, b) => b.totalReturn - a.totalReturn)[0].strategy,
+          bySharpe: comparison.sort((a, b) => b.sharpeRatio - a.sharpeRatio)[0].strategy,
+          byRisk: comparison.sort((a, b) => a.maxDrawdown - b.maxDrawdown)[0].strategy,
+        },
+      });
+    } catch (err) {
+      error(res, 500, `Comparison failed: ${err}`);
+    }
+  },
+
+  'POST /backtest/run': async (req, res) => {
+    try {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const params = JSON.parse(body);
+          
+          const config: BacktestConfig = {
+            initialCapital: params.initialCapital || 10000,
+            strategy: {
+              name: params.strategy?.name || 'custom',
+              riskTolerance: params.strategy?.riskTolerance || 'medium',
+              rebalanceThreshold: params.strategy?.rebalanceThreshold || 1,
+              maxProtocolConcentration: params.strategy?.maxProtocolConcentration || 0.5,
+              maxSlippage: params.strategy?.maxSlippage || 0.01,
+            },
+            startDate: params.startDate ? new Date(params.startDate) : (() => {
+              const d = new Date();
+              d.setMonth(d.getMonth() - 6);
+              return d;
+            })(),
+            endDate: params.endDate ? new Date(params.endDate) : new Date(),
+            rebalanceFrequencyDays: params.rebalanceFrequencyDays || 7,
+            gasCostUsd: params.gasCostUsd || 0.50,
+            benchmark: params.benchmark,
+            protocols: params.protocols,
+            useRiskAdjusted: params.useRiskAdjusted !== false,
+          };
+          
+          console.log(`🔬 Running custom backtest: $${config.initialCapital}`);
+          const engine = new BacktestEngine(config);
+          const result = await engine.run();
+          
+          json(res, {
+            config: {
+              ...config,
+              startDate: config.startDate.toISOString().split('T')[0],
+              endDate: config.endDate.toISOString().split('T')[0],
+            },
+            metrics: result.metrics,
+            protocolSummary: result.protocolSummary,
+            riskAnalysis: result.riskAnalysis,
+            trades: result.trades.slice(-20).map(t => ({
+              date: t.date.toISOString().split('T')[0],
+              type: t.type,
+              from: t.from,
+              to: t.to,
+              capitalMoved: parseFloat(t.capitalMoved.toFixed(2)),
+              gasCost: t.gasCost,
+            })),
+            benchmarkComparison: result.benchmarkComparison,
+            summary: result.summary,
+          });
+        } catch (err) {
+          error(res, 400, `Invalid request: ${err}`);
+        }
+      });
+    } catch (err) {
+      error(res, 500, `Request failed: ${err}`);
+    }
   },
 };
 

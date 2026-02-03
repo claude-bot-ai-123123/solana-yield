@@ -88,5 +88,24 @@ export {
   createTradingRoutes,
 } from './lib/websocket';
 
+// 📈 Strategy Backtesting Engine
+export {
+  BacktestEngine,
+  runQuickBacktest,
+  compareStrategies,
+  generateComparisonReport,
+  buildHistoricalDataset,
+  generateSyntheticHistory,
+  type BacktestConfig,
+  type BacktestResult,
+  type BacktestMetrics,
+  type BacktestTrade,
+  type DailySnapshot,
+  type ProtocolSummary,
+  type RiskAnalysis,
+  type BenchmarkComparison,
+  type HistoricalDataPoint,
+} from './lib/backtest';
+
 // Types
 export * from './types';
