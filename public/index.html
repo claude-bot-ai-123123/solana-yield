@@ -1417,17 +1417,46 @@
       }
 
       /* Chat */
+      .chat-section {
+        margin: 40px 0;
+        padding: 0 10px;
+      }
       .chat-container { 
-        border-radius: 0;
-        max-height: 350px;
+        border-radius: 8px;
+        max-height: none;
+      }
+      .chat-header {
+        padding: 15px;
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+      }
+      .chat-header-text h3 { font-size: 0.9rem; }
+      .chat-header-text p { font-size: 0.7rem; }
+      .chat-messages {
+        min-height: 200px;
+        max-height: none;
+        padding: 15px;
       }
       .message-content { 
         max-width: 95%; 
         font-size: 0.85rem;
         padding: 10px 12px;
       }
-      .chat-input-container { padding: 12px; }
-      .chat-input { font-size: 0.9rem; padding: 10px 12px; }
+      .chat-input-container { 
+        padding: 12px;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .chat-input { 
+        font-size: 0.9rem; 
+        padding: 12px;
+        width: 100%;
+      }
+      .chat-send-btn {
+        width: 100%;
+        padding: 12px;
+      }
 
       /* Footer */
       footer { padding: 40px 15px; }
