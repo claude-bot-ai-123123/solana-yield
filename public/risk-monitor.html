@@ -442,9 +442,28 @@
     }
 
     @media (max-width: 768px) {
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
       .health-grid { grid-template-columns: 1fr; }
-      .container { padding: 1rem; }
+      .container { padding: 0.75rem; }
+      .header h1 { font-size: 1.2rem; }
+      .header h1 .icon { font-size: 1.5rem; }
+      .stat-card { padding: 1rem; }
+      .stat-value { font-size: 1.5rem; }
+      .stat-label { font-size: 0.65rem; }
+      .section-header h2 { font-size: 0.9rem; }
+      .health-card { padding: 1rem; }
+      .protocol-name { font-size: 0.8rem; }
+      .score-value { font-size: 1.3rem; }
+      .alert-content { font-size: 0.8rem; }
+      .alert-time { font-size: 0.65rem; }
+      .event-message { font-size: 0.75rem; }
+      .live-badge { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+    }
+
+    @media (max-width: 380px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .stat-value { font-size: 1.2rem; }
+      .header h1 { font-size: 1rem; }
     }
 
     /* Scrollbar */

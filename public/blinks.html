@@ -622,6 +622,57 @@
       color: var(--neon-cyan);
       text-decoration: none;
     }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .header {
+        padding: 15px;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .logo { font-size: 1rem; }
+      .nav-link { 
+        padding: 8px 12px; 
+        font-size: 0.7rem;
+      }
+      .container { padding: 15px; }
+      .page-header h1 { font-size: 1.5rem; }
+      .page-header p { font-size: 0.85rem; }
+      .blink-builder { 
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+      .builder-card { padding: 20px; }
+      .builder-card h2 { font-size: 1rem; }
+      .form-group label { font-size: 0.75rem; }
+      .risk-options { 
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .risk-option { padding: 12px; }
+      .risk-option .emoji { font-size: 1.3rem; }
+      .risk-option .risk-name { font-size: 0.8rem; }
+      .generate-btn { padding: 14px; font-size: 0.9rem; }
+      .blink-preview { padding: 20px; }
+      .preview-title { font-size: 1rem; }
+      .preview-description { font-size: 0.8rem; }
+      .share-buttons { flex-direction: column; gap: 10px; }
+      .share-btn { width: 100%; justify-content: center; }
+      .protocol-cards { 
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .protocol-card { padding: 15px; }
+      .protocol-name { font-size: 0.9rem; }
+      .protocol-apy { font-size: 1.5rem; }
+      footer { padding: 30px 15px; font-size: 0.75rem; }
+    }
+
+    @media (max-width: 380px) {
+      .page-header h1 { font-size: 1.2rem; }
+      .builder-card { padding: 15px; }
+    }
   </style>
 </head>
 <body>

@@ -361,7 +361,7 @@
       border-radius: 3px;
     }
 
-    /* Mobile */
+    /* Tablet */
     @media (max-width: 900px) {
       .container {
         grid-template-columns: 1fr;
@@ -370,6 +370,60 @@
       .thought-stream {
         height: 50vh;
       }
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .header {
+        padding: 12px 15px;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .logo {
+        font-size: 0.9rem;
+      }
+      .status {
+        font-size: 0.7rem;
+      }
+      .container {
+        padding: 8px;
+        gap: 10px;
+      }
+      .thought-stream {
+        height: 60vh;
+        padding: 12px;
+      }
+      .thought {
+        padding: 10px;
+        font-size: 0.8rem;
+      }
+      .thought-timestamp {
+        font-size: 0.65rem;
+      }
+      .thought-type {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+      }
+      .summary-section {
+        padding: 15px;
+      }
+      .summary-section h3 {
+        font-size: 0.85rem;
+      }
+      .recommendation-protocol {
+        font-size: 1rem;
+      }
+      .recommendation-apy {
+        font-size: 1.3rem;
+      }
+      .scanlines { display: none; }
+    }
+
+    /* Small phones */
+    @media (max-width: 380px) {
+      .logo { font-size: 0.8rem; }
+      .thought-stream { height: 55vh; }
+      .thought { font-size: 0.75rem; }
     }
   </style>
 </head>

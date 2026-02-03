@@ -1263,18 +1263,191 @@
       text-shadow: 0 0 10px var(--neon-pink);
     }
 
+    /* Mobile Menu Toggle */
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--neon-cyan);
+      color: var(--neon-cyan);
+      padding: 8px 12px;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    /* Tablet */
+    @media (max-width: 1024px) {
+      .container { padding: 30px 15px; }
+      h1 { font-size: 3rem; }
+      .stats { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+      .stat-value { font-size: 2rem; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .section { margin: 60px 0; }
+    }
+
     /* Mobile */
     @media (max-width: 768px) {
-      h1 { font-size: 2.5rem; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .hero { padding: 60px 20px 40px; }
-      header { padding: 15px 20px; }
-      .nav-links { display: none; }
-      .chat-container { border-radius: 0; }
-      .message-content { max-width: 95%; }
-      .widget-inputs { grid-template-columns: 1fr; }
-      .agents-grid { grid-template-columns: repeat(2, 1fr); }
+      /* Header & Navigation */
+      header { 
+        padding: 12px 15px; 
+        flex-wrap: wrap;
+      }
+      .logo { font-size: 1rem; }
+      .mobile-menu-btn { display: block; }
+      .nav-links { 
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        gap: 0;
+        margin-top: 15px;
+        border-top: 1px solid rgba(0, 255, 249, 0.2);
+        padding-top: 15px;
+      }
+      .nav-links.active { display: flex; }
+      .nav-links a {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(0, 255, 249, 0.1);
+      }
+
+      /* Hero */
+      .hero { padding: 40px 15px 30px; }
+      h1 { 
+        font-size: 1.8rem; 
+        letter-spacing: -1px;
+        line-height: 1.2;
+      }
+      .subtitle { 
+        font-size: 0.9rem; 
+        margin-bottom: 30px;
+        line-height: 1.6;
+      }
+      .hero-badge { 
+        font-size: 0.6rem; 
+        padding: 6px 12px;
+        letter-spacing: 1px;
+      }
+      .cta-group { 
+        flex-direction: column; 
+        gap: 12px;
+        width: 100%;
+      }
+      .btn-primary, .btn-secondary { 
+        width: 100%; 
+        padding: 14px 20px;
+        font-size: 0.8rem;
+      }
+
+      /* Stats */
+      .stats { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 10px;
+        margin: 40px 0;
+      }
+      .stat { padding: 15px 10px; }
+      .stat-value { font-size: 1.5rem; }
+      .stat-label { font-size: 0.6rem; letter-spacing: 1px; }
+
+      /* Section */
+      .section { margin: 50px 0; }
+      .section-title { font-size: 1rem; letter-spacing: 1px; }
+      .section-header { margin-bottom: 25px; }
+
+      /* Widget */
+      .try-widget { padding: 20px 15px; }
+      .widget-header h2 { font-size: 1rem; }
+      .widget-header p { font-size: 0.8rem; }
+      .widget-inputs { 
+        grid-template-columns: 1fr; 
+        gap: 15px;
+      }
+      .input-group label { font-size: 0.7rem; }
+      .risk-buttons { flex-direction: column; gap: 8px; }
+      .risk-btn { padding: 12px; font-size: 0.8rem; }
+      .widget-run-btn { padding: 14px; font-size: 0.85rem; }
+
+      /* Agents */
+      .agents-grid { 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 10px;
+      }
+      .agent-card { padding: 12px 8px; }
+      .agent-card .agent-emoji { font-size: 1.5rem; }
+      .agent-card .agent-name { font-size: 0.65rem; }
       .agent-card:nth-child(5) { grid-column: 1 / -1; }
+
+      /* Consensus Result */
+      .consensus-result { padding: 15px; }
+      .consensus-header h3 { font-size: 1rem; }
+      .allocation-item { 
+        flex-direction: column; 
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      /* Features */
+      .features-grid { 
+        grid-template-columns: 1fr; 
+        gap: 15px;
+      }
+      .feature { padding: 20px 15px; }
+      .feature-title { font-size: 0.85rem; }
+      .feature-desc { font-size: 0.8rem; }
+
+      /* Yields */
+      .yields-grid { 
+        grid-template-columns: 1fr; 
+        gap: 12px;
+      }
+      .yield-card { padding: 18px 15px; }
+      .yield-apy { font-size: 1.5rem; }
+      .yield-asset { font-size: 1.1rem; }
+
+      /* API */
+      .api-card { padding: 15px; }
+      .api-endpoint { 
+        font-size: 0.75rem; 
+        padding: 8px 10px;
+        word-break: break-all;
+      }
+
+      /* Protocols */
+      .protocols { gap: 10px; }
+      .protocol-icon { 
+        padding: 8px 12px; 
+        font-size: 0.65rem;
+      }
+
+      /* Chat */
+      .chat-container { 
+        border-radius: 0;
+        max-height: 350px;
+      }
+      .message-content { 
+        max-width: 95%; 
+        font-size: 0.85rem;
+        padding: 10px 12px;
+      }
+      .chat-input-container { padding: 12px; }
+      .chat-input { font-size: 0.9rem; padding: 10px 12px; }
+
+      /* Footer */
+      footer { padding: 40px 15px; }
+      .footer-links { 
+        flex-direction: column; 
+        gap: 10px;
+      }
+
+      /* Hide heavy animations on mobile for performance */
+      .scanlines { display: none; }
+      .floating-orbs { opacity: 0.5; }
+      .orb { filter: blur(100px); }
+    }
+
+    /* Small phones */
+    @media (max-width: 380px) {
+      h1 { font-size: 1.5rem; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stat-value { font-size: 1.3rem; }
+      .agents-grid { grid-template-columns: 1fr 1fr; }
     }
 
     /* Scrollbar */
@@ -1296,13 +1469,13 @@
 
   <header>
     <div class="logo glitch">SOLANA_YIELD</div>
-    <nav class="nav-links">
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+    <nav class="nav-links" id="nav-links">
       <a href="#ask">Ask AI 💬</a>
       <a href="#yields">Yields</a>
       <a href="/blinks.html">⚡ Blinks</a>
       <a href="/live.html">Live Feed</a>
-      <a href="/risk-monitor.html">Risk Monitor 🔬</a>
-      <a href="/compare.html">Why This? 🎯</a>
+      <a href="/risk-monitor.html">Risk 🔬</a>
       <a href="https://github.com/claude-bot-ai-123123/solana-yield" target="_blank">GitHub</a>
     </nav>
   </header>
@@ -1597,6 +1770,19 @@
   </div>
 
   <script>
+    // Mobile menu toggle
+    function toggleMobileMenu() {
+      const nav = document.getElementById('nav-links');
+      nav.classList.toggle('active');
+    }
+
+    // Close mobile menu when clicking a link
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('nav-links').classList.remove('active');
+      });
+    });
+
     async function tryYields() {
       const output = document.getElementById('output');
       output.innerHTML = '<div class="terminal-header"><div class="terminal-dot red"></div><div class="terminal-dot yellow"></div><div class="terminal-dot green"></div></div>> fetching_yields...\n> connecting_to_defi_llama_oracle...';
