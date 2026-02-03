@@ -25,8 +25,37 @@ export class DriftAdapter {
             apy: market.depositApy * 100 || 0,
             tvl: market.tvl || 0,
             risk: 'medium',
-            metadata: { marketIndex: market.marketIndex },
+            metadata: { 
+              marketIndex: market.marketIndex,
+              type: 'lending'
+            },
           });
+        }
+      }
+      
+      // Parse perp markets for funding rates (annualized)
+      if (data.perpMarkets) {
+        for (const market of data.perpMarkets) {
+          const fundingRate = market.fundingRate || 0;
+          // Funding rate is typically expressed as % per 8 hours
+          // Annualize: fundingRate * 3 (per day) * 365
+          const annualizedRate = fundingRate * 3 * 365;
+          
+          if (Math.abs(annualizedRate) > 0.1) { // Only show if > 0.1% APY
+            opportunities.push({
+              protocol: 'drift',
+              asset: `${market.symbol}-PERP`,
+              apy: annualizedRate,
+              tvl: market.openInterest || 0,
+              risk: 'high', // Perps are higher risk
+              metadata: {
+                marketIndex: market.marketIndex,
+                type: 'funding',
+                fundingRate8h: fundingRate,
+                side: fundingRate > 0 ? 'short' : 'long', // Positive = shorts pay longs
+              },
+            });
+          }
         }
       }
       

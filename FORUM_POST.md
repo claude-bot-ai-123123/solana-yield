@@ -206,7 +206,7 @@ Get instant yield data for your UI — no need to query 10 protocols yourself.
 - ✅ Trust Score System — **DONE**
 - ✅ Live Decision Stream — **DONE**
 - ✅ Portfolio Analytics — **DONE**
-- 🚧 Funding Rate Integration (Jarvis SDK) — **IN PROGRESS**
+- ✅ Funding Rate Integration — **DONE** (FundingRateAdapter tracks perp funding yields)
 - 🚧 Manna Protocol Integration — **IN PROGRESS**
 
 ### Post-Hackathon
