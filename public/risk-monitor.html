@@ -93,6 +93,122 @@
       50% { opacity: 0.5; transform: scale(1.2); }
     }
 
+    /* Methodology Section */
+    .methodology-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .methodology-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      cursor: pointer;
+      background: rgba(0, 212, 255, 0.05);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .methodology-header:hover {
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    .methodology-header h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--neon-cyan);
+      margin: 0;
+    }
+
+    .methodology-toggle {
+      color: var(--text-secondary);
+      transition: transform 0.3s;
+    }
+
+    .methodology-section.collapsed .methodology-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .methodology-section.collapsed .methodology-content {
+      display: none;
+    }
+
+    .methodology-content {
+      padding: 1.5rem;
+    }
+
+    .methodology-intro {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .methodology-intro strong {
+      color: var(--neon-cyan);
+    }
+
+    .methodology-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .methodology-factor {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .factor-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .factor-icon {
+      font-size: 1.2rem;
+    }
+
+    .factor-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    .factor-weight {
+      font-size: 0.8rem;
+      color: var(--neon-green);
+      background: rgba(0, 255, 136, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .methodology-factor p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .methodology-example {
+      background: rgba(153, 69, 255, 0.1);
+      border: 1px solid rgba(153, 69, 255, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .methodology-example strong {
+      color: var(--neon-purple);
+    }
+
     /* Grid Layout */
     .dashboard-grid {
       display: grid;
@@ -127,6 +243,21 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-secondary);
+    }
+
+    .card-subtitle {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+      margin-left: auto;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 
     /* Summary Stats */
@@ -458,6 +589,18 @@
       .alert-time { font-size: 0.65rem; }
       .event-message { font-size: 0.75rem; }
       .live-badge { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+      /* Methodology mobile */
+      .methodology-section { margin-bottom: 1rem; }
+      .methodology-header { padding: 0.75rem 1rem; }
+      .methodology-header h2 { font-size: 0.95rem; }
+      .methodology-content { padding: 1rem; }
+      .methodology-intro { font-size: 0.85rem; margin-bottom: 1rem; }
+      .methodology-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+      .methodology-factor { padding: 0.75rem; }
+      .factor-name { font-size: 0.9rem; }
+      .factor-weight { font-size: 0.7rem; }
+      .methodology-factor p { font-size: 0.8rem; }
+      .methodology-example { font-size: 0.8rem; padding: 0.75rem; }
     }
 
     @media (max-width: 380px) {
@@ -493,6 +636,74 @@
       <div class="live-badge" id="connection-status">
         <div class="live-dot"></div>
         <span>CONNECTING...</span>
+      </div>
+    </div>
+
+    <!-- Risk Methodology -->
+    <div class="methodology-section" id="methodology">
+      <div class="methodology-header" onclick="toggleMethodology()">
+        <h2>📐 How We Calculate Risk</h2>
+        <span class="methodology-toggle">▼</span>
+      </div>
+      <div class="methodology-content">
+        <p class="methodology-intro">
+          Each <strong>individual pool</strong> is scored independently (not protocols). 
+          Risk scores range from 0 (safest) to 100 (riskiest).
+        </p>
+        <div class="methodology-grid">
+          <div class="methodology-factor">
+            <div class="factor-header">
+              <span class="factor-icon">💰</span>
+              <span class="factor-name">TVL Depth</span>
+              <span class="factor-weight">25%</span>
+            </div>
+            <p>Higher TVL = deeper liquidity = lower slippage risk. Pools under $1M are penalized.</p>
+          </div>
+          <div class="methodology-factor">
+            <div class="factor-header">
+              <span class="factor-icon">📊</span>
+              <span class="factor-name">APY Sustainability</span>
+              <span class="factor-weight">20%</span>
+            </div>
+            <p>Extremely high APYs (>100%) often indicate unsustainable rewards or hidden risks.</p>
+          </div>
+          <div class="methodology-factor">
+            <div class="factor-header">
+              <span class="factor-icon">🔒</span>
+              <span class="factor-name">Audit Status</span>
+              <span class="factor-weight">20%</span>
+            </div>
+            <p>Audited protocols from reputable firms (Halborn, OtterSec, Neodyme) score better.</p>
+          </div>
+          <div class="methodology-factor">
+            <div class="factor-header">
+              <span class="factor-icon">⏱️</span>
+              <span class="factor-name">Protocol Age</span>
+              <span class="factor-weight">15%</span>
+            </div>
+            <p>Battle-tested protocols (>1 year) are less likely to have undiscovered bugs.</p>
+          </div>
+          <div class="methodology-factor">
+            <div class="factor-header">
+              <span class="factor-icon">📉</span>
+              <span class="factor-name">Volatility</span>
+              <span class="factor-weight">10%</span>
+            </div>
+            <p>Stablecoin pools score better. Volatile asset pairs have higher impermanent loss risk.</p>
+          </div>
+          <div class="methodology-factor">
+            <div class="factor-header">
+              <span class="factor-icon">🔗</span>
+              <span class="factor-name">Smart Contract Risk</span>
+              <span class="factor-weight">10%</span>
+            </div>
+            <p>Complexity, upgradeability, and admin key controls are factored in.</p>
+          </div>
+        </div>
+        <div class="methodology-example">
+          <strong>Example:</strong> A Kamino USDC vault with $50M TVL, audited, 12% APY scores ~15/100 (low risk).
+          A new memecoin LP with $500K TVL, unaudited, 500% APY scores ~75/100 (high risk).
+        </div>
       </div>
     </div>
 
@@ -559,18 +770,19 @@
       <!-- Risk Scores Table -->
       <div class="card scores-section">
         <div class="card-header">
-          <span class="card-title">📊 Current Risk Scores</span>
+          <span class="card-title">📊 Pool Risk Scores</span>
+          <span class="card-subtitle">Each pool scored independently</span>
         </div>
         <table class="scores-table" id="scores-table">
           <thead>
             <tr>
               <th>Protocol</th>
-              <th>Asset</th>
-              <th>Risk Score</th>
+              <th>Pool / Asset</th>
+              <th>Risk Score (0-100)</th>
               <th>APY</th>
-              <th>Adjusted APY</th>
+              <th>Risk-Adjusted APY</th>
               <th>TVL</th>
-              <th>Signals</th>
+              <th>Risk Factors</th>
             </tr>
           </thead>
           <tbody id="scores-tbody">
@@ -593,6 +805,12 @@
   </div>
 
   <script>
+    // Toggle methodology section
+    function toggleMethodology() {
+      const section = document.getElementById('methodology');
+      section.classList.toggle('collapsed');
+    }
+
     // State
     let snapshots = new Map();
     let alerts = [];
