@@ -10,6 +10,19 @@ interface YieldOpp {
   risk: 'low' | 'medium' | 'high';
 }
 
+// Lightweight reasoning trace for SOLPRISM compatibility
+function createReasoningHash(data: object): string {
+  // Simple deterministic hash for demo (real impl uses @solprism/sdk)
+  const str = JSON.stringify(data, Object.keys(data).sort());
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return 'solprism_' + Math.abs(hash).toString(16).padStart(16, '0');
+}
+
 export default async function handler(request: Request) {
   const headers = { 
     'Content-Type': 'application/json', 
@@ -79,6 +92,44 @@ export default async function handler(request: Request) {
 
     const weightedApy = allocations.reduce((sum, a) => sum + (a.apy * a.allocation / 100), 0);
 
+    // SOLPRISM-compatible verifiable reasoning trace
+    const reasoningTrace = {
+      agent: 'SolanaYield',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+      action: {
+        type: 'portfolio_rebalance',
+        description: `Optimizing ${amount} across ${allocations.length} Solana DeFi protocols`,
+      },
+      inputs: {
+        dataSources: topOpps.map(o => ({
+          protocol: o.protocol,
+          apy: o.apy,
+          tvl: o.tvl,
+          source: 'DeFi Llama API',
+        })),
+        parameters: { riskTolerance: risk, amount, maxProtocols: 5 },
+      },
+      analysis: {
+        poolsAnalyzed: yields.length,
+        eligibleAfterRiskFilter: eligible.length,
+        methodology: '6-factor risk-adjusted scoring: APY, TVL, audit status, protocol age, historical stability, liquidity depth',
+        observations: [
+          `Best opportunity: ${topOpps[0]?.protocol} at ${topOpps[0]?.apy.toFixed(2)}% APY`,
+          `Risk filter removed ${yields.length - eligible.length} high-risk pools`,
+          `Diversification across ${allocations.length} protocols reduces single-point-of-failure risk`,
+        ],
+      },
+      decision: {
+        allocations: allocations.map(a => ({ protocol: a.protocol, percentage: a.allocation })),
+        expectedOutcome: `${weightedApy.toFixed(2)}% blended APY`,
+        confidence: Math.min(95, 70 + allocations.length * 5),
+        riskAssessment: risk,
+      },
+    };
+
+    const reasoningHash = createReasoningHash(reasoningTrace);
+
     return new Response(JSON.stringify({
       strategy: {
         riskTolerance: risk,
@@ -87,6 +138,16 @@ export default async function handler(request: Request) {
         diversification: allocations.length,
       },
       allocations,
+      // SOLPRISM verifiable reasoning
+      verifiableReasoning: {
+        hash: reasoningHash,
+        trace: reasoningTrace,
+        verification: {
+          protocol: 'SOLPRISM',
+          status: 'local_hash', // 'committed' when onchain
+          verifyUrl: `https://solprism.app/verify/${reasoningHash}`,
+        },
+      },
       disclaimer: 'This is not financial advice. DeFi carries risks including smart contract bugs and impermanent loss.',
     }), { headers });
 

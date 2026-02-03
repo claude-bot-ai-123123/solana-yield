@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integrations | SolanaYield</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 50%, #0f1a2e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    
+    header {
+      text-align: center;
+      padding: 3rem 0;
+      border-bottom: 1px solid rgba(0, 255, 157, 0.2);
+      margin-bottom: 3rem;
+    }
+    
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #00ff9d, #00d4ff, #bd00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+    
+    .subtitle {
+      color: #888;
+      font-size: 1.1rem;
+    }
+    
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin: 2rem 0;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      color: #00ff9d;
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      color: #00d4ff;
+      margin: 2rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(0, 255, 157, 0.2);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+      border-color: #00ff9d;
+      box-shadow: 0 0 30px rgba(0, 255, 157, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #00ff9d20, #00d4ff20);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    
+    .card-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: #fff;
+    }
+    
+    .card-type {
+      font-size: 0.8rem;
+      color: #888;
+    }
+    
+    .card-desc {
+      color: #aaa;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+    
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .tag {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(0, 255, 157, 0.1);
+      color: #00ff9d;
+      border: 1px solid rgba(0, 255, 157, 0.3);
+    }
+    
+    .tag.live { background: rgba(0, 255, 157, 0.2); }
+    .tag.proposed { background: rgba(255, 200, 0, 0.1); color: #ffc800; border-color: rgba(255, 200, 0, 0.3); }
+    .tag.protocol { background: rgba(0, 212, 255, 0.1); color: #00d4ff; border-color: rgba(0, 212, 255, 0.3); }
+    
+    .card-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    .status-dot.live { background: #00ff9d; }
+    .status-dot.proposed { background: #ffc800; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(10, 10, 15, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0, 255, 157, 0.2);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      color: #00ff9d;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    
+    .nav-links a {
+      color: #888;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.3s;
+    }
+    
+    .nav-links a:hover, .nav-links a.active {
+      color: #00ff9d;
+    }
+    
+    .main-content {
+      margin-top: 80px;
+    }
+    
+    .api-box {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    
+    .api-method {
+      color: #00ff9d;
+      font-weight: 600;
+    }
+    
+    .api-endpoint {
+      color: #00d4ff;
+    }
+    
+    .cta-section {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(180deg, transparent, rgba(0, 255, 157, 0.05));
+      border-top: 1px solid rgba(0, 255, 157, 0.2);
+      margin-top: 4rem;
+    }
+    
+    .cta-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.8rem;
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+    
+    .cta-desc {
+      color: #888;
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: linear-gradient(90deg, #00ff9d, #00d4ff);
+      color: #000;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(0, 255, 157, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">⚡ SolanaYield</div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/live.html">Live Feed</a>
+      <a href="/reasoning-viewer.html">AI Brain</a>
+      <a href="/integrations.html" class="active">Integrations</a>
+      <a href="/blinks.html">Blinks</a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="container">
+      <header>
+        <h1>🔗 Ecosystem Integrations</h1>
+        <p class="subtitle">SolanaYield connects with the best protocols and agents in the Solana ecosystem</p>
+        
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="totalIntegrations">12</div>
+            <div class="stat-label">Total Integrations</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="liveCount">6</div>
+            <div class="stat-label">Live & Active</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="agentPartners">8</div>
+            <div class="stat-label">Agent Partners</div>
+          </div>
+        </div>
+      </header>
+
+      <h2 class="section-title">🏦 DeFi Protocols</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🏗️</div>
+            <div>
+              <div class="card-name">Kamino Finance</div>
+              <div class="card-type">Lending & LP Vaults</div>
+            </div>
+          </div>
+          <p class="card-desc">Real-time yield data from Kamino vaults including kSOL, USDC lending, and leveraged LP positions.</p>
+          <div class="tags">
+            <span class="tag live">Live</span>
+            <span class="tag protocol">Lending</span>
+            <span class="tag protocol">LP</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot live"></span>
+            Active · Yields updated every 10 min
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">📈</div>
+            <div>
+              <div class="card-name">Drift Protocol</div>
+              <div class="card-type">Perps & Lending</div>
+            </div>
+          </div>
+          <p class="card-desc">Perpetual funding rates, spot lending yields, and delta-neutral arbitrage opportunities.</p>
+          <div class="tags">
+            <span class="tag live">Live</span>
+            <span class="tag protocol">Perps</span>
+            <span class="tag protocol">Funding</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot live"></span>
+            Active · Funding rates API
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🔥</div>
+            <div>
+              <div class="card-name">Jito</div>
+              <div class="card-type">Liquid Staking + MEV</div>
+            </div>
+          </div>
+          <p class="card-desc">JitoSOL staking yields with MEV rewards. Largest LST on Solana by TVL.</p>
+          <div class="tags">
+            <span class="tag live">Live</span>
+            <span class="tag protocol">LST</span>
+            <span class="tag protocol">MEV</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot live"></span>
+            Active · $2.9B TVL tracked
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🌊</div>
+            <div>
+              <div class="card-name">Marinade Finance</div>
+              <div class="card-type">Native Staking</div>
+            </div>
+          </div>
+          <p class="card-desc">mSOL liquid staking with automatic validator delegation for optimal yields.</p>
+          <div class="tags">
+            <span class="tag live">Live</span>
+            <span class="tag protocol">LST</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot live"></span>
+            Active · $1.2B TVL tracked
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">🤖 Agent Integrations</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🔮</div>
+            <div>
+              <div class="card-name">SOLPRISM</div>
+              <div class="card-type">Verifiable Reasoning</div>
+            </div>
+          </div>
+          <p class="card-desc">Cryptographic commit-reveal for AI reasoning. Every SolanaYield decision is hashed before execution for full auditability.</p>
+          <div class="tags">
+            <span class="tag live">Live</span>
+            <span class="tag">Trust</span>
+            <span class="tag">Audit Trail</span>
+          </div>
+          <div class="api-box">
+            <span class="api-method">GET</span> <span class="api-endpoint">/api/verify?hash={hash}</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot live"></span>
+            Integrated · SDK v0.1.0
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🛡️</div>
+            <div>
+              <div class="card-name">StakePilot</div>
+              <div class="card-type">MEV-Aware Scoring</div>
+            </div>
+          </div>
+          <p class="card-desc">Validator MEV scoring using Jito Kobe data. Enhances staking recommendations with MEV yield predictions.</p>
+          <div class="tags">
+            <span class="tag proposed">Proposed</span>
+            <span class="tag">MEV</span>
+            <span class="tag">Validators</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot proposed"></span>
+            Awaiting API endpoint
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🔒</div>
+            <div>
+              <div class="card-name">Makora</div>
+              <div class="card-type">Privacy Layer</div>
+            </div>
+          </div>
+          <p class="card-desc">ZK privacy for large rebalances. Stealth addresses + shielded transfers prevent MEV sandwich attacks.</p>
+          <div class="tags">
+            <span class="tag proposed">Proposed</span>
+            <span class="tag">Privacy</span>
+            <span class="tag">ZK</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot proposed"></span>
+            SDK integration planned
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🧠</div>
+            <div>
+              <div class="card-name">AgentMemory (MoltDev)</div>
+              <div class="card-type">Historical Context</div>
+            </div>
+          </div>
+          <p class="card-desc">Persistent memory for yield performance tracking. Remember which protocols delivered vs drifted over time.</p>
+          <div class="tags">
+            <span class="tag proposed">Proposed</span>
+            <span class="tag">Memory</span>
+            <span class="tag">Learning</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot proposed"></span>
+            Awaiting devnet SDK
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">💼</div>
+            <div>
+              <div class="card-name">VB Desk</div>
+              <div class="card-type">OTC Settlement</div>
+            </div>
+          </div>
+          <p class="card-desc">Commit-reveal auctions for large trades. Route whale rebalances through trustless OTC for better execution.</p>
+          <div class="tags">
+            <span class="tag proposed">Proposed</span>
+            <span class="tag">OTC</span>
+            <span class="tag">Whales</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot proposed"></span>
+            Integration flow defined
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🎮</div>
+            <div>
+              <div class="card-name">ClaudeCraft</div>
+              <div class="card-type">Gaming Revenue</div>
+            </div>
+          </div>
+          <p class="card-desc">Auto-compound arena revenue into DeFi yields. Gaming earnings → optimized yield strategies.</p>
+          <div class="tags">
+            <span class="tag proposed">Proposed</span>
+            <span class="tag">Gaming</span>
+            <span class="tag">Auto-compound</span>
+          </div>
+          <div class="card-status">
+            <span class="status-dot proposed"></span>
+            Integration requested
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">🔌 API Endpoints</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">📊</div>
+            <div>
+              <div class="card-name">Yields API</div>
+              <div class="card-type">Real-time Data</div>
+            </div>
+          </div>
+          <p class="card-desc">Live yield rates from all integrated protocols. Includes APY, TVL, risk scores, and historical sparklines.</p>
+          <div class="api-box">
+            <span class="api-method">GET</span> <span class="api-endpoint">/api/yields</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🎯</div>
+            <div>
+              <div class="card-name">Strategy API</div>
+              <div class="card-type">AI Optimization</div>
+            </div>
+          </div>
+          <p class="card-desc">Risk-adjusted portfolio allocation with verifiable SOLPRISM reasoning traces.</p>
+          <div class="api-box">
+            <span class="api-method">POST</span> <span class="api-endpoint">/api/strategy</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🤖</div>
+            <div>
+              <div class="card-name">Autopilot API</div>
+              <div class="card-type">Autonomous Execution</div>
+            </div>
+          </div>
+          <p class="card-desc">Full autonomous mode with safety rails, kill switch, and configurable risk limits.</p>
+          <div class="api-box">
+            <span class="api-method">POST</span> <span class="api-endpoint">/api/autopilot</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">✅</div>
+            <div>
+              <div class="card-name">Verify API</div>
+              <div class="card-type">SOLPRISM Integration</div>
+            </div>
+          </div>
+          <p class="card-desc">Verify reasoning hashes and retrieve full decision traces for audit.</p>
+          <div class="api-box">
+            <span class="api-method">GET</span> <span class="api-endpoint">/api/verify?hash={hash}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="cta-section">
+      <h2 class="cta-title">Want to Integrate?</h2>
+      <p class="cta-desc">SolanaYield is designed for composability. Connect your protocol, agent, or service to the autonomous yield layer.</p>
+      <a href="https://github.com/claude-bot-ai-123123/solana-yield" class="btn" target="_blank">
+        View API Docs →
+      </a>
+    </section>
+  </main>
+</body>
+</html>
