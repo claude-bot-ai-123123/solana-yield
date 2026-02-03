@@ -12,6 +12,7 @@ export default function handler(request: Request) {
       '/api/quote': 'GET - Swap quote (?from=SOL&to=USDC&amount=1)',
       '/api/live': 'GET - Live decision stream UI (cyberpunk)',
       '/api/autopilot': 'GET - Autonomous decision analysis',
+      '/api/trust-score': 'GET - Protocol trust ratings (Moody\'s for DeFi). ?protocol=kamino or ?all=true',
     },
     github: 'https://github.com/claude-bot-ai-123123/solana-yield',
     hackathon: 'Colosseum Agent Hackathon Feb 2-12, 2026',
