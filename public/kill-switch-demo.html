@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergency Kill Switch - SolanaYield</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ff4444 0%, #ff9999 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+    }
+
+    .status-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      transition: all 0.3s;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .status-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.armed {
+      background: #00ff00;
+      box-shadow: 0 0 20px #00ff00;
+    }
+
+    .status-dot.killed {
+      background: #ff0000;
+      box-shadow: 0 0 20px #ff0000;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    button {
+      flex: 1;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .kill-btn {
+      background: linear-gradient(135deg, #ff0000 0%, #aa0000 100%);
+      color: white;
+    }
+
+    .kill-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 0, 0, 0.4);
+    }
+
+    .rearm-btn {
+      background: linear-gradient(135deg, #00aa00 0%, #006600 100%);
+      color: white;
+    }
+
+    .rearm-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 170, 0, 0.4);
+    }
+
+    .status-btn {
+      background: linear-gradient(135deg, #0066ff 0%, #0044aa 100%);
+      color: white;
+    }
+
+    .status-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 102, 255, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .info-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .info-label {
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .systems-list {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .systems-list h3 {
+      margin-bottom: 15px;
+      color: #00ff88;
+    }
+
+    .system-item {
+      padding: 10px;
+      margin: 5px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .system-status {
+      font-size: 0.9rem;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    .system-status.enabled {
+      background: rgba(0, 255, 0, 0.2);
+      color: #00ff00;
+    }
+
+    .system-status.disabled {
+      background: rgba(255, 0, 0, 0.2);
+      color: #ff0000;
+    }
+
+    .response-box {
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .why-box {
+      background: rgba(0, 136, 255, 0.1);
+      border-left: 4px solid #0088ff;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 4px;
+    }
+
+    .why-box h3 {
+      color: #0088ff;
+      margin-bottom: 15px;
+    }
+
+    .why-box ul {
+      list-style-position: inside;
+      color: #ccc;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚨 Emergency Kill Switch</h1>
+    <p class="subtitle">Instant control over autonomous AI operations</p>
+
+    <div class="status-card">
+      <div class="status-indicator">
+        <div class="status-dot armed" id="statusDot"></div>
+        <div class="status-text" id="statusText">System Status: Loading...</div>
+      </div>
+
+      <div class="controls">
+        <button class="kill-btn" onclick="killSwitch()">🛑 EMERGENCY STOP</button>
+        <button class="rearm-btn" onclick="rearmSwitch()">✅ REARM</button>
+        <button class="status-btn" onclick="checkStatus()">🔍 CHECK STATUS</button>
+      </div>
+
+      <div class="info-grid" id="infoGrid"></div>
+
+      <div class="systems-list" id="systemsList"></div>
+
+      <div class="response-box" id="responseBox">Waiting for action...</div>
+    </div>
+
+    <div class="why-box">
+      <h3>Why This Matters</h3>
+      <ul>
+        <li><strong>Institutional Trust:</strong> Regulators and enterprises need proof of human override capability</li>
+        <li><strong>Risk Management:</strong> Immediately halt all operations if markets turn volatile</li>
+        <li><strong>Compliance:</strong> Meet financial services requirements for manual intervention</li>
+        <li><strong>Transparency:</strong> Users can see exactly what gets disabled when they hit the button</li>
+        <li><strong>Peace of Mind:</strong> Know you can always take back control</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+
+    async function checkStatus() {
+      try {
+        const response = await fetch('/api/kill-switch');
+        const data = await response.json();
+        
+        updateUI(data);
+        document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('responseBox').textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function killSwitch() {
+      if (!confirm('⚠️ This will IMMEDIATELY HALT all autonomous operations.\n\nAre you sure?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/kill-switch?action=kill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reason: 'Manual emergency stop from demo interface',
+            user: 'Demo User'
+          })
+        });
+        const data = await response.json();
+        
+        updateUI(data);
+        document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('responseBox').textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function rearmSwitch() {
+      if (!confirm('Restore normal operations?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/kill-switch?action=rearm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reason: 'Manual restoration from demo interface',
+            user: 'Demo User'
+          })
+        });
+        const data = await response.json();
+        
+        updateUI(data);
+        document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        document.getElementById('responseBox').textContent = `Error: ${err.message}`;
+      }
+    }
+
+    function updateUI(data) {
+      const state = data.killSwitch || data.state;
+      const isOperational = state?.status === 'ARMED';
+
+      // Update status indicator
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      
+      dot.className = `status-dot ${isOperational ? 'armed' : 'killed'}`;
+      text.textContent = `System Status: ${state?.status || 'Unknown'}`;
+
+      // Update info grid
+      const infoGrid = document.getElementById('infoGrid');
+      infoGrid.innerHTML = `
+        <div class="info-item">
+          <div class="info-label">Last Action</div>
+          <div class="info-value">${state?.lastAction || 'None'}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Action By</div>
+          <div class="info-value">${state?.lastActionBy || 'N/A'}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Timestamp</div>
+          <div class="info-value">${state?.timestamp ? new Date(state.timestamp).toLocaleTimeString() : 'N/A'}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Reason</div>
+          <div class="info-value">${state?.reason || 'N/A'}</div>
+        </div>
+      `;
+
+      // Update systems list
+      const systems = data.controlledSystems || [];
+      const affectedSystems = state?.affectedSystems || [];
+      
+      const systemsList = document.getElementById('systemsList');
+      systemsList.innerHTML = `
+        <h3>Controlled Systems</h3>
+        ${systems.map(sys => `
+          <div class="system-item">
+            <span>${sys}</span>
+            <span class="system-status ${affectedSystems.includes(sys) ? 'disabled' : 'enabled'}">
+              ${affectedSystems.includes(sys) ? 'DISABLED' : 'ENABLED'}
+            </span>
+          </div>
+        `).join('')}
+      `;
+    }
+
+    // Initial status check
+    checkStatus();
+  </script>
+</body>
+</html>

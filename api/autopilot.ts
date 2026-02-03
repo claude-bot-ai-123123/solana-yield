@@ -3,6 +3,7 @@ export const config = {
 };
 
 import { notifyWebhooks, createDecisionEvent } from './lib/webhook-notifier';
+import { isKilled, getKillSwitchState } from './kill-switch';
 
 /**
  * Autopilot API - Shows autonomous decision-making in action
@@ -11,6 +12,7 @@ import { notifyWebhooks, createDecisionEvent } from './lib/webhook-notifier';
  * POST /api/autopilot - Trigger a decision cycle (demo mode)
  * 
  * Now with webhook integration: Broadcasts decision events to subscribed agents
+ * Now with kill switch integration: Respects emergency stop
  */
 
 // Protocols we support
@@ -59,6 +61,18 @@ export default async function handler(request: Request) {
 
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers });
+  }
+
+  // KILL SWITCH CHECK - Emergency safety override
+  if (isKilled()) {
+    const killState = getKillSwitchState();
+    return new Response(JSON.stringify({
+      error: 'Autopilot disabled',
+      reason: '🚨 EMERGENCY STOP ACTIVE',
+      killSwitch: killState,
+      message: 'All autonomous operations are halted. Use /api/kill-switch?action=rearm to restore.',
+      disabledAt: killState.timestamp,
+    }, null, 2), { status: 503, headers });
   }
 
   try {
