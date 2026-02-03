@@ -42,5 +42,18 @@ export { DriftAdapter } from './adapters/drift';
 export { JitoAdapter } from './adapters/jito';
 export { MarinadeAdapter } from './adapters/marinade';
 
+// Multi-Agent Consensus System (THE DIFFERENTIATOR)
+export {
+  MultiAgentConsensus,
+  formatThoughtStream,
+  formatConsensusResult,
+  AGENT_PERSONAS,
+  type AgentPersona,
+  type AgentVote,
+  type ConsensusResult,
+  type ThoughtStreamEntry,
+  type MultiAgentAnalysis,
+} from './lib/consensus';
+
 // Types
 export * from './types';

@@ -10,6 +10,11 @@ import {
   getTopRecommendations,
   RiskAdjustedOpportunity 
 } from './lib/risk';
+import {
+  MultiAgentConsensus,
+  formatThoughtStream,
+  formatConsensusResult,
+} from './lib/consensus';
 
 const program = new Command();
 
@@ -223,6 +228,122 @@ program
     
     console.log('\n💡 Notice how the naive approach picks high-risk yields that look');
     console.log('   attractive but carry significant smart contract and liquidity risks.');
+  });
+
+program
+  .command('consensus')
+  .description('🤝 Multi-agent yield analysis with voting consensus (UNIQUE FEATURE)')
+  .option('--sentiment <level>', 'Market sentiment (bullish/neutral/bearish)', 'neutral')
+  .option('--volatility <level>', 'Market volatility (low/medium/high)', 'medium')
+  .option('--stream', 'Show agent thought stream')
+  .option('--agents', 'List available agents')
+  .option('--json', 'Output as JSON')
+  .action(async (options) => {
+    const connection = new Connection('https://api.mainnet-beta.solana.com');
+    const monitor = new YieldMonitor(connection);
+    
+    // Initialize consensus engine with market conditions
+    const consensus = new MultiAgentConsensus(undefined, {
+      sentiment: options.sentiment as any,
+      volatility: options.volatility as any,
+    });
+
+    // Just list agents if requested
+    if (options.agents) {
+      console.log('\n🤖 Agent Roster\n');
+      console.log('Our multi-agent system uses diverse perspectives to build trust through consensus:\n');
+      for (const agent of consensus.getAgents()) {
+        console.log(`${agent.emoji} **${agent.name}**`);
+        console.log(`   ${agent.description}`);
+        console.log(`   Specialty: ${agent.specialty}`);
+        console.log(`   Risk Tolerance: ${agent.riskTolerance}/100`);
+        console.log('');
+      }
+      console.log('Each agent analyzes opportunities independently, then they vote.');
+      console.log('Consensus = trust through multiple perspectives.\n');
+      return;
+    }
+
+    console.log('\n🤝 Multi-Agent Yield Consensus Analysis');
+    console.log('━'.repeat(60));
+    console.log('Multiple AI agents voting on strategies = trust through consensus\n');
+    console.log(`📊 Market Conditions: ${options.sentiment} sentiment, ${options.volatility} volatility\n`);
+    
+    console.log('🔍 Fetching yields...');
+    const opportunities = await monitor.fetchAllYields();
+    
+    console.log('🤖 Running multi-agent analysis...\n');
+    const analysis = consensus.analyze(opportunities);
+
+    if (options.json) {
+      console.log(JSON.stringify(analysis, null, 2));
+      return;
+    }
+
+    // Show thought stream if requested
+    if (options.stream) {
+      console.log(formatThoughtStream(analysis.thoughtStream));
+      console.log('\n' + '━'.repeat(60) + '\n');
+    }
+
+    // Show summary
+    console.log(analysis.summary);
+    console.log('');
+
+    // Show top 3 consensus results
+    console.log('\n### 📋 Detailed Consensus Results (Top 3)\n');
+    analysis.results.slice(0, 3).forEach((result, i) => {
+      const opp = result.opportunity;
+      const cons = result.consensus;
+      
+      console.log(`**${i + 1}. ${opp.asset} on ${opp.protocol}**`);
+      console.log(`   APY: ${opp.apy.toFixed(2)}% | Risk-adjusted: ${result.riskAnalysis.adjustedApy.toFixed(2)}%`);
+      console.log(`   Risk Score: ${result.riskAnalysis.riskScore.overall}/100 | TVL: $${formatTvl(opp.tvl)}`);
+      console.log(`   Consensus: ${cons.decision.replace('_', ' ').toUpperCase()} (score: ${cons.score}/100)`);
+      
+      if (cons.unanimity) {
+        console.log(`   ✅ UNANIMOUS - All agents agree!`);
+      } else {
+        console.log(`   Agreement: ${Math.round(cons.confidence * 100)}%`);
+        if (cons.dissent.length > 0) {
+          console.log(`   Dissent: ${cons.dissent.join(', ')}`);
+        }
+      }
+      
+      // Show each agent's vote
+      console.log('\n   Agent Votes:');
+      result.votes.forEach(vote => {
+        const icon = vote.decision.includes('approve') ? '👍' : vote.decision === 'neutral' ? '🤷' : '👎';
+        console.log(`   ${vote.agent.emoji} ${vote.agent.name.padEnd(20)} ${icon} ${vote.decision.replace('_', ' ').padEnd(15)} (${vote.score}/100)`);
+      });
+      console.log('');
+    });
+
+    // Highlight unanimous decisions
+    const unanimous = analysis.results.filter(r => r.consensus.unanimity && 
+      (r.consensus.decision === 'strong_approve' || r.consensus.decision === 'approve'));
+    
+    if (unanimous.length > 0) {
+      console.log('\n🏆 **UNANIMOUS APPROVALS** (All 5 agents agree)\n');
+      unanimous.slice(0, 3).forEach(r => {
+        console.log(`   ✅ ${r.opportunity.asset} on ${r.opportunity.protocol} — Score: ${r.consensus.score}/100`);
+      });
+    }
+
+    // Show dissent (interesting for transparency)
+    const contested = analysis.results.filter(r => r.consensus.dissent.length >= 2);
+    if (contested.length > 0) {
+      console.log('\n⚖️ **CONTESTED DECISIONS** (Significant disagreement)\n');
+      contested.slice(0, 3).forEach(r => {
+        console.log(`   ${r.opportunity.asset} on ${r.opportunity.protocol}`);
+        console.log(`   Dissent from: ${r.consensus.dissent.join(', ')}`);
+      });
+    }
+
+    console.log('\n' + '━'.repeat(60));
+    console.log('💡 Multi-agent consensus builds trust through diverse perspectives.');
+    console.log('   Each agent has different risk tolerance and analysis methodology.');
+    console.log('   Use --stream to see the full agent thought process.\n');
   });
 
 function formatTvl(tvl: number): string {
