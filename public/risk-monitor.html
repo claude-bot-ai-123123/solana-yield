@@ -541,7 +541,7 @@
 
     async function fetchYields() {
       try {
-        const res = await fetch('/api/yields');
+        const res = await fetch('/api/yields?extended=true');
         const data = await res.json();
         
         pools = data.yields.map(y => ({
