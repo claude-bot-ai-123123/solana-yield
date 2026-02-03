@@ -21,6 +21,14 @@ import {
   calculateRiskScore,
   PROTOCOL_PROFILES,
 } from './risk';
+import {
+  CommitPhase,
+  RevealPhase,
+  ReasoningCommitment,
+  ReasoningReveal,
+  VerifiableAnalysis,
+  revealReasoning,
+} from './verifiable-reasoning';
 
 // ============================================================================
 // Types
@@ -43,6 +51,12 @@ export interface YieldAnalysis {
   factors: AnalysisFactor[];
   reasoning: string[];
   thoughtStream: ThoughtStreamEntry[];
+  verification?: {
+    commitment: ReasoningCommitment;
+    reveal: ReasoningReveal;
+    verified: boolean;
+    nonce?: string; // Store nonce for this specific analysis
+  };
 }
 
 export interface ThoughtStreamEntry {
@@ -58,6 +72,7 @@ export interface PortfolioAnalysis {
   topRecommendation: YieldAnalysis | null;
   thoughtStream: ThoughtStreamEntry[];
   summary: string;
+  verification?: VerifiableAnalysis;
 }
 
 // Kept for backward compatibility
@@ -100,6 +115,7 @@ export interface MultiAgentAnalysis {
   agentAgreement: number;
   thoughtStream: ThoughtStreamEntry[];
   summary: string;
+  verification?: VerifiableAnalysis;
 }
 
 // ============================================================================
@@ -251,6 +267,145 @@ function analyzeOpportunity(opp: YieldOpportunity, riskAnalysis: RiskAdjustedOpp
 }
 
 // ============================================================================
+// Verifiable Analysis Function (with commit-reveal proof)
+// ============================================================================
+
+export async function analyzeYieldsVerifiable(
+  opportunities: YieldOpportunity[],
+  agentId: string = 'analyst'
+): Promise<PortfolioAnalysis> {
+  const timestamp = Date.now();
+  const thoughtStream: ThoughtStreamEntry[] = [];
+  
+  thoughtStream.push({
+    timestamp,
+    type: 'analysis',
+    message: `🔒 Starting VERIFIABLE analysis with commit-reveal proof...`
+  });
+
+  // Phase 1: COMMIT - Analyze and commit reasoning hashes
+  const commitPhase = new CommitPhase();
+  const riskAnalyzed = analyzeOpportunities(opportunities);
+  const sorted = sortByRiskAdjustedReturn(riskAnalyzed);
+  
+  const analyses: YieldAnalysis[] = [];
+  
+  for (let i = 0; i < sorted.length; i++) {
+    const ra = sorted[i];
+    const opp = opportunities.find(o => o.protocol === ra.protocol && o.asset === ra.asset)!;
+    const analysis = analyzeOpportunity(opp, ra);
+    
+    // Use unique agent ID per opportunity for proper nonce tracking
+    const uniqueAgentId = `${agentId}-${i}`;
+    
+    // Commit reasoning BEFORE revealing
+    const commitment = await commitPhase.addCommitment(uniqueAgentId, analysis.reasoning);
+    
+    thoughtStream.push({
+      timestamp: Date.now(),
+      type: 'analysis',
+      message: `🔐 Committed reasoning for ${opp.protocol} ${opp.asset} (hash: ${commitment.commitHash.slice(0, 8)}...)`
+    });
+    
+    // Store the agent ID with the analysis so we can retrieve the correct nonce later
+    analysis.verification = {
+      commitment,
+      reveal: { agentId: uniqueAgentId, reasoning: [], nonce: '', timestamp: 0 }, // Placeholder
+      verified: false,
+      nonce: commitPhase.getNonce(uniqueAgentId)
+    };
+    
+    analyses.push(analysis);
+  }
+
+  thoughtStream.push({
+    timestamp: Date.now(),
+    type: 'analysis',
+    message: `✅ Commitment phase complete - ${analyses.length} reasoning hashes committed`
+  });
+
+  // Phase 2: REVEAL - Now reveal reasoning with proofs
+  const revealPhase = new RevealPhase();
+  
+  for (const analysis of analyses) {
+    if (!analysis.verification?.nonce) continue;
+    
+    const reveal = revealReasoning(
+      analysis.verification.commitment.agentId,
+      analysis.reasoning,
+      analysis.verification.nonce
+    );
+    revealPhase.addReveal(reveal);
+    
+    // Update verification data with actual reveal
+    analysis.verification.reveal = reveal;
+  }
+
+  thoughtStream.push({
+    timestamp: Date.now(),
+    type: 'analysis',
+    message: `🔓 Reveal phase complete - reasoning disclosed with nonces`
+  });
+
+  // Phase 3: VERIFY - Cryptographically verify all reveals
+  const verification = await revealPhase.verify(commitPhase.getCommitments());
+  
+  // Update verification status in analyses
+  for (const analysis of analyses) {
+    if (analysis.verification) {
+      const verificationResult = verification.verifications.find(
+        v => v.agentId === analysis.verification?.commitment.agentId
+      );
+      if (verificationResult) {
+        analysis.verification.verified = verificationResult.verified;
+      }
+    }
+  }
+
+  thoughtStream.push({
+    timestamp: Date.now(),
+    type: verification.allVerified ? 'approval' : 'concern',
+    message: verification.allVerified
+      ? `✨ All reasoning verified - trust score: ${(verification.trustScore * 100).toFixed(0)}%`
+      : `⚠️ Verification failed - trust score: ${(verification.trustScore * 100).toFixed(0)}%`
+  });
+
+  // Sort by overall score
+  analyses.sort((a, b) => b.overallScore - a.overallScore);
+
+  // Merge thought streams
+  analyses.forEach(a => thoughtStream.push(...a.thoughtStream));
+  thoughtStream.sort((a, b) => a.timestamp - b.timestamp);
+
+  const topRecommendation = analyses[0] || null;
+
+  // Generate summary with verification status
+  const approved = analyses.filter(a => a.decision.includes('approve'));
+  const verifiedTag = verification.allVerified ? ' ✅ VERIFIED' : ' ⚠️ UNVERIFIED';
+  const summary = topRecommendation 
+    ? `Top recommendation: ${topRecommendation.opportunity.protocol} ${topRecommendation.opportunity.asset} ` +
+      `(${topRecommendation.opportunity.apy.toFixed(2)}% APY, score: ${topRecommendation.overallScore.toFixed(0)}/100)${verifiedTag}. ` +
+      `${approved.length} of ${analyses.length} opportunities approved.`
+    : 'No opportunities analyzed.';
+
+  thoughtStream.push({
+    timestamp: Date.now(),
+    type: 'conclusion',
+    message: summary
+  });
+
+  return {
+    timestamp,
+    opportunities,
+    analyses,
+    topRecommendation,
+    thoughtStream,
+    summary,
+    verification
+  };
+}
+
+// ============================================================================
 // Main Analysis Function
 // ============================================================================
 
@@ -352,6 +507,49 @@ export async function runMultiAgentAnalysis(opportunities: YieldOpportunity[]): 
     agentAgreement: 1, // Single agent always agrees with itself
     thoughtStream: analysis.thoughtStream,
     summary: analysis.summary
+  };
+}
+
+/**
+ * Run verifiable multi-agent analysis with commit-reveal proof
+ */
+export async function runVerifiableMultiAgentAnalysis(
+  opportunities: YieldOpportunity[]
+): Promise<MultiAgentAnalysis> {
+  const analysis = await analyzeYieldsVerifiable(opportunities);
+  
+  // Convert to old format for backward compatibility
+  const results: ConsensusResult[] = analysis.analyses.map(a => ({
+    opportunity: a.opportunity,
+    riskAnalysis: a.riskAnalysis,
+    votes: [{
+      agent: SINGLE_AGENT,
+      opportunity: a.opportunity,
+      decision: a.decision,
+      confidence: a.confidence,
+      score: a.overallScore,
+      reasoning: a.reasoning
+    }],
+    consensus: {
+      decision: a.decision,
+      score: a.overallScore,
+      confidence: a.confidence,
+      unanimity: true,
+      dissent: []
+    },
+    reasoning: a.reasoning,
+    thoughtStream: a.thoughtStream
+  }));
+
+  return {
+    timestamp: analysis.timestamp,
+    opportunities: analysis.opportunities,
+    results,
+    topRecommendation: results[0] || null,
+    agentAgreement: 1,
+    thoughtStream: analysis.thoughtStream,
+    summary: analysis.summary,
+    verification: analysis.verification
   };
 }
 
