@@ -36,23 +36,36 @@ export {
   type AuditExport,
 } from './lib/history';
 
+// What-If Scenario Simulation
+export {
+  WhatIfEngine,
+  getWhatIfEngine,
+  PREDEFINED_SCENARIOS,
+  type WhatIfScenario,
+  type WhatIfResult,
+  type WhatIfComparison,
+} from './lib/whatif';
+
 // Protocol adapters
 export { KaminoAdapter } from './adapters/kamino';
 export { DriftAdapter } from './adapters/drift';
 export { JitoAdapter } from './adapters/jito';
 export { MarinadeAdapter } from './adapters/marinade';
 
-// Multi-Agent Consensus System (THE DIFFERENTIATOR)
+// Yield Analysis System
 export {
-  MultiAgentConsensus,
-  formatThoughtStream,
-  formatConsensusResult,
+  analyzeYields,
+  runMultiAgentAnalysis,
+  runConsensusAnalysis,
   AGENT_PERSONAS,
   type AgentPersona,
   type AgentVote,
   type ConsensusResult,
   type ThoughtStreamEntry,
   type MultiAgentAnalysis,
+  type YieldAnalysis,
+  type PortfolioAnalysis,
+  type AnalysisFactor,
 } from './lib/consensus';
 
 // Types

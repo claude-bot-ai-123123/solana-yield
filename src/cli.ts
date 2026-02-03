@@ -11,9 +11,9 @@ import {
   RiskAdjustedOpportunity 
 } from './lib/risk';
 import {
-  MultiAgentConsensus,
-  formatThoughtStream,
-  formatConsensusResult,
+  analyzeYields,
+  runMultiAgentAnalysis,
+  AGENT_PERSONAS,
 } from './lib/consensus';
 
 const program = new Command();
@@ -242,38 +242,31 @@ program
     const connection = new Connection('https://api.mainnet-beta.solana.com');
     const monitor = new YieldMonitor(connection);
     
-    // Initialize consensus engine with market conditions
-    const consensus = new MultiAgentConsensus(undefined, {
-      sentiment: options.sentiment as any,
-      volatility: options.volatility as any,
-    });
-
-    // Just list agents if requested
+    // Just list the analysis approach if requested
     if (options.agents) {
-      console.log('\n🤖 Agent Roster\n');
-      console.log('Our multi-agent system uses diverse perspectives to build trust through consensus:\n');
-      for (const agent of consensus.getAgents()) {
-        console.log(`${agent.emoji} **${agent.name}**`);
-        console.log(`   ${agent.description}`);
-        console.log(`   Specialty: ${agent.specialty}`);
-        console.log(`   Risk Tolerance: ${agent.riskTolerance}/100`);
-        console.log('');
-      }
-      console.log('Each agent analyzes opportunities independently, then they vote.');
-      console.log('Consensus = trust through multiple perspectives.\n');
+      console.log('\n🔍 Yield Analysis System\n');
+      console.log('Multi-factor analysis with transparent reasoning:\n');
+      console.log('📊 Factors Analyzed:');
+      console.log('   • APY (raw yield)');
+      console.log('   • Risk Score (protocol safety)');
+      console.log('   • TVL (liquidity depth)');
+      console.log('   • Audit Status (security verification)');
+      console.log('   • Protocol Maturity (battle-tested)');
+      console.log('   • APY Sustainability (realistic yields)\n');
+      console.log('Each factor is weighted and combined into an overall score.');
+      console.log('Full reasoning is transparent and viewable.\n');
       return;
     }
 
-    console.log('\n🤝 Multi-Agent Yield Consensus Analysis');
+    console.log('\n🔍 Yield Analysis');
     console.log('━'.repeat(60));
-    console.log('Multiple AI agents voting on strategies = trust through consensus\n');
-    console.log(`📊 Market Conditions: ${options.sentiment} sentiment, ${options.volatility} volatility\n`);
+    console.log('Multi-factor analysis with transparent reasoning\n');
     
     console.log('🔍 Fetching yields...');
     const opportunities = await monitor.fetchAllYields();
     
-    console.log('🤖 Running multi-agent analysis...\n');
-    const analysis = consensus.analyze(opportunities);
+    console.log('📊 Running analysis...\n');
+    const analysis = await analyzeYields(opportunities);
 
     if (options.json) {
       console.log(JSON.stringify(analysis, null, 2));
@@ -282,7 +275,11 @@ program
 
     // Show thought stream if requested
     if (options.stream) {
-      console.log(formatThoughtStream(analysis.thoughtStream));
+      console.log('💭 Analysis Stream:\n');
+      for (const t of analysis.thoughtStream) {
+        const icon = t.type === 'concern' ? '⚠️' : t.type === 'approval' ? '✅' : t.type === 'conclusion' ? '🎯' : '🔍';
+        console.log(`${icon} ${t.message}`);
+      }
       console.log('\n' + '━'.repeat(60) + '\n');
     }
 
@@ -290,60 +287,32 @@ program
     console.log(analysis.summary);
     console.log('');
 
-    // Show top 3 consensus results
-    console.log('\n### 📋 Detailed Consensus Results (Top 3)\n');
-    analysis.results.slice(0, 3).forEach((result, i) => {
+    // Show top 3 analysis results
+    console.log('\n### 📋 Top Recommendations\n');
+    analysis.analyses.slice(0, 5).forEach((result, i) => {
       const opp = result.opportunity;
-      const cons = result.consensus;
+      const icon = result.decision.includes('approve') ? '✅' : result.decision === 'neutral' ? '⚖️' : '⚠️';
       
-      console.log(`**${i + 1}. ${opp.asset} on ${opp.protocol}**`);
+      console.log(`${icon} **${i + 1}. ${opp.asset} on ${opp.protocol}**`);
       console.log(`   APY: ${opp.apy.toFixed(2)}% | Risk-adjusted: ${result.riskAnalysis.adjustedApy.toFixed(2)}%`);
-      console.log(`   Risk Score: ${result.riskAnalysis.riskScore.overall}/100 | TVL: $${formatTvl(opp.tvl)}`);
-      console.log(`   Consensus: ${cons.decision.replace('_', ' ').toUpperCase()} (score: ${cons.score}/100)`);
+      console.log(`   Score: ${result.overallScore.toFixed(0)}/100 | Decision: ${result.decision.replace('_', ' ').toUpperCase()}`);
+      console.log(`   TVL: $${formatTvl(opp.tvl)} | Confidence: ${Math.round(result.confidence * 100)}%`);
       
-      if (cons.unanimity) {
-        console.log(`   ✅ UNANIMOUS - All agents agree!`);
-      } else {
-        console.log(`   Agreement: ${Math.round(cons.confidence * 100)}%`);
-        if (cons.dissent.length > 0) {
-          console.log(`   Dissent: ${cons.dissent.join(', ')}`);
-        }
+      // Show key factors
+      const positives = result.factors.filter(f => f.impact === 'positive');
+      const negatives = result.factors.filter(f => f.impact === 'negative');
+      if (positives.length > 0) {
+        console.log(`   ✅ Strengths: ${positives.map(f => f.name).join(', ')}`);
       }
-      
-      // Show each agent's vote
-      console.log('\n   Agent Votes:');
-      result.votes.forEach(vote => {
-        const icon = vote.decision.includes('approve') ? '👍' : vote.decision === 'neutral' ? '🤷' : '👎';
-        console.log(`   ${vote.agent.emoji} ${vote.agent.name.padEnd(20)} ${icon} ${vote.decision.replace('_', ' ').padEnd(15)} (${vote.score}/100)`);
-      });
+      if (negatives.length > 0) {
+        console.log(`   ⚠️ Concerns: ${negatives.map(f => f.name).join(', ')}`);
+      }
       console.log('');
     });
 
-    // Highlight unanimous decisions
-    const unanimous = analysis.results.filter(r => r.consensus.unanimity && 
-      (r.consensus.decision === 'strong_approve' || r.consensus.decision === 'approve'));
-    
-    if (unanimous.length > 0) {
-      console.log('\n🏆 **UNANIMOUS APPROVALS** (All 5 agents agree)\n');
-      unanimous.slice(0, 3).forEach(r => {
-        console.log(`   ✅ ${r.opportunity.asset} on ${r.opportunity.protocol} — Score: ${r.consensus.score}/100`);
-      });
-    }
-
-    // Show dissent (interesting for transparency)
-    const contested = analysis.results.filter(r => r.consensus.dissent.length >= 2);
-    if (contested.length > 0) {
-      console.log('\n⚖️ **CONTESTED DECISIONS** (Significant disagreement)\n');
-      contested.slice(0, 3).forEach(r => {
-        console.log(`   ${r.opportunity.asset} on ${r.opportunity.protocol}`);
-        console.log(`   Dissent from: ${r.consensus.dissent.join(', ')}`);
-      });
-    }
-
-    console.log('\n' + '━'.repeat(60));
-    console.log('💡 Multi-agent consensus builds trust through diverse perspectives.');
-    console.log('   Each agent has different risk tolerance and analysis methodology.');
-    console.log('   Use --stream to see the full agent thought process.\n');
+    console.log('━'.repeat(60));
+    console.log('💡 Each opportunity scored on 6 factors: APY, Risk, TVL, Audits, Maturity, Sustainability');
+    console.log('   Use --stream to see the full analysis process.\n');
   });
 
 function formatTvl(tvl: number): string {

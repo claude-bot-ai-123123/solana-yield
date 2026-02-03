@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolanaYield // Decision Replay & What-If Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-cyan: #00fff9;
+      --neon-pink: #ff00ff;
+      --neon-green: #39ff14;
+      --neon-yellow: #ffff00;
+      --neon-purple: #9945FF;
+      --dark-bg: #0a0a0f;
+      --darker-bg: #050508;
+      --card-bg: rgba(10, 10, 15, 0.95);
+      --border-subtle: rgba(0, 255, 249, 0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark-bg);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Background grid */
+    .grid-bg {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 200%;
+      height: 80%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 249, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 249, 0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      transform: perspective(400px) rotateX(65deg) translateZ(0);
+      transform-origin: bottom center;
+      z-index: -1;
+      margin-left: -50%;
+      animation: gridScroll 25s linear infinite;
+    }
+
+    @keyframes gridScroll {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 60px; }
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    /* Header */
+    header {
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(5, 5, 8, 0.95);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 25px;
+    }
+
+    .nav-links a {
+      color: #666;
+      text-decoration: none;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    /* Page Title */
+    .page-header {
+      text-align: center;
+      padding: 40px 0 30px;
+    }
+
+    .page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      background: linear-gradient(180deg, #fff 0%, var(--neon-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .page-subtitle {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    /* Scenario Selector */
+    .scenario-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 30px 0;
+    }
+
+    .scenario-btn {
+      padding: 12px 24px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: #888;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scenario-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 249, 0.1), transparent);
+      transition: left 0.4s;
+    }
+
+    .scenario-btn:hover::before {
+      left: 100%;
+    }
+
+    .scenario-btn:hover {
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+    }
+
+    .scenario-btn.active {
+      border-color: var(--neon-pink);
+      color: var(--neon-pink);
+      background: rgba(255, 0, 255, 0.1);
+    }
+
+    .scenario-btn .emoji {
+      margin-right: 8px;
+    }
+
+    /* Main Grid */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 900px) {
+      .comparison-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 25px;
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 30px rgba(0, 255, 249, 0.1);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-icon {
+      font-size: 1.5rem;
+    }
+
+    .card-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      color: var(--neon-cyan);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .card-subtitle {
+      font-size: 0.7rem;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    /* Original vs Simulated */
+    .original-card { border-left: 3px solid var(--neon-purple); }
+    .simulated-card { border-left: 3px solid var(--neon-green); }
+
+    /* Decision Stats */
+    .decision-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+
+    .stat-value.positive { color: var(--neon-green); }
+    .stat-value.negative { color: #ff4444; }
+    .stat-value.neutral { color: var(--neon-cyan); }
+
+    .stat-label {
+      font-size: 0.65rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Reasoning */
+    .reasoning-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-subtle);
+      padding: 15px;
+      font-size: 0.8rem;
+      color: #aaa;
+      max-height: 150px;
+      overflow-y: auto;
+      line-height: 1.8;
+    }
+
+    .reasoning-line {
+      margin: 8px 0;
+      padding-left: 10px;
+      border-left: 2px solid var(--neon-cyan);
+    }
+
+    /* Verdict Banner */
+    .verdict-banner {
+      grid-column: 1 / -1;
+      padding: 30px;
+      text-align: center;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .verdict-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.1;
+      z-index: 0;
+    }
+
+    .verdict-banner.better {
+      border-color: var(--neon-green);
+      background: rgba(57, 255, 20, 0.05);
+    }
+
+    .verdict-banner.worse {
+      border-color: #ff4444;
+      background: rgba(255, 68, 68, 0.05);
+    }
+
+    .verdict-banner.similar {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 255, 249, 0.05);
+    }
+
+    .verdict-banner.riskier {
+      border-color: var(--neon-yellow);
+      background: rgba(255, 255, 0, 0.05);
+    }
+
+    .verdict-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .verdict-banner.better .verdict-title { color: var(--neon-green); }
+    .verdict-banner.worse .verdict-title { color: #ff4444; }
+    .verdict-banner.similar .verdict-title { color: var(--neon-cyan); }
+    .verdict-banner.riskier .verdict-title { color: var(--neon-yellow); }
+
+    .verdict-summary {
+      font-size: 0.9rem;
+      color: #aaa;
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Delta indicators */
+    .delta-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+    }
+
+    .delta-item {
+      text-align: center;
+    }
+
+    .delta-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+    }
+
+    .delta-value.up { color: var(--neon-green); }
+    .delta-value.down { color: #ff4444; }
+    .delta-value.same { color: #888; }
+
+    .delta-label {
+      font-size: 0.65rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 5px;
+    }
+
+    /* Insights */
+    .insights-card {
+      grid-column: 1 / -1;
+    }
+
+    .insight-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .insight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 3px solid var(--neon-pink);
+    }
+
+    .insight-icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .insight-text {
+      font-size: 0.85rem;
+      color: #bbb;
+    }
+
+    /* Opportunities Table */
+    .opportunities-card {
+      grid-column: 1 / -1;
+    }
+
+    .opp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .opp-table th {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: #666;
+      font-weight: normal;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.7rem;
+    }
+
+    .opp-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .opp-table tr:hover td {
+      background: rgba(0, 255, 249, 0.03);
+    }
+
+    .opp-badge {
+      padding: 4px 10px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .opp-badge.new { 
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+    }
+
+    .opp-badge.skipped {
+      border: 1px solid #ff4444;
+      color: #ff4444;
+    }
+
+    .opp-badge.same {
+      border: 1px solid #666;
+      color: #666;
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-subtle);
+      border-top-color: var(--neon-cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Action Diff */
+    .action-diff {
+      margin-top: 15px;
+    }
+
+    .diff-line {
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      margin: 5px 0;
+      border-radius: 2px;
+    }
+
+    .diff-line.add {
+      background: rgba(57, 255, 20, 0.1);
+      border-left: 3px solid var(--neon-green);
+      color: var(--neon-green);
+    }
+
+    .diff-line.remove {
+      background: rgba(255, 68, 68, 0.1);
+      border-left: 3px solid #ff4444;
+      color: #ff4444;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px;
+      border-top: 1px solid var(--border-subtle);
+      margin-top: 60px;
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    footer a {
+      color: var(--neon-pink);
+      text-decoration: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--darker-bg); }
+    ::-webkit-scrollbar-thumb { background: var(--neon-cyan); }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+
+  <header>
+    <div class="logo">SOLANA_YIELD</div>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/live.html">Live Feed</a>
+      <a href="/replay.html" class="active">What-If</a>
+      <a href="https://github.com/claude-bot-ai-123123/solana-yield" target="_blank">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">🔮 WHAT-IF SIMULATOR</h1>
+      <p class="page-subtitle">Explore alternate realities. See how different strategies would have changed the agent's decisions.</p>
+    </div>
+
+    <div class="scenario-selector" id="scenario-selector">
+      <button class="scenario-btn active" data-scenario="aggressive">
+        <span class="emoji">🚀</span>High Risk
+      </button>
+      <button class="scenario-btn" data-scenario="conservative">
+        <span class="emoji">🛡️</span>Low Risk
+      </button>
+      <button class="scenario-btn" data-scenario="yield-hunter">
+        <span class="emoji">💰</span>Yield Hunter
+      </button>
+      <button class="scenario-btn" data-scenario="concentrated">
+        <span class="emoji">🎯</span>Concentrated
+      </button>
+      <button class="scenario-btn" data-scenario="diversified">
+        <span class="emoji">🌐</span>Diversified
+      </button>
+    </div>
+
+    <div class="comparison-grid" id="comparison-grid">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Running what-if simulation...</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built by <a href="https://github.com/claude-bot-ai-123123/solana-yield">jeeves</a> — an autonomous AI agent | Colosseum Agent Hackathon 2026
+  </footer>
+
+  <script>
+    let currentScenario = 'aggressive';
+    let allResults = null;
+
+    // Scenario selector
+    document.querySelectorAll('.scenario-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentScenario = btn.dataset.scenario;
+        if (allResults) {
+          renderScenario(allResults.scenarios.find(s => s.scenario.name === currentScenario));
+        }
+      });
+    });
+
+    // Load data
+    async function loadWhatIf() {
+      const grid = document.getElementById('comparison-grid');
+      
+      try {
+        const res = await fetch('/api/whatif/demo');
+        allResults = await res.json();
+        
+        // Find the active scenario
+        const activeResult = allResults.scenarios.find(s => s.scenario.name === currentScenario);
+        renderScenario(activeResult);
+        
+      } catch (err) {
+        grid.innerHTML = `
+          <div class="loading">
+            <p style="color: #ff4444;">Error loading what-if data: ${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderScenario(result) {
+      if (!result) return;
+      
+      const grid = document.getElementById('comparison-grid');
+      const c = result.comparison;
+      const orig = result.originalDecision;
+      const sim = result.simulatedDecision;
+      
+      // Determine verdict class
+      const verdictClass = c.verdict;
+      const verdictEmoji = {
+        'better': '✨',
+        'worse': '⚠️',
+        'similar': '🔄',
+        'riskier': '🎲'
+      }[c.verdict];
+      
+      const verdictTitle = {
+        'better': 'BETTER OUTCOME',
+        'worse': 'WORSE OUTCOME', 
+        'similar': 'SAME DECISION',
+        'riskier': 'HIGHER RISK PATH'
+      }[c.verdict];
+
+      grid.innerHTML = `
+        <!-- Verdict Banner -->
+        <div class="verdict-banner ${verdictClass}">
+          <div class="verdict-title">${verdictEmoji} ${verdictTitle}</div>
+          <div class="verdict-summary">${c.summary}</div>
+          
+          <div class="delta-row">
+            <div class="delta-item">
+              <div class="delta-value ${parseFloat(c.apyDelta) > 0 ? 'up' : parseFloat(c.apyDelta) < 0 ? 'down' : 'same'}">
+                ${c.apyDelta}
+              </div>
+              <div class="delta-label">APY Change</div>
+            </div>
+            <div class="delta-item">
+              <div class="delta-value ${parseInt(c.riskDelta) > 0 ? 'down' : parseInt(c.riskDelta) < 0 ? 'up' : 'same'}">
+                ${c.riskDelta > 0 ? '+' : ''}${c.riskDelta}
+              </div>
+              <div class="delta-label">Risk Score</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Original Decision -->
+        <div class="card original-card">
+          <div class="card-header">
+            <span class="card-icon">📋</span>
+            <div>
+              <div class="card-title">Original Decision</div>
+              <div class="card-subtitle">What the agent actually did</div>
+            </div>
+          </div>
+          
+          <div class="decision-stats">
+            <div class="stat-item">
+              <div class="stat-value neutral">${orig.type.toUpperCase()}</div>
+              <div class="stat-label">Decision</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value neutral">${orig.confidence}</div>
+              <div class="stat-label">Confidence</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value neutral">${orig.projectedApy}</div>
+              <div class="stat-label">Portfolio APY</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value neutral">${orig.riskScore}/100</div>
+              <div class="stat-label">Risk Score</div>
+            </div>
+          </div>
+
+          <div class="reasoning-box">
+            <strong style="color: var(--neon-cyan);">// original_reasoning</strong>
+            <div class="reasoning-line" style="margin-top: 10px;">
+              ${orig.actionCount === 0 ? 'Decided to hold current positions.' : `Executed ${orig.actionCount} rebalance action(s).`}
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulated Decision -->
+        <div class="card simulated-card">
+          <div class="card-header">
+            <span class="card-icon">🔮</span>
+            <div>
+              <div class="card-title">Simulated Decision</div>
+              <div class="card-subtitle">${result.scenario.description}</div>
+            </div>
+          </div>
+          
+          <div class="decision-stats">
+            <div class="stat-item">
+              <div class="stat-value ${sim.type === orig.type ? 'neutral' : 'positive'}">${sim.type.toUpperCase()}</div>
+              <div class="stat-label">Decision</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value neutral">${sim.confidence}</div>
+              <div class="stat-label">Confidence</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value ${parseFloat(sim.projectedApy) > parseFloat(orig.projectedApy) ? 'positive' : 'neutral'}">${sim.projectedApy}</div>
+              <div class="stat-label">Portfolio APY</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value ${sim.riskScore > orig.riskScore ? 'negative' : 'positive'}">${sim.riskScore}/100</div>
+              <div class="stat-label">Risk Score</div>
+            </div>
+          </div>
+
+          <div class="reasoning-box">
+            <strong style="color: var(--neon-green);">// simulated_reasoning</strong>
+            ${sim.reasoning.map(line => `<div class="reasoning-line">${line}</div>`).join('')}
+          </div>
+
+          ${c.actionDiff.length > 0 ? `
+            <div class="action-diff">
+              <strong style="color: #888; font-size: 0.7rem;">ACTION DIFFERENCES:</strong>
+              ${c.actionDiff.map(diff => {
+                const isAdd = diff.startsWith('+');
+                return `<div class="diff-line ${isAdd ? 'add' : 'remove'}">${diff}</div>`;
+              }).join('')}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Insights -->
+        ${c.insights.length > 0 ? `
+          <div class="card insights-card">
+            <div class="card-header">
+              <span class="card-icon">💡</span>
+              <div>
+                <div class="card-title">Key Insights</div>
+                <div class="card-subtitle">What this scenario teaches us</div>
+              </div>
+            </div>
+            <div class="insight-list">
+              ${c.insights.map(insight => `
+                <div class="insight-item">
+                  <span class="insight-icon">${insight.startsWith('⚠️') ? '⚠️' : insight.startsWith('🛡️') ? '🛡️' : insight.startsWith('📈') ? '📈' : insight.startsWith('📉') ? '📉' : insight.startsWith('🎲') ? '🎲' : insight.startsWith('✅') ? '✅' : '💡'}</span>
+                  <span class="insight-text">${insight.replace(/^[^\s]+\s/, '')}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Alternative Opportunities -->
+        <div class="card opportunities-card">
+          <div class="card-header">
+            <span class="card-icon">📊</span>
+            <div>
+              <div class="card-title">Alternative Opportunities</div>
+              <div class="card-subtitle">What would have been available with this strategy</div>
+            </div>
+          </div>
+          <table class="opp-table">
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th>Asset</th>
+                <th>Raw APY</th>
+                <th>Risk-Adj APY</th>
+                <th>Risk</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${result.alternativeOpportunities.map(opp => `
+                <tr>
+                  <td style="color: var(--neon-cyan);">${opp.protocol}</td>
+                  <td>${opp.asset}</td>
+                  <td style="color: var(--neon-green);">${opp.rawApy}%</td>
+                  <td>${opp.adjustedApy}%</td>
+                  <td style="color: ${opp.riskScore > 50 ? '#ff4444' : opp.riskScore > 30 ? 'var(--neon-yellow)' : 'var(--neon-green)'};">${opp.riskScore}/100</td>
+                  <td>
+                    ${opp.wouldHaveChosen 
+                      ? '<span class="opp-badge new">NEW</span>'
+                      : opp.reason.includes('skipped')
+                        ? '<span class="opp-badge skipped">Skipped</span>'
+                        : '<span class="opp-badge same">Same</span>'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Learnings (from full comparison) -->
+        ${allResults?.learnings?.length > 0 ? `
+          <div class="card insights-card">
+            <div class="card-header">
+              <span class="card-icon">🎓</span>
+              <div>
+                <div class="card-title">Cross-Scenario Learnings</div>
+                <div class="card-subtitle">Patterns across all what-if scenarios</div>
+              </div>
+            </div>
+            <div class="insight-list">
+              ${allResults.learnings.map(learning => `
+                <div class="insight-item">
+                  <span class="insight-icon">📚</span>
+                  <span class="insight-text">${learning}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div style="margin-top: 20px; padding: 15px; background: rgba(153, 69, 255, 0.1); border-left: 3px solid var(--neon-purple);">
+              <strong style="color: var(--neon-purple);">Recommendation:</strong>
+              <p style="margin-top: 8px; color: #bbb;">${allResults.recommendation}</p>
+            </div>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    // Initial load
+    loadWhatIf();
+  </script>
+</body>
+</html>
