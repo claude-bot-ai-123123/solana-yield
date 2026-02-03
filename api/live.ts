@@ -2,7 +2,560 @@ export const config = {
   runtime: 'edge',
 };
 
-const html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>SolanaYield // LIVE FEED</title>\n  <link href=\"https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap\" rel=\"stylesheet\">\n  <style>\n    :root {\n      --neon-cyan: #00fff9;\n      --neon-pink: #ff00ff;\n      --neon-green: #39ff14;\n      --neon-yellow: #ffff00;\n      --dark-bg: #0a0a0f;\n      --darker-bg: #050508;\n      --grid-color: rgba(0, 255, 249, 0.1);\n    }\n\n    * {\n      margin: 0;\n      padding: 0;\n      box-sizing: border-box;\n    }\n\n    body {\n      background: var(--dark-bg);\n      color: #fff;\n      font-family: 'JetBrains Mono', monospace;\n      min-height: 100vh;\n      overflow-x: hidden;\n    }\n\n    /* Cyberpunk grid background */\n    .grid-bg {\n      position: fixed;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 100%;\n      background-image: \n        linear-gradient(var(--grid-color) 1px, transparent 1px),\n        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);\n      background-size: 50px 50px;\n      z-index: -1;\n      animation: gridMove 20s linear infinite;\n    }\n\n    @keyframes gridMove {\n      0% { transform: perspective(500px) rotateX(60deg) translateY(0); }\n      100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }\n    }\n\n    /* Scanlines overlay */\n    .scanlines {\n      position: fixed;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 100%;\n      background: repeating-linear-gradient(\n        0deg,\n        rgba(0, 0, 0, 0.15),\n        rgba(0, 0, 0, 0.15) 1px,\n        transparent 1px,\n        transparent 2px\n      );\n      pointer-events: none;\n      z-index: 1000;\n    }\n\n    /* Header */\n    .header {\n      padding: 20px 40px;\n      border-bottom: 1px solid var(--neon-cyan);\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      background: rgba(10, 10, 15, 0.9);\n    }\n\n    .logo {\n      font-family: 'Orbitron', sans-serif;\n      font-size: 1.5rem;\n      font-weight: 900;\n      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));\n      -webkit-background-clip: text;\n      -webkit-text-fill-color: transparent;\n      text-shadow: 0 0 30px rgba(0, 255, 249, 0.5);\n    }\n\n    .status {\n      display: flex;\n      align-items: center;\n      gap: 10px;\n    }\n\n    .status-dot {\n      width: 10px;\n      height: 10px;\n      background: var(--neon-green);\n      border-radius: 50%;\n      animation: pulse 1s ease-in-out infinite;\n    }\n\n    @keyframes pulse {\n      0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--neon-green); }\n      50% { opacity: 0.5; box-shadow: 0 0 20px var(--neon-green); }\n    }\n\n    .status-text {\n      color: var(--neon-green);\n      font-size: 0.8rem;\n      text-transform: uppercase;\n      letter-spacing: 2px;\n    }\n\n    /* Main container */\n    .container {\n      display: grid;\n      grid-template-columns: 1fr 400px;\n      gap: 20px;\n      padding: 20px 40px;\n      max-width: 1600px;\n      margin: 0 auto;\n    }\n\n    /* Thought stream */\n    .thought-stream {\n      background: var(--darker-bg);\n      border: 1px solid var(--neon-cyan);\n      border-radius: 4px;\n      padding: 20px;\n      height: calc(100vh - 140px);\n      overflow-y: auto;\n    }\n\n    .stream-header {\n      font-family: 'Orbitron', sans-serif;\n      color: var(--neon-cyan);\n      font-size: 0.9rem;\n      margin-bottom: 20px;\n      display: flex;\n      align-items: center;\n      gap: 10px;\n    }\n\n    .stream-header::before {\n      content: '>';\n      animation: blink 1s step-end infinite;\n    }\n\n    @keyframes blink {\n      50% { opacity: 0; }\n    }\n\n    .thought {\n      margin-bottom: 15px;\n      padding: 15px;\n      background: rgba(0, 255, 249, 0.05);\n      border-left: 3px solid var(--neon-cyan);\n      animation: fadeIn 0.5s ease-out;\n    }\n\n    .thought.decision {\n      border-left-color: var(--neon-green);\n      background: rgba(57, 255, 20, 0.05);\n    }\n\n    .thought.warning {\n      border-left-color: var(--neon-yellow);\n      background: rgba(255, 255, 0, 0.05);\n    }\n\n    .thought.action {\n      border-left-color: var(--neon-pink);\n      background: rgba(255, 0, 255, 0.05);\n    }\n\n    @keyframes fadeIn {\n      from { opacity: 0; transform: translateX(-20px); }\n      to { opacity: 1; transform: translateX(0); }\n    }\n\n    .thought-time {\n      font-size: 0.7rem;\n      color: #666;\n      margin-bottom: 5px;\n    }\n\n    .thought-type {\n      font-size: 0.7rem;\n      text-transform: uppercase;\n      letter-spacing: 1px;\n      margin-bottom: 8px;\n    }\n\n    .thought.decision .thought-type { color: var(--neon-green); }\n    .thought.warning .thought-type { color: var(--neon-yellow); }\n    .thought.action .thought-type { color: var(--neon-pink); }\n    .thought .thought-type { color: var(--neon-cyan); }\n\n    .thought-content {\n      font-size: 0.9rem;\n      line-height: 1.6;\n    }\n\n    .thought-content code {\n      background: rgba(255, 255, 255, 0.1);\n      padding: 2px 6px;\n      border-radius: 3px;\n      color: var(--neon-cyan);\n    }\n\n    /* Sidebar */\n    .sidebar {\n      display: flex;\n      flex-direction: column;\n      gap: 20px;\n    }\n\n    .panel {\n      background: var(--darker-bg);\n      border: 1px solid rgba(0, 255, 249, 0.3);\n      border-radius: 4px;\n      padding: 20px;\n    }\n\n    .panel-title {\n      font-family: 'Orbitron', sans-serif;\n      font-size: 0.8rem;\n      color: var(--neon-cyan);\n      text-transform: uppercase;\n      letter-spacing: 2px;\n      margin-bottom: 15px;\n      padding-bottom: 10px;\n      border-bottom: 1px solid rgba(0, 255, 249, 0.2);\n    }\n\n    /* Stats */\n    .stat-row {\n      display: flex;\n      justify-content: space-between;\n      margin-bottom: 10px;\n      font-size: 0.85rem;\n    }\n\n    .stat-label {\n      color: #888;\n    }\n\n    .stat-value {\n      color: var(--neon-cyan);\n      font-weight: bold;\n    }\n\n    .stat-value.positive { color: var(--neon-green); }\n    .stat-value.negative { color: #ff4444; }\n\n    /* Yield ticker */\n    .yield-ticker {\n      display: flex;\n      flex-direction: column;\n      gap: 8px;\n    }\n\n    .ticker-item {\n      display: flex;\n      justify-content: space-between;\n      align-items: center;\n      padding: 8px;\n      background: rgba(0, 255, 249, 0.05);\n      border-radius: 4px;\n      font-size: 0.8rem;\n    }\n\n    .ticker-protocol {\n      display: flex;\n      align-items: center;\n      gap: 8px;\n    }\n\n    .ticker-apy {\n      color: var(--neon-green);\n      font-weight: bold;\n    }\n\n    /* Confidence meter */\n    .confidence-meter {\n      margin-top: 10px;\n    }\n\n    .meter-bar {\n      height: 8px;\n      background: rgba(255, 255, 255, 0.1);\n      border-radius: 4px;\n      overflow: hidden;\n      margin-top: 5px;\n    }\n\n    .meter-fill {\n      height: 100%;\n      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));\n      border-radius: 4px;\n      transition: width 0.5s ease;\n    }\n\n    .meter-label {\n      display: flex;\n      justify-content: space-between;\n      font-size: 0.75rem;\n      color: #666;\n      margin-top: 5px;\n    }\n\n    /* Action button */\n    .action-btn {\n      width: 100%;\n      padding: 15px;\n      margin-top: 15px;\n      background: transparent;\n      border: 2px solid var(--neon-pink);\n      color: var(--neon-pink);\n      font-family: 'Orbitron', sans-serif;\n      font-size: 0.9rem;\n      text-transform: uppercase;\n      letter-spacing: 2px;\n      cursor: pointer;\n      transition: all 0.3s ease;\n    }\n\n    .action-btn:hover {\n      background: var(--neon-pink);\n      color: var(--dark-bg);\n      box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);\n    }\n\n    /* Glitch effect */\n    .glitch {\n      animation: glitch 2s infinite;\n    }\n\n    @keyframes glitch {\n      0%, 90%, 100% { transform: translate(0); }\n      92% { transform: translate(-2px, 1px); }\n      94% { transform: translate(2px, -1px); }\n      96% { transform: translate(-1px, -1px); }\n      98% { transform: translate(1px, 1px); }\n    }\n\n    /* Scrollbar */\n    ::-webkit-scrollbar {\n      width: 6px;\n    }\n\n    ::-webkit-scrollbar-track {\n      background: var(--darker-bg);\n    }\n\n    ::-webkit-scrollbar-thumb {\n      background: var(--neon-cyan);\n      border-radius: 3px;\n    }\n\n    /* Mobile */\n    @media (max-width: 900px) {\n      .container {\n        grid-template-columns: 1fr;\n        padding: 10px;\n      }\n      .thought-stream {\n        height: 50vh;\n      }\n    }\n  </style>\n</head>\n<body>\n  <div class=\"grid-bg\"></div>\n  <div class=\"scanlines\"></div>\n\n  <header class=\"header\">\n    <div class=\"logo glitch\">SOLANA_YIELD://LIVE</div>\n    <div class=\"status\">\n      <div class=\"status-dot\"></div>\n      <span class=\"status-text\">Neural Link Active</span>\n    </div>\n  </header>\n\n  <main class=\"container\">\n    <section class=\"thought-stream\" id=\"thoughtStream\">\n      <div class=\"stream-header\">AGENT THOUGHT STREAM</div>\n      <!-- Thoughts will be injected here -->\n    </section>\n\n    <aside class=\"sidebar\">\n      <div class=\"panel\">\n        <div class=\"panel-title\">Agent Status</div>\n        <div class=\"stat-row\">\n          <span class=\"stat-label\">Mode</span>\n          <span class=\"stat-value\">AUTOPILOT</span>\n        </div>\n        <div class=\"stat-row\">\n          <span class=\"stat-label\">Uptime</span>\n          <span class=\"stat-value\" id=\"uptime\">00:00:00</span>\n        </div>\n        <div class=\"stat-row\">\n          <span class=\"stat-label\">Decisions Made</span>\n          <span class=\"stat-value\" id=\"decisions\">0</span>\n        </div>\n        <div class=\"stat-row\">\n          <span class=\"stat-label\">Protocols Scanned</span>\n          <span class=\"stat-value\">9</span>\n        </div>\n        <div class=\"confidence-meter\">\n          <div class=\"stat-row\">\n            <span class=\"stat-label\">Decision Confidence</span>\n            <span class=\"stat-value\" id=\"confidence\">0%</span>\n          </div>\n          <div class=\"meter-bar\">\n            <div class=\"meter-fill\" id=\"confidenceFill\" style=\"width: 0%\"></div>\n          </div>\n        </div>\n      </div>\n\n      <div class=\"panel\">\n        <div class=\"panel-title\">Live Yields</div>\n        <div class=\"yield-ticker\" id=\"yieldTicker\">\n          <!-- Yields will be injected here -->\n        </div>\n      </div>\n\n      <div class=\"panel\">\n        <div class=\"panel-title\">Current Recommendation</div>\n        <div id=\"recommendation\">\n          <div class=\"stat-row\">\n            <span class=\"stat-label\">Action</span>\n            <span class=\"stat-value\" id=\"recAction\">ANALYZING...</span>\n          </div>\n          <div class=\"stat-row\">\n            <span class=\"stat-label\">Protocol</span>\n            <span class=\"stat-value\" id=\"recProtocol\">—</span>\n          </div>\n          <div class=\"stat-row\">\n            <span class=\"stat-label\">Expected APY</span>\n            <span class=\"stat-value positive\" id=\"recApy\">—</span>\n          </div>\n        </div>\n        <button class=\"action-btn\" onclick=\"executeRecommendation()\">\n          Execute Strategy\n        </button>\n      </div>\n    </aside>\n  </main>\n\n  <script>\n    // Simulated thought stream\n    const thoughts = [\n      { type: 'analysis', content: 'Initiating yield scan across 9 Solana protocols...' },\n      { type: 'analysis', content: 'Fetching real-time APY data from DeFi Llama oracle...' },\n      { type: 'analysis', content: 'Detected <code>23.4% APY</code> on Kamino USDC vault. Analyzing risk factors...' },\n      { type: 'warning', content: 'High TVL concentration detected in Kamino. Diversification recommended.' },\n      { type: 'analysis', content: 'Cross-referencing with Drift perpetuals funding rates...' },\n      { type: 'analysis', content: 'Drift SOL-PERP showing <code>+0.0034%</code> hourly funding. Long bias in market.' },\n      { type: 'decision', content: 'RECOMMENDATION: Split allocation 60/40 between Kamino USDC (23.4%) and Jito SOL staking (8.2%). Risk-adjusted score: <code>87/100</code>' },\n      { type: 'analysis', content: 'Monitoring for rate changes... Current refresh: 30s' },\n      { type: 'analysis', content: 'Marinade mSOL yield dropped from 7.8% to 7.2%. No action needed—within tolerance.' },\n      { type: 'action', content: 'Autopilot queuing rebalance check in 4 hours based on rate velocity...' },\n      { type: 'analysis', content: 'Scanning competitor protocols for arbitrage opportunities...' },\n      { type: 'warning', content: 'Orca USDC pool showing anomalous volume spike. Monitoring for impermanent loss risk.' },\n      { type: 'decision', content: 'Confidence level increased to <code>92%</code> after 15-minute rate stability check.' },\n    ];\n\n    const yieldData = [\n      { protocol: 'Kamino', asset: 'USDC', apy: '23.4%' },\n      { protocol: 'Drift', asset: 'USDC', apy: '18.7%' },\n      { protocol: 'Jito', asset: 'SOL', apy: '8.2%' },\n      { protocol: 'Marinade', asset: 'SOL', apy: '7.2%' },\n      { protocol: 'Raydium', asset: 'SOL-USDC', apy: '34.1%' },\n    ];\n\n    let thoughtIndex = 0;\n    let decisionCount = 0;\n    let startTime = Date.now();\n\n    function addThought() {\n      const stream = document.getElementById('thoughtStream');\n      const thought = thoughts[thoughtIndex % thoughts.length];\n      \n      const time = new Date().toLocaleTimeString('en-US', { hour12: false });\n      \n      const div = document.createElement('div');\n      div.className = `thought ${thought.type}`;\n      div.innerHTML = `\n        <div class=\"thought-time\">${time}</div>\n        <div class=\"thought-type\">${thought.type}</div>\n        <div class=\"thought-content\">${thought.content}</div>\n      `;\n      \n      stream.appendChild(div);\n      stream.scrollTop = stream.scrollHeight;\n      \n      if (thought.type === 'decision') {\n        decisionCount++;\n        document.getElementById('decisions').textContent = decisionCount;\n        updateConfidence(Math.min(95, 70 + decisionCount * 5));\n      }\n      \n      thoughtIndex++;\n    }\n\n    function updateConfidence(value) {\n      document.getElementById('confidence').textContent = value + '%';\n      document.getElementById('confidenceFill').style.width = value + '%';\n    }\n\n    function updateUptime() {\n      const elapsed = Math.floor((Date.now() - startTime) / 1000);\n      const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');\n      const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');\n      const seconds = String(elapsed % 60).padStart(2, '0');\n      document.getElementById('uptime').textContent = `${hours}:${minutes}:${seconds}`;\n    }\n\n    function renderYields() {\n      const ticker = document.getElementById('yieldTicker');\n      ticker.innerHTML = yieldData.map(y => `\n        <div class=\"ticker-item\">\n          <div class=\"ticker-protocol\">\n            <span>${y.protocol}</span>\n            <span style=\"color: #666\">${y.asset}</span>\n          </div>\n          <span class=\"ticker-apy\">${y.apy}</span>\n        </div>\n      `).join('');\n    }\n\n    function executeRecommendation() {\n      const thought = {\n        type: 'action',\n        content: '⚡ EXECUTING STRATEGY: Initiating transaction sequence... Wallet signature required.'\n      };\n      thoughts.push(thought);\n      addThought();\n      \n      document.getElementById('recAction').textContent = 'EXECUTING...';\n      document.getElementById('recAction').style.color = 'var(--neon-pink)';\n    }\n\n    // Initialize\n    renderYields();\n    updateConfidence(72);\n    document.getElementById('recAction').textContent = 'DEPOSIT';\n    document.getElementById('recProtocol').textContent = 'Kamino USDC';\n    document.getElementById('recApy').textContent = '23.4%';\n\n    // Start thought stream\n    addThought();\n    setInterval(addThought, 4000);\n    setInterval(updateUptime, 1000);\n\n    // Fetch real yields\n    fetch('/api/yields')\n      .then(r => r.json())\n      .then(data => {\n        if (data.yields && data.yields.length > 0) {\n          const top5 = data.yields.slice(0, 5);\n          const ticker = document.getElementById('yieldTicker');\n          ticker.innerHTML = top5.map(y => `\n            <div class=\"ticker-item\">\n              <div class=\"ticker-protocol\">\n                <span>${y.protocol}</span>\n                <span style=\"color: #666\">${y.asset}</span>\n              </div>\n              <span class=\"ticker-apy\">${y.apy.toFixed(1)}%</span>\n            </div>\n          `).join('');\n          \n          // Update recommendation with top yield\n          const best = top5[0];\n          document.getElementById('recProtocol').textContent = `${best.protocol} ${best.asset}`;\n          document.getElementById('recApy').textContent = `${best.apy.toFixed(1)}%`;\n        }\n      })\n      .catch(() => console.log('Using simulated data'));\n  </script>\n</body>\n</html>\n\n";
+const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolanaYield // LIVE FEED</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-cyan: #00fff9;
+      --neon-pink: #ff00ff;
+      --neon-green: #39ff14;
+      --neon-yellow: #ffff00;
+      --dark-bg: #0a0a0f;
+      --darker-bg: #050508;
+      --grid-color: rgba(0, 255, 249, 0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark-bg);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .grid-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: -1;
+      animation: gridMove 20s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+      100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+    }
+
+    .scanlines {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .header {
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--neon-cyan);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 10, 15, 0.9);
+    }
+
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(0, 255, 249, 0.5);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-dot {
+      width: 10px; height: 10px;
+      background: var(--neon-green);
+      border-radius: 50%;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .status-dot.disconnected {
+      background: #ff4444;
+      animation: none;
+    }
+
+    .status-dot.connecting {
+      background: var(--neon-yellow);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--neon-green); }
+      50% { opacity: 0.5; box-shadow: 0 0 20px var(--neon-green); }
+    }
+
+    .status-text {
+      color: var(--neon-green);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .status-text.disconnected { color: #ff4444; }
+    .status-text.connecting { color: var(--neon-yellow); }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+      padding: 20px 40px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .thought-stream {
+      background: var(--darker-bg);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 4px;
+      padding: 20px;
+      height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+
+    .stream-header {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--neon-cyan);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stream-header::before {
+      content: '>';
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .thought {
+      margin-bottom: 15px;
+      padding: 15px;
+      background: rgba(0, 255, 249, 0.05);
+      border-left: 3px solid var(--neon-cyan);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .thought.decision {
+      border-left-color: var(--neon-green);
+      background: rgba(57, 255, 20, 0.08);
+    }
+
+    .thought.warning {
+      border-left-color: var(--neon-yellow);
+      background: rgba(255, 255, 0, 0.05);
+    }
+
+    .thought.action {
+      border-left-color: var(--neon-pink);
+      background: rgba(255, 0, 255, 0.08);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .thought-time { font-size: 0.7rem; color: #666; margin-bottom: 5px; }
+    .thought-type { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+    .thought.decision .thought-type { color: var(--neon-green); }
+    .thought.warning .thought-type { color: var(--neon-yellow); }
+    .thought.action .thought-type { color: var(--neon-pink); }
+    .thought .thought-type { color: var(--neon-cyan); }
+
+    .thought-content {
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .thought-content code {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: var(--neon-cyan);
+    }
+
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+    .panel {
+      background: var(--darker-bg);
+      border: 1px solid rgba(0, 255, 249, 0.3);
+      border-radius: 4px;
+      padding: 20px;
+    }
+
+    .panel-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      color: var(--neon-cyan);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(0, 255, 249, 0.2);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+    }
+
+    .stat-label { color: #888; }
+    .stat-value { color: var(--neon-cyan); font-weight: bold; }
+    .stat-value.positive { color: var(--neon-green); }
+    .stat-value.negative { color: #ff4444; }
+
+    .yield-ticker { display: flex; flex-direction: column; gap: 8px; }
+
+    .ticker-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      background: rgba(0, 255, 249, 0.05);
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .ticker-protocol { display: flex; align-items: center; gap: 8px; }
+    .ticker-apy { color: var(--neon-green); font-weight: bold; }
+
+    .confidence-meter { margin-top: 10px; }
+
+    .meter-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .meter-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .confidence-factors {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: #888;
+    }
+
+    .confidence-factors li {
+      margin-left: 15px;
+      margin-bottom: 3px;
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 15px;
+      margin-top: 15px;
+      background: transparent;
+      border: 2px solid var(--neon-pink);
+      color: var(--neon-pink);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+      background: var(--neon-pink);
+      color: var(--dark-bg);
+      box-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .glitch { animation: glitch 2s infinite; }
+
+    @keyframes glitch {
+      0%, 90%, 100% { transform: translate(0); }
+      92% { transform: translate(-2px, 1px); }
+      94% { transform: translate(2px, -1px); }
+      96% { transform: translate(-1px, -1px); }
+      98% { transform: translate(1px, 1px); }
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--darker-bg); }
+    ::-webkit-scrollbar-thumb { background: var(--neon-cyan); border-radius: 3px; }
+
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; padding: 10px; }
+      .thought-stream { height: 50vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="scanlines"></div>
+
+  <header class="header">
+    <div class="logo glitch">SOLANA_YIELD://LIVE</div>
+    <div class="status">
+      <div class="status-dot connecting" id="statusDot"></div>
+      <span class="status-text connecting" id="statusText">Connecting...</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="thought-stream" id="thoughtStream">
+      <div class="stream-header">AGENT THOUGHT STREAM</div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="panel-title">Agent Status</div>
+        <div class="stat-row">
+          <span class="stat-label">Mode</span>
+          <span class="stat-value">AUTOPILOT</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Uptime</span>
+          <span class="stat-value" id="uptime">00:00:00</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Thoughts</span>
+          <span class="stat-value" id="thoughtCount">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Decisions</span>
+          <span class="stat-value" id="decisions">0</span>
+        </div>
+        <div class="confidence-meter">
+          <div class="stat-row">
+            <span class="stat-label">Decision Confidence</span>
+            <span class="stat-value" id="confidence">—</span>
+          </div>
+          <div class="meter-bar">
+            <div class="meter-fill" id="confidenceFill" style="width: 0%"></div>
+          </div>
+          <ul class="confidence-factors" id="confidenceFactors"></ul>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Live Yields</div>
+        <div class="yield-ticker" id="yieldTicker">
+          <div class="ticker-item" style="color: #666">Waiting for data...</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Current Recommendation</div>
+        <div id="recommendation">
+          <div class="stat-row">
+            <span class="stat-label">Action</span>
+            <span class="stat-value" id="recAction">ANALYZING...</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Protocol</span>
+            <span class="stat-value" id="recProtocol">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Expected APY</span>
+            <span class="stat-value positive" id="recApy">—</span>
+          </div>
+        </div>
+        <button class="action-btn" id="executeBtn" onclick="executeRecommendation()" disabled>
+          Execute Strategy
+        </button>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    let thoughtCount = 0;
+    let decisionCount = 0;
+    let startTime = Date.now();
+    let eventSource = null;
+    let reconnectAttempts = 0;
+
+    function setStatus(status) {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      
+      dot.className = 'status-dot ' + status;
+      text.className = 'status-text ' + status;
+      
+      const labels = {
+        '': 'Neural Link Active',
+        'connecting': 'Connecting...',
+        'disconnected': 'Disconnected'
+      };
+      text.textContent = labels[status] || labels[''];
+    }
+
+    function addThought(type, content) {
+      const stream = document.getElementById('thoughtStream');
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      
+      thoughtCount++;
+      document.getElementById('thoughtCount').textContent = thoughtCount;
+      
+      if (type === 'decision') {
+        decisionCount++;
+        document.getElementById('decisions').textContent = decisionCount;
+      }
+      
+      const div = document.createElement('div');
+      div.className = 'thought ' + type;
+      div.innerHTML = \`
+        <div class="thought-time">\${time}</div>
+        <div class="thought-type">\${type}</div>
+        <div class="thought-content">\${content}</div>
+      \`;
+      
+      stream.appendChild(div);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function updateConfidence(value, factors) {
+      document.getElementById('confidence').textContent = value + '/100';
+      document.getElementById('confidenceFill').style.width = value + '%';
+      
+      if (factors && factors.length > 0) {
+        const list = document.getElementById('confidenceFactors');
+        list.innerHTML = factors.map(f => '<li>' + f + '</li>').join('');
+      }
+    }
+
+    function updateYields(yields) {
+      const ticker = document.getElementById('yieldTicker');
+      ticker.innerHTML = yields.map(y => \`
+        <div class="ticker-item">
+          <div class="ticker-protocol">
+            <span>\${y.protocol}</span>
+            <span style="color: #666">\${y.asset}</span>
+          </div>
+          <span class="ticker-apy">\${y.apy.toFixed(1)}%</span>
+        </div>
+      \`).join('');
+    }
+
+    function updateRecommendation(rec) {
+      document.getElementById('recAction').textContent = rec.action;
+      document.getElementById('recProtocol').textContent = rec.protocol;
+      document.getElementById('recApy').textContent = rec.apy.toFixed(1) + '%';
+      document.getElementById('executeBtn').disabled = false;
+    }
+
+    function updateUptime() {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const hours = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+      const minutes = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+      const seconds = String(elapsed % 60).padStart(2, '0');
+      document.getElementById('uptime').textContent = hours + ':' + minutes + ':' + seconds;
+    }
+
+    function connectStream() {
+      if (eventSource) {
+        eventSource.close();
+      }
+      
+      setStatus('connecting');
+      eventSource = new EventSource('/api/stream');
+      
+      eventSource.addEventListener('thought', function(e) {
+        reconnectAttempts = 0;
+        setStatus('');
+        
+        try {
+          const data = JSON.parse(e.data);
+          
+          if (data.type === 'data') {
+            // Handle structured data updates
+            if (data.content === 'yields' && data.metadata?.yields) {
+              updateYields(data.metadata.yields);
+            } else if (data.content === 'confidence' && data.metadata) {
+              updateConfidence(data.metadata.confidence, data.metadata.factors);
+            } else if (data.content === 'recommendation' && data.metadata) {
+              updateRecommendation(data.metadata);
+            }
+          } else {
+            // Regular thought
+            addThought(data.type, data.content);
+          }
+        } catch (err) {
+          console.error('Parse error:', err);
+        }
+      });
+      
+      eventSource.onerror = function() {
+        setStatus('disconnected');
+        eventSource.close();
+        
+        // Exponential backoff reconnect
+        reconnectAttempts++;
+        const delay = Math.min(30000, 1000 * Math.pow(2, reconnectAttempts));
+        console.log('Reconnecting in ' + delay + 'ms...');
+        setTimeout(connectStream, delay);
+      };
+    }
+
+    function executeRecommendation() {
+      addThought('action', '⚡ EXECUTING STRATEGY: Initiating transaction sequence... Wallet signature required.');
+      document.getElementById('recAction').textContent = 'EXECUTING...';
+      document.getElementById('recAction').style.color = 'var(--neon-pink)';
+      document.getElementById('executeBtn').disabled = true;
+      
+      // Simulate execution
+      setTimeout(() => {
+        addThought('action', '⏳ Awaiting wallet connection... (Demo mode - no real transaction)');
+      }, 2000);
+    }
+
+    // Initialize
+    setInterval(updateUptime, 1000);
+    connectStream();
+  </script>
+</body>
+</html>
+`;
 
 export default function handler(request: Request) {
   return new Response(html, {
