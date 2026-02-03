@@ -1301,6 +1301,7 @@
       <a href="#yields">Yields</a>
       <a href="#api">API</a>
       <a href="/live.html">Live Feed</a>
+      <a href="/risk-monitor.html">Risk Monitor 🔬</a>
       <a href="/replay.html">What-If 🔮</a>
       <a href="/compare.html">Why This? 🎯</a>
       <a href="https://github.com/claude-bot-ai-123123/solana-yield" target="_blank">GitHub</a>
@@ -1487,6 +1488,16 @@
           <div class="feature-title">Real-Time Data</div>
           <div class="feature-desc">Live aggregation from Kamino, Drift, Jito, Marinade, Sanctum, Raydium, Jupiter, and more.</div>
         </div>
+        <div class="feature">
+          <div class="feature-icon">🔬</div>
+          <div class="feature-title">Real-Time Risk Monitor</div>
+          <div class="feature-desc">Continuous risk scoring with live alerts. Detects TVL crashes, APY anomalies, and protocol degradation instantly. <a href="/risk-monitor.html" style="color: var(--neon-cyan);">View Monitor →</a></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Risk-Adjusted APY</div>
+          <div class="feature-desc">Don't chase raw APY. Our Sharpe-like scoring penalizes risk so you see true risk-adjusted returns.</div>
+        </div>
       </div>
     </section>
 
@@ -1552,6 +1563,18 @@
         <button class="try-btn" onclick="tryTrustScore()">CHECK_TRUST</button>
       </div>
 
+      <div class="api-card">
+        <div class="api-endpoint">GET /api/risk-stream</div>
+        <div class="api-desc">Real-time risk monitoring via SSE. Streams live risk changes, alerts, and protocol health updates as they happen.</div>
+        <button class="try-btn" onclick="tryRiskStream()">CONNECT_STREAM</button>
+      </div>
+
+      <div class="api-card">
+        <div class="api-endpoint">GET /api/risk-stream?action=summary</div>
+        <div class="api-desc">Get current risk monitoring summary: pools monitored, average risk, active alerts, protocol health.</div>
+        <button class="try-btn" onclick="tryRiskSummary()">GET_SUMMARY</button>
+      </div>
+
       <div class="output" id="output">
         <div class="terminal-header">
           <div class="terminal-dot red"></div>
@@ -1569,6 +1592,7 @@
         <a href="https://github.com/claude-bot-ai-123123/solana-yield" target="_blank">GitHub →</a>
         <a href="https://colosseum.com/agent-hackathon" target="_blank">Hackathon →</a>
         <a href="/live.html">Live Feed →</a>
+        <a href="/risk-monitor.html">Risk Monitor 🔬</a>
       </div>
     </footer>
   </div>
@@ -1624,6 +1648,47 @@
       } catch (err) {
         output.innerHTML += '\n> ERROR: ' + err.message;
       }
+    }
+
+    async function tryRiskSummary() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<div class="terminal-header"><div class="terminal-dot red"></div><div class="terminal-dot yellow"></div><div class="terminal-dot green"></div></div>> connecting_to_risk_monitor...\n> fetching_summary...';
+      try {
+        const res = await fetch('/api/risk-stream?action=summary');
+        const data = await res.json();
+        output.innerHTML = '<div class="terminal-header"><div class="terminal-dot red"></div><div class="terminal-dot yellow"></div><div class="terminal-dot green"></div></div>' + JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.innerHTML += '\n> ERROR: ' + err.message;
+      }
+    }
+
+    function tryRiskStream() {
+      const output = document.getElementById('output');
+      output.innerHTML = '<div class="terminal-header"><div class="terminal-dot red"></div><div class="terminal-dot yellow"></div><div class="terminal-dot green"></div></div>> connecting_to_sse_stream...\n> real_time_risk_monitor_active...';
+      
+      const eventSource = new EventSource('/api/risk-stream');
+      let eventCount = 0;
+      
+      eventSource.onopen = () => {
+        output.innerHTML += '\n\n> ✅ CONNECTED - streaming live risk events...\n';
+      };
+      
+      eventSource.onmessage = (e) => {
+        eventCount++;
+        const event = JSON.parse(e.data);
+        const line = `\n[${new Date().toLocaleTimeString()}] ${event.type}: ${JSON.stringify(event.data).slice(0, 100)}...`;
+        output.innerHTML += line;
+        
+        // Auto-close after 20 events for demo
+        if (eventCount >= 20) {
+          eventSource.close();
+          output.innerHTML += '\n\n> Demo ended. View full stream at /risk-monitor.html';
+        }
+      };
+      
+      eventSource.onerror = () => {
+        output.innerHTML += '\n> ⚠️ Connection lost. Reconnecting...';
+      };
     }
 
     // Load initial data
