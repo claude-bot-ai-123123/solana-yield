@@ -6,6 +6,10 @@
       "destination": "/api/actions.json"
     },
     {
+      "source": "/blinks",
+      "destination": "/blinks.html"
+    },
+    {
       "source": "/",
       "destination": "/api"
     },
@@ -19,6 +23,17 @@
     }
   ],
   "headers": [
+    {
+      "source": "/api/actions(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, Content-Encoding, Accept-Encoding" },
+        { "key": "Access-Control-Expose-Headers", "value": "X-Action-Version, X-Blockchain-Ids" },
+        { "key": "X-Action-Version", "value": "2.1.3" },
+        { "key": "X-Blockchain-Ids", "value": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

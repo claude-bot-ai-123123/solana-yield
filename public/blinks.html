@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blinks // SolanaYield Actions</title>
+  <meta property="og:title" content="SolanaYield Blinks - Shareable DeFi Actions">
+  <meta property="og:description" content="Create and share Solana Actions for yield strategies">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-cyan: #00fff9;
+      --neon-pink: #ff00ff;
+      --neon-green: #39ff14;
+      --neon-yellow: #ffff00;
+      --neon-purple: #9945FF;
+      --dark-bg: #0a0a0f;
+      --darker-bg: #050508;
+      --card-bg: rgba(10, 10, 15, 0.9);
+      --border-color: rgba(0, 255, 249, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark-bg);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated gradient background */
+    .gradient-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(153, 69, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(0, 255, 249, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 0, 255, 0.05) 0%, transparent 50%);
+      z-index: -1;
+      animation: gradientShift 15s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(-2%, 2%) rotate(1deg); }
+    }
+
+    /* Header */
+    header {
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(5, 5, 8, 0.95);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: #888;
+      text-decoration: none;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    #connect-wallet {
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #connect-wallet:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(153, 69, 255, 0.4);
+    }
+
+    #connect-wallet.connected {
+      background: linear-gradient(135deg, var(--neon-green), #00aa00);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Page header */
+    .page-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .page-header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      margin-bottom: 15px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink), var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .page-header p {
+      color: #888;
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Blink Builder */
+    .blink-builder {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 40px;
+      margin-bottom: 60px;
+    }
+
+    @media (max-width: 1024px) {
+      .blink-builder {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .builder-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .builder-card h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      margin-bottom: 25px;
+      color: var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Form styles */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #aaa;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 255, 249, 0.2);
+    }
+
+    .form-group select option {
+      background: var(--dark-bg);
+    }
+
+    /* Risk selector */
+    .risk-selector {
+      display: flex;
+      gap: 10px;
+    }
+
+    .risk-btn {
+      flex: 1;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: #888;
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .risk-btn:hover {
+      border-color: var(--neon-cyan);
+    }
+
+    .risk-btn.active {
+      color: white;
+    }
+
+    .risk-btn.low.active {
+      border-color: var(--neon-green);
+      background: rgba(57, 255, 20, 0.1);
+      color: var(--neon-green);
+    }
+
+    .risk-btn.medium.active {
+      border-color: var(--neon-yellow);
+      background: rgba(255, 255, 0, 0.1);
+      color: var(--neon-yellow);
+    }
+
+    .risk-btn.high.active {
+      border-color: var(--neon-pink);
+      background: rgba(255, 0, 255, 0.1);
+      color: var(--neon-pink);
+    }
+
+    /* URL output */
+    .url-output {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .url-output input {
+      flex: 1;
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid var(--neon-purple);
+      border-radius: 8px;
+      color: var(--neon-cyan);
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .url-output button {
+      padding: 12px 20px;
+      background: var(--neon-purple);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .url-output button:hover {
+      background: var(--neon-pink);
+      transform: translateY(-2px);
+    }
+
+    /* Blink Preview */
+    .blink-preview {
+      background: #1a1a2e;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    .preview-header {
+      background: linear-gradient(135deg, var(--neon-purple) 0%, #6b21a8 100%);
+      padding: 30px;
+      text-align: center;
+    }
+
+    .preview-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+
+    .preview-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .preview-description {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .preview-body {
+      padding: 20px 30px 30px;
+    }
+
+    .preview-input {
+      margin-bottom: 15px;
+    }
+
+    .preview-input label {
+      display: block;
+      margin-bottom: 5px;
+      color: #888;
+      font-size: 0.8rem;
+    }
+
+    .preview-input input {
+      width: 100%;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: white;
+      font-family: inherit;
+    }
+
+    .preview-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .preview-action-btn {
+      padding: 14px;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.95rem;
+    }
+
+    .preview-action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(153, 69, 255, 0.4);
+    }
+
+    .preview-action-btn.secondary {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .preview-action-btn.secondary:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: none;
+    }
+
+    /* Protocol cards */
+    .protocols-section {
+      margin-top: 60px;
+    }
+
+    .protocols-section h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .protocols-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .protocol-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 25px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .protocol-card:hover {
+      border-color: var(--neon-cyan);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0, 255, 249, 0.1);
+    }
+
+    .protocol-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
+
+    .protocol-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .protocol-card p {
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 15px;
+    }
+
+    .protocol-card .apy {
+      display: inline-block;
+      padding: 5px 12px;
+      background: rgba(57, 255, 20, 0.1);
+      border: 1px solid var(--neon-green);
+      border-radius: 20px;
+      color: var(--neon-green);
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .protocol-card .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .protocol-card .action-tag {
+      padding: 4px 10px;
+      background: rgba(153, 69, 255, 0.2);
+      border-radius: 4px;
+      color: var(--neon-purple);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    /* How it works section */
+    .how-it-works {
+      margin-top: 80px;
+      text-align: center;
+    }
+
+    .how-it-works h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      margin-bottom: 40px;
+    }
+
+    .steps {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .step {
+      max-width: 250px;
+    }
+
+    .step-number {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin: 0 auto 15px;
+    }
+
+    .step h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: var(--neon-green);
+      color: black;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-weight: bold;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Transaction modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 450px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .modal h3 {
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 20px;
+    }
+
+    .modal .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--neon-cyan);
+      border-radius: 50%;
+      margin: 20px auto;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .modal p {
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    .modal button {
+      padding: 12px 30px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: white;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .modal button:hover {
+      border-color: var(--neon-cyan);
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 80px;
+      padding: 30px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      color: #666;
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--neon-cyan);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="gradient-bg"></div>
+
+  <header>
+    <a href="/" class="logo">SOLANAYIELD</a>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/live">Live Dashboard</a>
+      <a href="/blinks.html" class="active">Blinks</a>
+      <a href="/compare.html">Compare</a>
+      <button id="connect-wallet">Connect Wallet</button>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>⚡ Solana Actions</h1>
+      <p>Create shareable blinks for your DeFi yield strategies. One link, instant execution.</p>
+    </div>
+
+    <div class="blink-builder">
+      <div class="builder-card">
+        <h2>🔧 Build Your Blink</h2>
+        
+        <div class="form-group">
+          <label>Action Type</label>
+          <select id="action-type">
+            <option value="strategy">🤖 AI Strategy (Auto-optimized allocation)</option>
+            <option value="stake-jito">⚡ Jito Stake (Liquid Staking)</option>
+            <option value="stake-marinade">🥩 Marinade Stake (Liquid Staking)</option>
+            <option value="deposit-kamino">🏛️ Kamino Deposit (Lending)</option>
+            <option value="deposit-drift">📈 Drift Deposit (Trading)</option>
+            <option value="swap">🪐 Jupiter Swap</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="risk-group">
+          <label>Risk Tolerance</label>
+          <div class="risk-selector">
+            <button class="risk-btn low" data-risk="low">🟢 Low</button>
+            <button class="risk-btn medium active" data-risk="medium">🟡 Medium</button>
+            <button class="risk-btn high" data-risk="high">🔴 High</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Default Amount (SOL)</label>
+          <input type="number" id="default-amount" value="1" min="0.01" step="0.1">
+        </div>
+
+        <div class="url-output">
+          <input type="text" id="blink-url" readonly placeholder="Your blink URL will appear here...">
+          <button id="copy-url">Copy</button>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+          <button class="preview-action-btn" id="share-x" style="flex: 1; font-size: 0.85rem;">
+            Share on X
+          </button>
+          <button class="preview-action-btn secondary" id="share-warpcast" style="flex: 1; font-size: 0.85rem;">
+            Share on Warpcast
+          </button>
+        </div>
+      </div>
+
+      <div class="builder-card" style="padding: 0;">
+        <h2 style="padding: 30px 30px 0;">👁️ Live Preview</h2>
+        <div class="blink-preview" style="margin: 20px; margin-top: 10px;">
+          <div class="preview-header">
+            <div class="preview-icon">🌾</div>
+            <div class="preview-title" id="preview-title">SolanaYield Balanced Strategy</div>
+            <div class="preview-description" id="preview-description">Expected APY: 12.5%
+
+Top opportunities:
+Kamino: USDC @ 8.2%
+Jito: SOL @ 7.8%
+Drift: SOL @ 6.1%</div>
+          </div>
+          <div class="preview-body">
+            <div class="preview-input">
+              <label>Amount (SOL)</label>
+              <input type="number" id="preview-amount" value="1" min="0.01" step="0.1">
+            </div>
+            <div class="preview-actions">
+              <button class="preview-action-btn" id="execute-action">Deploy Capital</button>
+              <button class="preview-action-btn secondary" onclick="window.location='/live'">View Live Analysis</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="protocols-section">
+      <h2>Supported Protocols</h2>
+      <div class="protocols-grid" id="protocols-grid">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <div class="how-it-works">
+      <h2>How Blinks Work</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Create</h3>
+          <p>Configure your yield strategy using the builder above</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Share</h3>
+          <p>Copy the blink URL and share it anywhere - X, Discord, Telegram</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Execute</h3>
+          <p>Anyone can click the link and execute with their wallet instantly</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Built for the <a href="https://www.colosseum.org/hackathon" target="_blank">Colosseum Agent Hackathon</a> // 
+    <a href="https://github.com/claude-bot-ai-123123/solana-yield" target="_blank">GitHub</a></p>
+  </footer>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <div class="modal-overlay" id="tx-modal">
+    <div class="modal">
+      <h3 id="modal-title">Processing Transaction</h3>
+      <div class="spinner" id="modal-spinner"></div>
+      <p id="modal-message">Please approve the transaction in your wallet...</p>
+      <button id="modal-close" style="display: none;">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = 'https://solana-yield.vercel.app';
+    const PROTOCOLS = {
+      kamino: {
+        name: 'Kamino Finance',
+        description: 'Automated liquidity management & lending on Solana',
+        icon: '🏛️',
+        apy: '5-25%',
+        actions: ['deposit', 'withdraw', 'claim'],
+      },
+      jito: {
+        name: 'Jito',
+        description: 'MEV-powered liquid staking with JitoSOL',
+        icon: '⚡',
+        apy: '7-9%',
+        actions: ['stake', 'unstake'],
+      },
+      marinade: {
+        name: 'Marinade Finance',
+        description: 'Decentralized liquid staking with mSOL',
+        icon: '🥩',
+        apy: '6-8%',
+        actions: ['stake', 'unstake'],
+      },
+      drift: {
+        name: 'Drift Protocol',
+        description: 'Perpetuals & spot trading platform',
+        icon: '📈',
+        apy: '3-40%',
+        actions: ['deposit', 'withdraw', 'trade'],
+      },
+      jupiter: {
+        name: 'Jupiter',
+        description: 'Leading DEX aggregator on Solana',
+        icon: '🪐',
+        apy: 'Variable',
+        actions: ['swap'],
+      },
+    };
+
+    // State
+    let selectedRisk = 'medium';
+    let walletConnected = false;
+    let walletAddress = null;
+
+    // Elements
+    const actionTypeEl = document.getElementById('action-type');
+    const riskGroupEl = document.getElementById('risk-group');
+    const defaultAmountEl = document.getElementById('default-amount');
+    const blinkUrlEl = document.getElementById('blink-url');
+    const previewTitleEl = document.getElementById('preview-title');
+    const previewDescEl = document.getElementById('preview-description');
+    const previewAmountEl = document.getElementById('preview-amount');
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      renderProtocols();
+      updateBlinkUrl();
+      updatePreview();
+
+      // Risk buttons
+      document.querySelectorAll('.risk-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedRisk = btn.dataset.risk;
+          updateBlinkUrl();
+          updatePreview();
+        });
+      });
+
+      // Action type change
+      actionTypeEl.addEventListener('change', () => {
+        const isStrategy = actionTypeEl.value === 'strategy';
+        riskGroupEl.style.display = isStrategy ? 'block' : 'none';
+        updateBlinkUrl();
+        updatePreview();
+      });
+
+      // Amount change
+      defaultAmountEl.addEventListener('input', () => {
+        previewAmountEl.value = defaultAmountEl.value;
+        updateBlinkUrl();
+      });
+
+      previewAmountEl.addEventListener('input', () => {
+        defaultAmountEl.value = previewAmountEl.value;
+        updateBlinkUrl();
+      });
+
+      // Copy URL
+      document.getElementById('copy-url').addEventListener('click', copyUrl);
+
+      // Share buttons
+      document.getElementById('share-x').addEventListener('click', shareOnX);
+      document.getElementById('share-warpcast').addEventListener('click', shareOnWarpcast);
+
+      // Execute action
+      document.getElementById('execute-action').addEventListener('click', executeAction);
+
+      // Connect wallet
+      document.getElementById('connect-wallet').addEventListener('click', connectWallet);
+
+      // Modal close
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+    });
+
+    function updateBlinkUrl() {
+      const actionType = actionTypeEl.value;
+      const amount = defaultAmountEl.value;
+      
+      let url;
+      if (actionType === 'strategy') {
+        url = `${BASE_URL}/api/actions?type=strategy&risk=${selectedRisk}&amount=${amount}`;
+      } else if (actionType.startsWith('stake-')) {
+        const protocol = actionType.split('-')[1];
+        url = `${BASE_URL}/api/actions?type=stake&protocol=${protocol}&amount=${amount}`;
+      } else if (actionType.startsWith('deposit-')) {
+        const protocol = actionType.split('-')[1];
+        url = `${BASE_URL}/api/actions?type=deposit&protocol=${protocol}&amount=${amount}`;
+      } else if (actionType === 'swap') {
+        url = `${BASE_URL}/api/actions?type=swap&protocol=jupiter&amount=${amount}`;
+      }
+      
+      // Convert to blink URL format (solana-action:)
+      const blinkUrl = `https://dial.to/?action=solana-action:${encodeURIComponent(url)}`;
+      blinkUrlEl.value = blinkUrl;
+    }
+
+    async function updatePreview() {
+      const actionType = actionTypeEl.value;
+      
+      if (actionType === 'strategy') {
+        const riskLabels = { low: 'Conservative', medium: 'Balanced', high: 'Aggressive' };
+        previewTitleEl.textContent = `SolanaYield ${riskLabels[selectedRisk]} Strategy`;
+        
+        // Fetch live data for preview
+        try {
+          const res = await fetch(`${BASE_URL}/api/actions?type=strategy&risk=${selectedRisk}`);
+          const data = await res.json();
+          previewDescEl.textContent = data.description || 'Loading yield data...';
+        } catch (err) {
+          previewDescEl.textContent = `Expected APY: ~${selectedRisk === 'low' ? '6-10' : selectedRisk === 'high' ? '15-30' : '10-18'}%\n\nAI-optimized allocation across Solana DeFi`;
+        }
+      } else {
+        const [action, protocol] = actionType.split('-');
+        const p = PROTOCOLS[protocol] || PROTOCOLS.jupiter;
+        previewTitleEl.textContent = `${p.icon} ${p.name}`;
+        previewDescEl.textContent = `${p.description}\n\nExpected APY: ${p.apy}`;
+      }
+    }
+
+    function copyUrl() {
+      blinkUrlEl.select();
+      navigator.clipboard.writeText(blinkUrlEl.value);
+      showToast('Copied to clipboard!');
+    }
+
+    function shareOnX() {
+      const text = encodeURIComponent(`Check out my Solana DeFi strategy on @SolanaYield! 🌾\n\n`);
+      const url = encodeURIComponent(blinkUrlEl.value);
+      window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+    }
+
+    function shareOnWarpcast() {
+      const text = encodeURIComponent(`Check out my Solana DeFi strategy! 🌾\n\n${blinkUrlEl.value}`);
+      window.open(`https://warpcast.com/~/compose?text=${text}`, '_blank');
+    }
+
+    async function connectWallet() {
+      const btn = document.getElementById('connect-wallet');
+      
+      if (walletConnected) {
+        walletConnected = false;
+        walletAddress = null;
+        btn.textContent = 'Connect Wallet';
+        btn.classList.remove('connected');
+        return;
+      }
+
+      try {
+        // Check for Solana wallet
+        const provider = window.solana || window.phantom?.solana;
+        
+        if (!provider) {
+          showToast('Please install Phantom or another Solana wallet');
+          window.open('https://phantom.app/', '_blank');
+          return;
+        }
+
+        const resp = await provider.connect();
+        walletAddress = resp.publicKey.toString();
+        walletConnected = true;
+        
+        btn.textContent = `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`;
+        btn.classList.add('connected');
+        showToast('Wallet connected!');
+      } catch (err) {
+        console.error('Wallet connection failed:', err);
+        showToast('Failed to connect wallet');
+      }
+    }
+
+    async function executeAction() {
+      if (!walletConnected) {
+        showToast('Please connect your wallet first');
+        document.getElementById('connect-wallet').click();
+        return;
+      }
+
+      const amount = parseFloat(previewAmountEl.value);
+      if (!amount || amount <= 0) {
+        showToast('Please enter a valid amount');
+        return;
+      }
+
+      showModal('Building Transaction', 'Fetching optimal route...');
+
+      try {
+        const actionType = actionTypeEl.value;
+        let apiUrl;
+        
+        if (actionType === 'strategy') {
+          apiUrl = `${BASE_URL}/api/actions?type=strategy&risk=${selectedRisk}&amount=${amount}`;
+        } else if (actionType.startsWith('stake-')) {
+          const protocol = actionType.split('-')[1];
+          apiUrl = `${BASE_URL}/api/actions?type=stake&protocol=${protocol}&amount=${amount}`;
+        } else if (actionType.startsWith('deposit-')) {
+          const protocol = actionType.split('-')[1];
+          apiUrl = `${BASE_URL}/api/actions?type=deposit&protocol=${protocol}&amount=${amount}`;
+        } else {
+          apiUrl = `${BASE_URL}/api/actions?type=swap&protocol=jupiter&amount=${amount}`;
+        }
+
+        // POST to get transaction
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            account: walletAddress,
+            amount,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          throw new Error(data.error.message);
+        }
+
+        updateModal('Sign Transaction', 'Please approve in your wallet...');
+
+        // Decode and sign transaction
+        const provider = window.solana || window.phantom?.solana;
+        const tx = data.transaction;
+        
+        // If it's a versioned transaction (base64), use signAndSendTransaction
+        const signedTx = await provider.signAndSendTransaction(
+          // Decode base64 transaction
+          {
+            serialize: () => Uint8Array.from(atob(tx), c => c.charCodeAt(0)),
+          }
+        ).catch(async () => {
+          // Fallback: try legacy signing
+          const connection = new (await import('https://esm.sh/@solana/web3.js')).Connection(
+            'https://api.mainnet-beta.solana.com'
+          );
+          const txBuffer = Buffer.from(tx, 'base64');
+          const transaction = (await import('https://esm.sh/@solana/web3.js')).Transaction.from(txBuffer);
+          const signed = await provider.signTransaction(transaction);
+          return await connection.sendRawTransaction(signed.serialize());
+        });
+
+        updateModal('Success! 🎉', `Transaction sent!\n\n${data.message || ''}`);
+        document.getElementById('modal-spinner').style.display = 'none';
+        document.getElementById('modal-close').style.display = 'block';
+
+      } catch (err) {
+        console.error('Transaction failed:', err);
+        updateModal('Transaction Failed', err.message || 'Something went wrong');
+        document.getElementById('modal-spinner').style.display = 'none';
+        document.getElementById('modal-close').style.display = 'block';
+      }
+    }
+
+    function renderProtocols() {
+      const grid = document.getElementById('protocols-grid');
+      grid.innerHTML = Object.entries(PROTOCOLS).map(([key, p]) => `
+        <div class="protocol-card" onclick="selectProtocol('${key}')">
+          <div class="icon">${p.icon}</div>
+          <h3>${p.name}</h3>
+          <p>${p.description}</p>
+          <span class="apy">${p.apy} APY</span>
+          <div class="actions">
+            ${p.actions.map(a => `<span class="action-tag">${a}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectProtocol(protocol) {
+      const p = PROTOCOLS[protocol];
+      if (p.actions.includes('stake')) {
+        actionTypeEl.value = `stake-${protocol}`;
+      } else if (p.actions.includes('deposit')) {
+        actionTypeEl.value = `deposit-${protocol}`;
+      } else {
+        actionTypeEl.value = 'swap';
+      }
+      riskGroupEl.style.display = 'none';
+      updateBlinkUrl();
+      updatePreview();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function showModal(title, message) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-message').textContent = message;
+      document.getElementById('modal-spinner').style.display = 'block';
+      document.getElementById('modal-close').style.display = 'none';
+      document.getElementById('tx-modal').classList.add('show');
+    }
+
+    function updateModal(title, message) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-message').textContent = message;
+    }
+
+    function closeModal() {
+      document.getElementById('tx-modal').classList.remove('show');
+    }
+  </script>
+</body>
+</html>
