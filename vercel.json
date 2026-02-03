@@ -22,6 +22,10 @@
     {
       "source": "/demo",
       "destination": "/demo.html"
+    },
+    {
+      "source": "/audit",
+      "destination": "/audit.html"
     }
   ],
   "headers": [
