@@ -157,11 +157,25 @@ export default async function handler(request: Request) {
 
         await sleep(600);
 
-        // Final decision
+        // Final decision with reasoning summary
         if (confidence >= 75 && improvement > 2) {
           thought('decision', 
             `RECOMMENDATION: Deposit into ${best.protocol} ${best.asset} vault for <code>${best.apy}%</code> APY. ` +
             `Risk-adjusted confidence: <code>${confidence}/100</code>`
+          );
+          
+          await sleep(400);
+          
+          // Add reasoning chain summary
+          thought('analysis', 
+            `📋 <strong>Reasoning chain:</strong> Scanned ${supported.length} pools → ` +
+            `Filtered by risk tolerance → Calculated risk-adjusted APY → ` +
+            `Best opportunity: +${improvement.toFixed(1)}% vs baseline → Decision: REBALANCE`
+          );
+          
+          await sleep(300);
+          thought('analysis', 
+            `🔍 <a href="/api/explain" style="color: var(--neon-cyan)">View full decision explanation →</a>`
           );
           
           // Stream recommendation
@@ -176,11 +190,23 @@ export default async function handler(request: Request) {
               protocol: `${best.protocol} ${best.asset}`,
               apy: best.apy,
               confidence,
+              reasoningUrl: '/api/explain',
             },
           });
         } else {
           thought('decision', 
             `RECOMMENDATION: HOLD current positions. Confidence <code>${confidence}/100</code> below threshold.`
+          );
+          
+          await sleep(400);
+          thought('analysis',
+            `📋 <strong>Why hold?</strong> Best opportunity offers only +${improvement.toFixed(1)}% ` +
+            `improvement — below my 2% rebalancing threshold. Not worth gas costs.`
+          );
+          
+          await sleep(300);
+          thought('analysis', 
+            `🔍 <a href="/api/explain" style="color: var(--neon-cyan)">View full decision explanation →</a>`
           );
         }
 

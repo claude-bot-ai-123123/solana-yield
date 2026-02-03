@@ -404,6 +404,9 @@ const html = `<!DOCTYPE html>
         <button class="action-btn" id="executeBtn" onclick="executeRecommendation()" disabled>
           Execute Strategy
         </button>
+        <a href="/api/explain" class="action-btn" style="display: block; text-align: center; text-decoration: none; margin-top: 10px; border-color: var(--neon-cyan); color: var(--neon-cyan);">
+          🧠 View Full Reasoning
+        </a>
       </div>
     </aside>
   </main>

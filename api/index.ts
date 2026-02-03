@@ -5,32 +5,54 @@ export const config = {
 export default function handler(request: Request) {
   return new Response(JSON.stringify({
     name: 'SolanaYield API',
-    version: '0.2.0',
-    description: 'Autonomous DeFi yield orchestrator for AI agents — with real-time rug pull detection',
-    tagline: 'Trust, but verify — automatically.',
+    version: '0.3.0',
+    description: 'Autonomous DeFi yield orchestrator with transparent reasoning — every decision explained',
+    tagline: 'No black boxes. No hidden logic. Complete transparency.',
+    highlight: '🧠 NEW: Transparent Reasoning Engine — see exactly WHY every decision is made',
     endpoints: {
+      '⭐_transparency': {
+        '/api/explain': '🧠 Interactive reasoning explanation (visual UI)',
+        '/api/reasoning': 'GET - Complete reasoning chain JSON (?mode=simple|full)',
+        '/api/reasoning?whatif=high': 'GET - "What if I chose high risk?" counterfactual',
+      },
       core: {
         '/api/yields': 'GET - Yield opportunities from Kamino, Drift, Jito, Marinade',
         '/api/quote': 'GET - Swap quote (?from=SOL&to=USDC&amount=1)',
         '/api/risk': 'GET - Risk-adjusted yield analysis',
       },
       trust_layer: {
-        '/api/trust-score': 'GET - Protocol trust ratings (Moody\'s for DeFi). ?protocol=kamino or ?all=true',
-        '/api/rugpull': 'GET - 🛡️ Real-time rug pull detection. ?protocol=kamino or ?all=true or ?alerts=true',
-        '/api/alerts': 'GET - 🚨 Live rug pull alert dashboard (cyberpunk UI)',
+        '/api/trust-score': 'GET - Protocol trust ratings (Moody\'s for DeFi)',
+        '/api/rugpull': 'GET - 🛡️ Real-time rug pull detection',
+        '/api/alerts': 'GET - 🚨 Live rug pull alert dashboard',
       },
       ui_dashboards: {
+        '/api/explain': '🧠 Decision Transparency Engine (new!)',
         '/api/live': 'GET - Live decision stream UI',
         '/api/alerts': 'GET - Rug pull detection dashboard',
         '/api/autopilot': 'GET - Autonomous decision analysis',
       },
+      audit_trail: {
+        '/api/audit/decisions': 'GET - Query decision history',
+        '/api/audit/stats': 'GET - Decision statistics',
+        '/api/audit/timeline': 'GET - Decision timeline',
+        '/api/audit/export': 'GET - Export for compliance',
+      },
       agent_endpoints: {
         '/api/stream': 'GET - SSE stream for real-time thought feed',
         '/api/portfolio': 'GET - Portfolio analysis with recommendations',
-        '/api/strategy': 'GET - Strategy recommendations based on risk profile',
+        '/api/strategy': 'GET - Strategy recommendations by risk profile',
+        '/api/webhook': 'POST - Register for decision webhooks',
       },
     },
     features: {
+      '⭐_transparent_reasoning': [
+        '🔍 Step-by-step decision chain with evidence',
+        '📊 Risk factor breakdown with weights',
+        '🔀 Alternatives considered & why rejected',
+        '🔮 "What-if" counterfactual scenarios',
+        '🧒 ELI5 explanations for non-technical users',
+        '📋 Full audit trail for compliance',
+      ],
       yield_optimization: [
         'Real-time yields from 9+ Solana DeFi protocols',
         'Risk-adjusted APY scoring (Sharpe ratio for DeFi)',
@@ -40,8 +62,6 @@ export default function handler(request: Request) {
         '📉 TVL collapse / liquidity drain detection',
         '🐋 Whale concentration & dump monitoring',
         '🔐 Contract upgrade authority analysis',
-        '🖨️ Mint/freeze authority detection',
-        '🔓 Token unlock schedule tracking',
         '⚡ Real-time alert generation',
       ],
       trust_scoring: [
@@ -49,6 +69,11 @@ export default function handler(request: Request) {
         'Multi-factor analysis (audits, TVL, team, history)',
         'Transparent factor breakdown',
       ],
+    },
+    philosophy: {
+      core_belief: 'AI agents managing money MUST be transparent',
+      approach: 'Every decision comes with complete reasoning chain',
+      goal: 'Build trust through radical transparency, not obscurity',
     },
     github: 'https://github.com/claude-bot-ai-123123/solana-yield',
     hackathon: 'Colosseum Agent Hackathon Feb 2-12, 2026',
