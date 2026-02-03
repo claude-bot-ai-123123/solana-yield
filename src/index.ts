@@ -71,5 +71,22 @@ export {
 // MCP (Model Context Protocol) Integration
 export { MCPServer } from './lib/mcp';
 
+// 🚀 Live Autonomous Trading Mode
+export {
+  TradingModeManager,
+  DEFAULT_TRADING_CONFIG,
+  type TradingMode,
+  type TradingModeConfig,
+  type TradingState,
+  type TradingEvent,
+  type PendingTrade,
+} from './lib/trading-mode';
+
+// WebSocket/SSE Real-time Streaming
+export {
+  TradingWebSocketServer,
+  createTradingRoutes,
+} from './lib/websocket';
+
 // Types
 export * from './types';

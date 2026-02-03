@@ -40,6 +40,9 @@ export interface DecisionContext {
     totalSolanaTvl?: number;
     avgApy?: number;
   };
+  // Live Trading Mode context
+  tradingMode?: 'manual' | 'monitoring' | 'autonomous';
+  sessionId?: string;
 }
 
 export interface DecisionMeta {

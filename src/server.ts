@@ -1,11 +1,11 @@
 /**
  * SolanaYield HTTP API Server
  * Simple REST API for yield monitoring and quotes
- * Now with risk-adjusted recommendations and full audit trail!
+ * Now with risk-adjusted recommendations, full audit trail, and LIVE AUTONOMOUS TRADING!
  */
 
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { Connection } from '@solana/web3.js';
+import { Connection, Keypair } from '@solana/web3.js';
 import { YieldMonitor } from './lib/monitor';
 import { JupiterSwap, TOKENS } from './lib/jupiter';
 import { 
@@ -21,12 +21,71 @@ import {
   DecisionRecord,
 } from './lib/history';
 import { MCPServer } from './lib/mcp';
+import { TradingModeManager, DEFAULT_TRADING_CONFIG } from './lib/trading-mode';
+import { TradingWebSocketServer, createTradingRoutes } from './lib/websocket';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const connection = new Connection('https://api.mainnet-beta.solana.com');
+const connection = new Connection(process.env.RPC_URL || 'https://api.mainnet-beta.solana.com');
 const monitor = new YieldMonitor(connection);
 const jupiter = new JupiterSwap(connection);
 const historyStore = getHistoryStore(process.env.DECISION_DATA_DIR || './data/decisions');
 const mcpServer = new MCPServer(connection);
+
+// ============================================================================
+// Initialize Trading Mode (Live Autonomous Trading!)
+// ============================================================================
+
+let tradingManager: TradingModeManager | null = null;
+const wsServer = new TradingWebSocketServer();
+
+// Load keypair if available
+function loadKeypair(): Keypair | null {
+  const keyPaths = [
+    process.env.KEYPAIR_PATH,
+    path.join(process.env.HOME || '', '.openclaw/workspace/keys/main.json'),
+    path.join(process.env.HOME || '', '.config/solana/id.json'),
+  ].filter(Boolean) as string[];
+  
+  for (const keyPath of keyPaths) {
+    try {
+      if (fs.existsSync(keyPath)) {
+        const keyData = JSON.parse(fs.readFileSync(keyPath, 'utf-8'));
+        console.log(`🔑 Loaded keypair from ${keyPath}`);
+        return Keypair.fromSecretKey(new Uint8Array(keyData));
+      }
+    } catch (err) {
+      console.warn(`⚠️ Failed to load keypair from ${keyPath}: ${err}`);
+    }
+  }
+  return null;
+}
+
+// Initialize trading manager with default strategy
+const keypair = loadKeypair();
+if (keypair) {
+  const defaultStrategy = {
+    name: 'balanced',
+    riskTolerance: 'medium' as const,
+    rebalanceThreshold: 2.0,
+    maxProtocolConcentration: 0.5,
+    maxSlippage: 0.01,
+    preferredProtocols: ['kamino', 'drift', 'jito', 'marinade'],
+  };
+  
+  tradingManager = new TradingModeManager(connection, keypair, defaultStrategy, {
+    mode: 'monitoring', // Start in safe mode
+    maxTradeValueUsd: 500,
+    maxDailyTradesUsd: 2000,
+    requireApprovalAboveUsd: 100,
+    decisionIntervalMs: 60 * 1000, // Check every minute
+  });
+  
+  wsServer.attachTradingManager(tradingManager);
+  console.log('🤖 Trading Mode Manager initialized (monitoring mode)');
+} else {
+  console.log('⚠️ No keypair found - Trading Mode disabled (read-only mode)');
+}
 
 const PORT = process.env.PORT || 3000;
 
@@ -38,20 +97,43 @@ const routes: Record<string, RouteHandler> = {
   'GET /': async (req, res) => {
     json(res, {
       name: 'SolanaYield API',
-      version: '0.3.0',
-      description: 'Autonomous DeFi yield orchestrator with risk-adjusted recommendations and full audit trail',
+      version: '1.0.0',
+      description: 'Autonomous DeFi yield orchestrator with LIVE TRADING, risk-adjusted recommendations, and full audit trail',
+      tradingEnabled: !!tradingManager,
+      tradingMode: tradingManager?.getState().mode || 'disabled',
       endpoints: {
+        // Yield Data
         '/yields': 'GET - All yield opportunities (raw APY)',
         '/yields/top': 'GET - Top 10 by raw APY',
         '/yields/all': 'GET - All Solana yields',
+        // Risk Analysis
         '/risk/analyze': 'GET - Risk-adjusted recommendations (?risk=medium&top=10)',
         '/risk/compare': 'GET - Compare raw APY vs risk-adjusted rankings',
         '/risk/protocols': 'GET - Protocol risk profiles',
+        // Swaps
         '/quote': 'GET - Swap quote (?from=SOL&to=USDC&amount=1)',
+        // 🚀 LIVE TRADING (NEW!)
+        '/trading': 'GET - Trading API overview',
+        '/trading/status': 'GET - Current trading state and stats',
+        '/trading/config': 'GET - Trading configuration',
+        '/trading/summary': 'GET - Human-readable status',
+        '/trading/pending': 'GET - Pending trades requiring approval',
+        '/trading/history': 'GET - Trade execution history',
+        '/trading/stream': 'GET - SSE stream for real-time updates',
+        '/trading/start': 'POST - Start trading manager',
+        '/trading/stop': 'POST - Stop trading manager',
+        '/trading/mode': 'POST - Change mode (manual/monitoring/autonomous)',
+        '/trading/pause': 'POST - Pause trading',
+        '/trading/resume': 'POST - Resume trading',
+        '/trading/emergency': 'POST - Emergency stop',
+        '/trading/approve': 'POST - Approve pending trade (?id=xxx)',
+        '/trading/reject': 'POST - Reject pending trade (?id=xxx)',
+        // Audit Trail
         '/audit/decisions': 'GET - Query decision history (?type=rebalance&limit=20)',
         '/audit/stats': 'GET - Decision statistics summary',
         '/audit/timeline': 'GET - Decision timeline (?groupBy=hour|day)',
         '/audit/export': 'GET - Export decisions for compliance (?startDate=2024-01-01)',
+        // Health & MCP
         '/health': 'GET - Health check',
         '/mcp': 'MCP (Model Context Protocol) - AI agent integration',
         '/mcp/info': 'GET - MCP server capabilities',
@@ -606,12 +688,77 @@ const dynamicRoutes: Array<{
   },
 ];
 
+// ============================================================================
+// Trading Routes (Live Autonomous Trading!)
+// ============================================================================
+
+let tradingRoutes: Record<string, (req: IncomingMessage, res: ServerResponse) => Promise<void>> = {};
+
+if (tradingManager) {
+  tradingRoutes = createTradingRoutes(tradingManager, wsServer);
+}
+
 const server = createServer(async (req, res) => {
   const method = req.method || 'GET';
-  const path = (req.url || '/').split('?')[0];
-  const routeKey = `${method} ${path}`;
+  const urlPath = (req.url || '/').split('?')[0];
+  const routeKey = `${method} ${urlPath}`;
 
-  // Try static routes first
+  // Handle CORS preflight
+  if (method === 'OPTIONS') {
+    res.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    });
+    res.end();
+    return;
+  }
+
+  // Try trading routes first (they have special handling)
+  if (urlPath.startsWith('/trading')) {
+    // Map trading routes
+    const tradingRouteMap: Record<string, string> = {
+      'GET /trading': 'GET /trading',
+      'GET /trading/status': 'GET /trading/status',
+      'GET /trading/config': 'GET /trading/config',
+      'GET /trading/summary': 'GET /trading/summary',
+      'GET /trading/pending': 'GET /trading/pending',
+      'GET /trading/history': 'GET /trading/history',
+      'GET /trading/stream': 'GET /trading/stream',
+      'POST /trading/start': 'POST /trading/start',
+      'POST /trading/stop': 'POST /trading/stop',
+      'POST /trading/mode': 'POST /trading/mode',
+      'POST /trading/pause': 'POST /trading/pause',
+      'POST /trading/resume': 'POST /trading/resume',
+      'POST /trading/emergency': 'POST /trading/emergency',
+      'POST /trading/config': 'POST /trading/config',
+      'POST /trading/approve': 'POST /trading/approve',
+      'POST /trading/reject': 'POST /trading/reject',
+    };
+    
+    const tradingHandler = tradingRoutes[tradingRouteMap[routeKey]];
+    if (tradingHandler) {
+      try {
+        await tradingHandler(req, res);
+        return;
+      } catch (err) {
+        error(res, 500, `Trading error: ${err}`);
+        return;
+      }
+    }
+    
+    // Trading not enabled
+    if (!tradingManager) {
+      json(res, {
+        error: 'Trading mode not enabled',
+        reason: 'No keypair loaded. Set KEYPAIR_PATH environment variable.',
+        readOnlyEndpoints: ['/yields', '/risk/analyze', '/audit/decisions'],
+      });
+      return;
+    }
+  }
+
+  // Try static routes
   const handler = routes[routeKey];
   if (handler) {
     try {
@@ -627,7 +774,7 @@ const server = createServer(async (req, res) => {
   for (const route of dynamicRoutes) {
     if (route.method !== method) continue;
     
-    const match = path.match(route.pattern);
+    const match = urlPath.match(route.pattern);
     if (match) {
       const params: Record<string, string> = { id: match[1] };
       try {
@@ -648,6 +795,20 @@ const server = createServer(async (req, res) => {
   }
 });
 
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('Shutting down...');
+  if (tradingManager) {
+    tradingManager.stop();
+  }
+  wsServer.shutdown();
+  server.close();
+});
+
 server.listen(PORT, () => {
   console.log(`🌾 SolanaYield API running on http://localhost:${PORT}`);
+  console.log(`🤖 Live Trading: ${tradingManager ? 'ENABLED' : 'DISABLED (no keypair)'}`);
+  if (tradingManager) {
+    console.log(`📡 Real-time stream: http://localhost:${PORT}/trading/stream`);
+  }
 });
