@@ -21,13 +21,15 @@ interface LlamaPool {
 }
 
 // Map DeFi Llama project names to our protocol names
-const PROJECT_MAP: Record<string, 'kamino' | 'drift' | 'jito' | 'marinade'> = {
+const PROJECT_MAP: Record<string, 'kamino' | 'drift' | 'jito' | 'marinade' | 'mango'> = {
   'kamino-lend': 'kamino',
   'kamino': 'kamino',
   'drift': 'drift',
   'jito': 'jito',
   'marinade-finance': 'marinade',
   'marinade': 'marinade',
+  'mango-markets': 'mango',
+  'mango': 'mango',
 };
 
 export async function fetchSolanaYields(

@@ -1,7 +1,7 @@
 import { PublicKey, Keypair } from '@solana/web3.js';
 
 export interface YieldOpportunity {
-  protocol: 'kamino' | 'drift' | 'jito' | 'marinade';
+  protocol: 'kamino' | 'drift' | 'jito' | 'marinade' | 'mango';
   asset: string;
   apy: number;
   tvl: number;

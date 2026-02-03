@@ -5,6 +5,7 @@ import { KaminoAdapter } from '../adapters/kamino';
 import { DriftAdapter } from '../adapters/drift';
 import { JitoAdapter } from '../adapters/jito';
 import { MarinadeAdapter } from '../adapters/marinade';
+import { MangoAdapter } from '../adapters/mango';
 import { FundingRateAdapter } from '../adapters/funding';
 
 export class YieldMonitor {
@@ -14,6 +15,7 @@ export class YieldMonitor {
     drift: DriftAdapter;
     jito: JitoAdapter;
     marinade: MarinadeAdapter;
+    mango: MangoAdapter;
     funding: FundingRateAdapter;
   };
 
@@ -24,6 +26,7 @@ export class YieldMonitor {
       drift: new DriftAdapter(connection),
       jito: new JitoAdapter(connection),
       marinade: new MarinadeAdapter(connection),
+      mango: new MangoAdapter(connection),
       funding: new FundingRateAdapter(connection),
     };
   }
@@ -53,6 +56,7 @@ export class YieldMonitor {
       this.adapters.drift.getYields(),
       this.adapters.jito.getYields(),
       this.adapters.marinade.getYields(),
+      this.adapters.mango.getYields(),
       this.adapters.funding.getYields(),
     ]);
 
