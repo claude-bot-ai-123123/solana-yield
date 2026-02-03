@@ -107,5 +107,18 @@ export {
   type HistoricalDataPoint,
 } from './lib/backtest';
 
+// ⛽ Gas Optimization AI
+export {
+  GasOptimizer,
+  PRIORITY_TIERS,
+  type PriorityTier,
+  type NetworkCongestion,
+  type GasRecommendation,
+  type BatchOptimization,
+  type TransactionBatch,
+  type TimingRecommendation,
+  type GasAnalysis,
+} from './lib/gas-optimizer';
+
 // Types
 export * from './types';
