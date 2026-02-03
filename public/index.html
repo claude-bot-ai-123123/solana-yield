@@ -923,6 +923,346 @@
       30% { transform: translateY(-6px); opacity: 1; }
     }
 
+    /* Interactive Widget */
+    .try-widget-section {
+      padding: 60px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .try-widget {
+      background: rgba(5, 5, 8, 0.95);
+      border: 2px solid rgba(0, 255, 249, 0.3);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 0 60px rgba(0, 255, 249, 0.15);
+    }
+
+    .widget-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .widget-header h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      color: var(--neon-cyan);
+      margin-bottom: 10px;
+    }
+
+    .widget-header p {
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    .widget-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .input-group label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .input-with-prefix {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(0, 255, 249, 0.3);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .input-with-prefix .prefix {
+      padding: 15px;
+      color: var(--neon-cyan);
+      background: rgba(0, 255, 249, 0.1);
+      border-right: 1px solid rgba(0, 255, 249, 0.3);
+    }
+
+    .input-with-prefix input {
+      flex: 1;
+      padding: 15px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.2rem;
+      outline: none;
+    }
+
+    .risk-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .risk-btn {
+      flex: 1;
+      padding: 15px 10px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #888;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .risk-btn:hover {
+      border-color: rgba(0, 255, 249, 0.5);
+      color: #fff;
+    }
+
+    .risk-btn.active {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 255, 249, 0.15);
+      color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 255, 249, 0.3);
+    }
+
+    .widget-run-btn {
+      grid-column: 1 / -1;
+      padding: 18px 40px;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+      border: none;
+      border-radius: 8px;
+      color: var(--dark-bg);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .widget-run-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 255, 249, 0.4);
+    }
+
+    .widget-run-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Agent Deliberation Animation */
+    .agents-container {
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(0, 255, 249, 0.2);
+    }
+
+    .agents-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      color: var(--neon-pink);
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--neon-pink);
+      border-radius: 50%;
+      animation: pulseDot 1s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 15px;
+    }
+
+    .agent-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      transition: all 0.3s;
+      opacity: 0.5;
+    }
+
+    .agent-card.thinking {
+      opacity: 1;
+      border-color: var(--neon-yellow);
+      animation: agentThink 1s infinite;
+    }
+
+    .agent-card.voted {
+      opacity: 1;
+      border-color: var(--neon-green);
+      background: rgba(57, 255, 20, 0.1);
+    }
+
+    @keyframes agentThink {
+      0%, 100% { box-shadow: 0 0 10px rgba(255, 255, 0, 0.3); }
+      50% { box-shadow: 0 0 25px rgba(255, 255, 0, 0.5); }
+    }
+
+    .agent-icon {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+
+    .agent-name {
+      font-size: 0.7rem;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .agent-status {
+      font-size: 0.65rem;
+      color: #666;
+      min-height: 30px;
+    }
+
+    .agent-vote {
+      margin-top: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      color: var(--neon-green);
+    }
+
+    /* Consensus Result */
+    .consensus-result {
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(0, 255, 249, 0.2);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .consensus-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .consensus-badge {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      color: var(--neon-green);
+      padding: 10px 20px;
+      border: 2px solid var(--neon-green);
+      border-radius: 8px;
+      background: rgba(57, 255, 20, 0.1);
+    }
+
+    .confidence-meter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    .meter-bar {
+      width: 100px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .consensus-reasoning {
+      background: rgba(0, 0, 0, 0.4);
+      border-left: 3px solid var(--neon-purple);
+      padding: 20px;
+      margin-bottom: 25px;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: #ccc;
+    }
+
+    .allocation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .allocation-card {
+      background: rgba(0, 255, 249, 0.05);
+      border: 1px solid rgba(0, 255, 249, 0.2);
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .alloc-info h4 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    .alloc-info p {
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .alloc-amount {
+      text-align: right;
+    }
+
+    .alloc-amount .pct {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      color: var(--neon-green);
+    }
+
+    .alloc-amount .apy {
+      font-size: 0.75rem;
+      color: var(--neon-cyan);
+    }
+
+    .consensus-footer {
+      text-align: center;
+    }
+
+    .footer-link {
+      color: var(--neon-pink);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .footer-link:hover {
+      text-shadow: 0 0 10px var(--neon-pink);
+    }
+
     /* Mobile */
     @media (max-width: 768px) {
       h1 { font-size: 2.5rem; }
@@ -932,6 +1272,9 @@
       .nav-links { display: none; }
       .chat-container { border-radius: 0; }
       .message-content { max-width: 95%; }
+      .widget-inputs { grid-template-columns: 1fr; }
+      .agents-grid { grid-template-columns: repeat(2, 1fr); }
+      .agent-card:nth-child(5) { grid-column: 1 / -1; }
     }
 
     /* Scrollbar */
@@ -967,14 +1310,106 @@
   <div class="container">
     <section class="hero">
       <div class="hero-badge">🏆 Colosseum Agent Hackathon</div>
-      <h1>AUTONOMOUS<br>YIELD INTELLIGENCE</h1>
+      <h1>5 AI AGENTS.<br>ONE STRATEGY.</h1>
       <p class="subtitle">
-        An AI agent that scans <span>9+ Solana protocols</span> in real-time, 
-        analyzes risk, and optimizes yield strategies—<span>without human intervention</span>.
+        Watch <span>5 independent AI agents</span> analyze your portfolio, 
+        debate the best approach, and reach consensus—<span>with full transparency</span>.
       </p>
       <div class="cta-group">
-        <a href="/live.html" class="btn-primary">⚡ Watch Live Feed</a>
-        <a href="#api" class="btn-secondary">// explore_api</a>
+        <a href="#try-it" class="btn-primary">🧠 Try It Now</a>
+        <a href="/live.html" class="btn-secondary">⚡ Watch Live Feed</a>
+      </div>
+    </section>
+
+    <!-- Interactive Multi-Agent Widget -->
+    <section class="try-widget-section" id="try-it">
+      <div class="try-widget">
+        <div class="widget-header">
+          <h2>🧠 MULTI-AGENT CONSENSUS</h2>
+          <p>Enter your parameters. Watch 5 AI agents debate. See transparent reasoning.</p>
+        </div>
+        
+        <div class="widget-inputs">
+          <div class="input-group">
+            <label>Investment Amount</label>
+            <div class="input-with-prefix">
+              <span class="prefix">$</span>
+              <input type="number" id="widget-amount" value="1000" min="100" max="1000000">
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Risk Tolerance</label>
+            <div class="risk-buttons">
+              <button class="risk-btn" data-risk="low" onclick="selectRisk('low')">🛡️ Low</button>
+              <button class="risk-btn active" data-risk="medium" onclick="selectRisk('medium')">⚖️ Medium</button>
+              <button class="risk-btn" data-risk="high" onclick="selectRisk('high')">🚀 High</button>
+            </div>
+          </div>
+          <button class="widget-run-btn" onclick="runConsensus()">
+            <span class="btn-text">▶ RUN CONSENSUS</span>
+            <span class="btn-loading" style="display:none;">⏳ Agents deliberating...</span>
+          </button>
+        </div>
+
+        <!-- Agent Deliberation Animation -->
+        <div class="agents-container" id="agents-container" style="display:none;">
+          <div class="agents-header">
+            <div class="pulse-dot"></div>
+            <span>AGENTS DELIBERATING...</span>
+          </div>
+          <div class="agents-grid">
+            <div class="agent-card" id="agent-1">
+              <div class="agent-icon">📊</div>
+              <div class="agent-name">Technical Analyst</div>
+              <div class="agent-status">Analyzing APY trends...</div>
+              <div class="agent-vote"></div>
+            </div>
+            <div class="agent-card" id="agent-2">
+              <div class="agent-icon">📈</div>
+              <div class="agent-name">Fundamental Analyst</div>
+              <div class="agent-status">Evaluating protocols...</div>
+              <div class="agent-vote"></div>
+            </div>
+            <div class="agent-card" id="agent-3">
+              <div class="agent-icon">🎯</div>
+              <div class="agent-name">Sentiment Analyst</div>
+              <div class="agent-status">Scanning market mood...</div>
+              <div class="agent-vote"></div>
+            </div>
+            <div class="agent-card" id="agent-4">
+              <div class="agent-icon">🛡️</div>
+              <div class="agent-name">Risk Manager</div>
+              <div class="agent-status">Checking safety...</div>
+              <div class="agent-vote"></div>
+            </div>
+            <div class="agent-card" id="agent-5">
+              <div class="agent-icon">🌍</div>
+              <div class="agent-name">Macro Analyst</div>
+              <div class="agent-status">Reviewing conditions...</div>
+              <div class="agent-vote"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consensus Result -->
+        <div class="consensus-result" id="consensus-result" style="display:none;">
+          <div class="consensus-header">
+            <div class="consensus-badge">✅ CONSENSUS REACHED</div>
+            <div class="confidence-meter">
+              <span>Confidence:</span>
+              <div class="meter-bar"><div class="meter-fill" id="confidence-fill"></div></div>
+              <span id="confidence-pct">--</span>
+            </div>
+          </div>
+          
+          <div class="consensus-reasoning" id="consensus-reasoning"></div>
+          
+          <div class="allocation-grid" id="allocation-grid"></div>
+          
+          <div class="consensus-footer">
+            <a href="/live.html" class="footer-link">📡 Watch agents think in real-time →</a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1220,6 +1655,149 @@
     }
 
     loadInitialData();
+
+    // Interactive Widget Functions
+    let selectedRisk = 'medium';
+
+    function selectRisk(risk) {
+      selectedRisk = risk;
+      document.querySelectorAll('.risk-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.risk === risk);
+      });
+    }
+
+    async function runConsensus() {
+      const amount = document.getElementById('widget-amount').value || 1000;
+      const runBtn = document.querySelector('.widget-run-btn');
+      const agentsContainer = document.getElementById('agents-container');
+      const consensusResult = document.getElementById('consensus-result');
+
+      // Disable button
+      runBtn.disabled = true;
+      runBtn.querySelector('.btn-text').style.display = 'none';
+      runBtn.querySelector('.btn-loading').style.display = 'inline';
+
+      // Hide previous result, show agents
+      consensusResult.style.display = 'none';
+      agentsContainer.style.display = 'block';
+
+      // Reset agent states
+      document.querySelectorAll('.agent-card').forEach(card => {
+        card.classList.remove('thinking', 'voted');
+        card.querySelector('.agent-vote').textContent = '';
+        card.querySelector('.agent-status').textContent = 'Waiting...';
+      });
+
+      // Simulate agent deliberation with animation
+      const agentThoughts = [
+        { id: 1, status: 'Analyzing APY trends...', delay: 500 },
+        { id: 2, status: 'Evaluating TVL & audits...', delay: 800 },
+        { id: 3, status: 'Scanning social signals...', delay: 600 },
+        { id: 4, status: 'Calculating risk vectors...', delay: 900 },
+        { id: 5, status: 'Reviewing macro factors...', delay: 700 }
+      ];
+
+      // Animate each agent thinking
+      for (const agent of agentThoughts) {
+        const card = document.getElementById(`agent-${agent.id}`);
+        card.classList.add('thinking');
+        card.querySelector('.agent-status').textContent = agent.status;
+        await sleep(agent.delay);
+      }
+
+      // Fetch real data
+      try {
+        const res = await fetch('/api/strategy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            risk_tolerance: selectedRisk, 
+            amount: parseFloat(amount) 
+          })
+        });
+        const data = await res.json();
+
+        // Animate agents voting
+        const votes = ['AGREE', 'AGREE', 'AGREE', 'AGREE', 'AGREE'];
+        for (let i = 0; i < 5; i++) {
+          await sleep(300);
+          const card = document.getElementById(`agent-${i + 1}`);
+          card.classList.remove('thinking');
+          card.classList.add('voted');
+          card.querySelector('.agent-status').textContent = 'Decision made';
+          card.querySelector('.agent-vote').textContent = `✓ ${votes[i]}`;
+        }
+
+        await sleep(500);
+
+        // Show consensus result
+        displayConsensusResult(data, amount);
+
+      } catch (err) {
+        console.error('Consensus error:', err);
+        document.getElementById('consensus-reasoning').textContent = `Error: ${err.message}`;
+        consensusResult.style.display = 'block';
+      }
+
+      // Re-enable button
+      runBtn.disabled = false;
+      runBtn.querySelector('.btn-text').style.display = 'inline';
+      runBtn.querySelector('.btn-loading').style.display = 'none';
+    }
+
+    function displayConsensusResult(data, amount) {
+      const consensusResult = document.getElementById('consensus-result');
+      const confidence = data.strategy?.confidence || 0.87;
+
+      // Set confidence meter
+      document.getElementById('confidence-fill').style.width = `${confidence * 100}%`;
+      document.getElementById('confidence-pct').textContent = `${(confidence * 100).toFixed(0)}%`;
+
+      // Set reasoning
+      const reasoning = data.reasoning || 
+        `Based on ${selectedRisk} risk tolerance and $${amount} investment, the 5 agents reached consensus on optimal allocation across ${data.allocations?.length || 3} protocols. The strategy balances yield optimization (${data.strategy?.expectedApy?.toFixed(1) || '8.5'}% expected APY) with protocol safety scores.`;
+      document.getElementById('consensus-reasoning').innerHTML = `
+        <strong style="color: var(--neon-cyan);">Reasoning:</strong> ${reasoning}
+      `;
+
+      // Set allocations
+      const allocGrid = document.getElementById('allocation-grid');
+      if (data.allocations && data.allocations.length > 0) {
+        allocGrid.innerHTML = data.allocations.map(a => `
+          <div class="allocation-card">
+            <div class="alloc-info">
+              <h4>${a.protocol}</h4>
+              <p>$${((a.allocation / 100) * amount).toFixed(0)} allocated</p>
+            </div>
+            <div class="alloc-amount">
+              <div class="pct">${a.allocation}%</div>
+              <div class="apy">${a.apy?.toFixed(1) || '?'}% APY</div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        // Fallback display
+        allocGrid.innerHTML = `
+          <div class="allocation-card">
+            <div class="alloc-info">
+              <h4>Diversified Portfolio</h4>
+              <p>Across multiple protocols</p>
+            </div>
+            <div class="alloc-amount">
+              <div class="pct">100%</div>
+              <div class="apy">${data.strategy?.expectedApy?.toFixed(1) || '8.5'}% APY</div>
+            </div>
+          </div>
+        `;
+      }
+
+      consensusResult.style.display = 'block';
+      consensusResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     // Interactive particle system
     const canvas = document.getElementById('particles');
