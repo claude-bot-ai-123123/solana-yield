@@ -10,16 +10,12 @@
       "destination": "/blinks.html"
     },
     {
-      "source": "/",
-      "destination": "/api"
-    },
-    {
       "source": "/live",
-      "destination": "/api"
+      "destination": "/live.html"
     },
     {
       "source": "/demo",
-      "destination": "/api"
+      "destination": "/demo.html"
     }
   ],
   "headers": [
