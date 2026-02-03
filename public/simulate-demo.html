@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Simulation - SolanaYield</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e0e7ff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #60a5fa;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: #e0e7ff;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #60a5fa;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result.success {
+            border-color: #10b981;
+        }
+
+        .result.error {
+            border-color: #ef4444;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-badge.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #94a3b8;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .logs {
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+
+        .log-line {
+            padding: 0.25rem 0;
+            color: #94a3b8;
+        }
+
+        .example-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .example-btn {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid #60a5fa;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-box h3 {
+            color: #60a5fa;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .info-box p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Transaction Simulation</h1>
+        <p class="subtitle">Preview transaction outcomes before execution — validate, estimate costs, and inspect state changes</p>
+
+        <div class="demo-grid">
+            <div class="card">
+                <h2>Input Transaction</h2>
+                <textarea id="txInput" placeholder="Paste base64-encoded Solana transaction here..."></textarea>
+                
+                <div class="example-buttons">
+                    <button class="example-btn" onclick="loadExample('transfer')">📤 Transfer Example</button>
+                    <button class="example-btn" onclick="loadExample('swap')">🔄 Swap Example</button>
+                    <button class="example-btn" onclick="loadExample('stake')">🪙 Stake Example</button>
+                </div>
+                
+                <button id="simulateBtn" onclick="simulateTransaction()">
+                    🚀 Simulate Transaction
+                </button>
+
+                <div class="info-box">
+                    <h3>💡 How it works</h3>
+                    <p>
+                        Paste a base64-encoded Solana transaction to see:<br>
+                        • Expected state changes<br>
+                        • Gas cost estimates<br>
+                        • Transaction logs<br>
+                        • Success/failure prediction
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Simulation Result</h2>
+                <div id="resultContainer">
+                    <div style="text-align: center; padding: 2rem; color: #64748b;">
+                        <p>👆 Enter a transaction and click "Simulate" to preview</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const exampleTransactions = {
+            transfer: 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAEDArczbMIA1oku3TTkM0iyH99pTzk8dhWqhZSRZ0qwbT7zhwmVIaD23xI9yS2wSYk1OKRRz2kMnLvhKvLxLJFp//8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYUF0AAAAAABHBQUBAAAA',
+            swap: 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAQPDPQYsrT4fAz+1C/J6kqzf5F+hjjQcmU9n6ZqWzx7k2QcBAgQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0A=',
+            stake: 'AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9g'
+        };
+
+        function loadExample(type) {
+            const example = exampleTransactions[type];
+            if (example) {
+                document.getElementById('txInput').value = example;
+            }
+        }
+
+        async function simulateTransaction() {
+            const txInput = document.getElementById('txInput').value.trim();
+            const btn = document.getElementById('simulateBtn');
+            const resultContainer = document.getElementById('resultContainer');
+
+            if (!txInput) {
+                alert('Please enter a transaction');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Simulating...';
+
+            resultContainer.innerHTML = '<div style="text-align: center; padding: 2rem;">⏳ Running simulation...</div>';
+
+            try {
+                const response = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transaction: txInput })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Simulation failed');
+                }
+
+                displayResult(result);
+            } catch (error) {
+                resultContainer.innerHTML = `
+                    <div class="result error">
+                        <div class="status-badge error">❌ ERROR</div>
+                        <p><strong>Simulation failed:</strong> ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 Simulate Transaction';
+            }
+        }
+
+        function displayResult(result) {
+            const resultContainer = document.getElementById('resultContainer');
+            
+            const statusClass = result.success ? 'success' : 'error';
+            const statusIcon = result.success ? '✅' : '❌';
+            const statusText = result.success ? 'SUCCESS' : 'FAILED';
+
+            let html = `
+                <div class="result ${statusClass}">
+                    <div class="status-badge ${statusClass}">${statusIcon} ${statusText}</div>
+            `;
+
+            // Cost estimates
+            if (result.estimatedCost) {
+                html += `
+                    <div class="metric">
+                        <span class="metric-label">Estimated Cost</span>
+                        <span class="metric-value">
+                            ${result.estimatedCost.sol.toFixed(6)} SOL
+                            ${result.estimatedCost.usd ? `($${result.estimatedCost.usd.toFixed(4)})` : ''}
+                        </span>
+                    </div>
+                `;
+            }
+
+            // Compute units
+            if (result.unitsConsumed) {
+                html += `
+                    <div class="metric">
+                        <span class="metric-label">Compute Units</span>
+                        <span class="metric-value">${result.unitsConsumed.toLocaleString()}</span>
+                    </div>
+                `;
+            }
+
+            // Error details
+            if (result.err) {
+                html += `
+                    <div class="metric">
+                        <span class="metric-label">Error</span>
+                        <span class="metric-value" style="color: #ef4444;">${JSON.stringify(result.err)}</span>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+
+            // Logs
+            if (result.logs && result.logs.length > 0) {
+                html += `
+                    <div style="margin-top: 1rem;">
+                        <h3 style="color: #60a5fa; margin-bottom: 0.5rem;">Transaction Logs</h3>
+                        <div class="logs">
+                            ${result.logs.map(log => `<div class="log-line">${log}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Return data
+            if (result.returnData) {
+                html += `
+                    <div style="margin-top: 1rem;">
+                        <h3 style="color: #60a5fa; margin-bottom: 0.5rem;">Return Data</h3>
+                        <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 0.5rem; font-family: monospace; font-size: 0.8rem; word-break: break-all;">
+                            <strong>Program:</strong> ${result.returnData.programId}<br>
+                            <strong>Data:</strong> ${result.returnData.data}
+                        </div>
+                    </div>
+                `;
+            }
+
+            resultContainer.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
