@@ -122,8 +122,8 @@ export default async function handler(request: Request) {
           await sleep(600);
 
           // Risk assessment
-          const riskEmoji = { low: '🟢', medium: '🟡', high: '🔴' };
-          thought('analysis', `Risk assessment: ${riskEmoji[best.risk]} ${best.risk.toUpperCase()}`);
+          const riskEmoji: Record<string, string> = { low: '🟢', medium: '🟡', high: '🔴' };
+          thought('analysis', `Risk assessment: ${riskEmoji[best.risk] || '⚪'} ${best.risk.toUpperCase()}`);
           await sleep(500);
         }
 
