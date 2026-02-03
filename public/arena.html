@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Battle Arena // SolanaYield</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-cyan: #00fff9;
+      --neon-pink: #ff00ff;
+      --neon-green: #39ff14;
+      --neon-blue: #3b82f6;
+      --neon-purple: #8b5cf6;
+      --dark-bg: #0a0a0f;
+      --darker-bg: #050508;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark-bg);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3rem;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink), var(--neon-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 20px rgba(0, 255, 249, 0.5);
+    }
+
+    .header p {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 1.1rem;
+    }
+
+    .back-link {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      color: var(--neon-cyan);
+      text-decoration: none;
+      padding: 0.75rem 1.5rem;
+      border: 2px solid var(--neon-cyan);
+      border-radius: 8px;
+      transition: all 0.3s;
+      background: rgba(0, 255, 249, 0.05);
+      font-weight: 700;
+      z-index: 100;
+    }
+
+    .back-link:hover {
+      background: rgba(0, 255, 249, 0.15);
+      box-shadow: 0 0 20px rgba(0, 255, 249, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .scenario-input {
+      max-width: 800px;
+      margin: 0 auto 2rem;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 255, 249, 0.2);
+    }
+
+    .scenario-input label {
+      display: block;
+      color: var(--neon-cyan);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .scenario-input textarea {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(0, 255, 249, 0.3);
+      color: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .scenario-input textarea:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 255, 249, 0.3);
+    }
+
+    .start-btn {
+      width: 100%;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      border: none;
+      border-radius: 8px;
+      color: #000;
+      font-weight: 900;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .start-btn:hover:not(:disabled) {
+      transform: scale(1.02);
+      box-shadow: 0 0 30px rgba(0, 255, 249, 0.6);
+    }
+
+    .start-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .arena-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: none;
+    }
+
+    .arena-container.active {
+      display: block;
+    }
+
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .agent-card {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .agent-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05));
+      pointer-events: none;
+    }
+
+    .agent-card.atlas { border-color: var(--neon-blue); }
+    .agent-card.nova { border-color: var(--neon-purple); }
+    .agent-card.sage { border-color: var(--neon-green); }
+
+    .agent-card h3 {
+      font-family: 'Orbitron', sans-serif;
+      margin-bottom: 0.5rem;
+      font-size: 1.5rem;
+    }
+
+    .agent-card.atlas h3 { color: var(--neon-blue); }
+    .agent-card.nova h3 { color: var(--neon-purple); }
+    .agent-card.sage h3 { color: var(--neon-green); }
+
+    .agent-card .role {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .agent-card .strategy {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .debate-feed {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      padding: 2rem;
+      border: 1px solid rgba(0, 255, 249, 0.2);
+      max-height: 800px;
+      overflow-y: auto;
+    }
+
+    .debate-message {
+      margin-bottom: 1.5rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      border-left: 4px solid;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .debate-message.atlas { border-left-color: var(--neon-blue); }
+    .debate-message.nova { border-left-color: var(--neon-purple); }
+    .debate-message.sage { border-left-color: var(--neon-green); }
+    .debate-message.consensus { 
+      border-left-color: var(--neon-cyan); 
+      background: rgba(0, 255, 249, 0.05);
+    }
+
+    .debate-message .agent-name {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .debate-message.atlas .agent-name { color: var(--neon-blue); }
+    .debate-message.nova .agent-name { color: var(--neon-purple); }
+    .debate-message.sage .agent-name { color: var(--neon-green); }
+    .debate-message.consensus .agent-name { color: var(--neon-cyan); }
+
+    .debate-message .message-text {
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.6;
+    }
+
+    .round-header {
+      text-align: center;
+      padding: 1rem;
+      margin: 2rem 0;
+      background: linear-gradient(135deg, rgba(0, 255, 249, 0.1), rgba(153, 69, 255, 0.1));
+      border-radius: 8px;
+      border: 1px solid rgba(0, 255, 249, 0.3);
+    }
+
+    .round-header h2 {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--neon-cyan);
+      font-size: 1.3rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--neon-cyan);
+      font-size: 1.2rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 255, 249, 0.2);
+      border-top-color: var(--neon-cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px solid rgba(255, 0, 0, 0.3);
+      color: #ff6b6b;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="back-link">← Back to Dashboard</a>
+
+  <div class="header">
+    <h1>⚔️ AGENT BATTLE ARENA</h1>
+    <p>Watch AI agents debate optimal DeFi strategies in real-time</p>
+  </div>
+
+  <div class="scenario-input">
+    <label for="scenario">Investment Scenario:</label>
+    <textarea id="scenario" placeholder="Example: I have $10,000 USDC and want 15%+ APY with moderate risk tolerance. I'm comfortable with 6-month lockup periods.">I have $5,000 USDC and want maximum yield with moderate risk. I prefer liquid positions over locked staking.</textarea>
+    <button class="start-btn" id="startBtn">START DEBATE</button>
+  </div>
+
+  <div class="arena-container" id="arenaContainer">
+    <div class="agents-grid">
+      <div class="agent-card atlas">
+        <h3>ATLAS</h3>
+        <div class="role">Conservative Yield Optimizer</div>
+        <div class="strategy">Focus on stable, low-risk yields with established protocols. Prioritize capital preservation.</div>
+      </div>
+      <div class="agent-card nova">
+        <h3>NOVA</h3>
+        <div class="role">Aggressive Growth Hunter</div>
+        <div class="strategy">Target high-APY opportunities. Accept higher risk for exponential returns. Early adopter mindset.</div>
+      </div>
+      <div class="agent-card sage">
+        <h3>SAGE</h3>
+        <div class="role">Risk-Adjusted Strategist</div>
+        <div class="strategy">Balance risk and reward. Diversify across protocols. Focus on Sharpe ratio optimization.</div>
+      </div>
+    </div>
+
+    <div class="debate-feed" id="debateFeed">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>Loading current yields...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const scenarioInput = document.getElementById('scenario');
+    const arenaContainer = document.getElementById('arenaContainer');
+    const debateFeed = document.getElementById('debateFeed');
+
+    startBtn.addEventListener('click', async () => {
+      const scenario = scenarioInput.value.trim();
+      if (!scenario) {
+        alert('Please enter an investment scenario');
+        return;
+      }
+
+      startBtn.disabled = true;
+      startBtn.textContent = 'RUNNING DEBATE...';
+      arenaContainer.classList.add('active');
+      debateFeed.innerHTML = '<div class="loading"><div class="spinner"></div><div>Fetching live yields...</div></div>';
+
+      try {
+        // Fetch current yields
+        const yieldsRes = await fetch('/api/yields');
+        if (!yieldsRes.ok) throw new Error('Failed to fetch yields');
+        const yields = await yieldsRes.json();
+
+        debateFeed.innerHTML = '<div class="loading"><div class="spinner"></div><div>Agents analyzing strategies...</div></div>';
+
+        // Start debate
+        const arenaRes = await fetch('/api/arena', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenario, yields })
+        });
+
+        if (!arenaRes.ok) {
+          const error = await arenaRes.json();
+          throw new Error(error.error || 'Arena failed');
+        }
+
+        const data = await arenaRes.json();
+        renderDebate(data);
+
+      } catch (error) {
+        console.error('Arena error:', error);
+        debateFeed.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+      } finally {
+        startBtn.disabled = false;
+        startBtn.textContent = 'START NEW DEBATE';
+      }
+    });
+
+    function renderDebate(data) {
+      debateFeed.innerHTML = '';
+
+      const { debate } = data;
+      
+      // Round 1: Initial positions
+      const round1Header = document.createElement('div');
+      round1Header.className = 'round-header';
+      round1Header.innerHTML = '<h2>🎯 ROUND 1: INITIAL POSITIONS</h2>';
+      debateFeed.appendChild(round1Header);
+
+      for (let i = 0; i < 3; i++) {
+        renderMessage(debate[i]);
+      }
+
+      // Round 2: Rebuttals
+      const round2Header = document.createElement('div');
+      round2Header.className = 'round-header';
+      round2Header.innerHTML = '<h2>⚡ ROUND 2: REBUTTALS</h2>';
+      debateFeed.appendChild(round2Header);
+
+      for (let i = 3; i < 6; i++) {
+        renderMessage(debate[i]);
+      }
+
+      // Round 3: Consensus
+      const round3Header = document.createElement('div');
+      round3Header.className = 'round-header';
+      round3Header.innerHTML = '<h2>🏆 FINAL CONSENSUS</h2>';
+      debateFeed.appendChild(round3Header);
+
+      renderMessage(debate[6]);
+    }
+
+    function renderMessage(msg) {
+      const div = document.createElement('div');
+      div.className = `debate-message ${msg.agent.toLowerCase()}`;
+      div.innerHTML = `
+        <div class="agent-name">${msg.agent.toUpperCase()}</div>
+        <div class="message-text">${msg.message}</div>
+      `;
+      debateFeed.appendChild(div);
+    }
+  </script>
+</body>
+</html>
