@@ -70,14 +70,139 @@
       z-index: 1000;
     }
 
+    /* Floating orbs */
+    .floating-orbs {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: orbFloat 25s ease-in-out infinite;
+    }
+
+    .orb1 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
+      top: -10%;
+      left: -10%;
+    }
+
+    .orb2 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, var(--neon-pink) 0%, transparent 70%);
+      bottom: -10%;
+      right: -10%;
+      animation-delay: -10s;
+    }
+
+    .orb3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, var(--neon-green) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      animation-delay: -5s;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(50px, 30px) scale(1.1); }
+      50% { transform: translate(-30px, 60px) scale(0.9); }
+      75% { transform: translate(-60px, -40px) scale(1.05); }
+    }
+
+    /* Glitch effect */
+    .glitch {
+      position: relative;
+    }
+    .glitch::before, .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+    .glitch::before {
+      left: 2px;
+      text-shadow: -2px 0 var(--neon-pink);
+      clip: rect(24px, 550px, 90px, 0);
+      animation: glitch-anim 3s infinite linear alternate-reverse;
+    }
+    .glitch::after {
+      left: -2px;
+      text-shadow: -2px 0 var(--neon-cyan);
+      clip: rect(85px, 550px, 140px, 0);
+      animation: glitch-anim 2s infinite linear alternate-reverse;
+    }
+    @keyframes glitch-anim {
+      0% { clip: rect(30px, 9999px, 10px, 0); }
+      25% { clip: rect(70px, 9999px, 60px, 0); }
+      50% { clip: rect(20px, 9999px, 80px, 0); }
+      75% { clip: rect(50px, 9999px, 30px, 0); }
+      100% { clip: rect(10px, 9999px, 90px, 0); }
+    }
+
     /* Header */
-    .header {
+    header {
       padding: 20px 40px;
-      border-bottom: 1px solid var(--neon-cyan);
+      border-bottom: 1px solid rgba(0, 255, 249, 0.3);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(10, 10, 15, 0.95);
+      background: rgba(5, 5, 8, 0.95);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 25px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: #888;
+      text-decoration: none;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 10px;
       backdrop-filter: blur(10px);
       position: sticky;
       top: 0;
@@ -471,13 +596,25 @@
 </head>
 <body>
   <div class="grid-bg"></div>
+  <div class="floating-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
   <div class="scanlines"></div>
 
-  <header class="header">
-    <div class="logo">⚡ REASONING ENGINE</div>
-    <div class="controls">
-      <button class="toggle-btn" id="eli5-toggle">👶 ELI5 Mode</button>
-      <button class="toggle-btn" id="refresh-btn">🔄 Refresh</button>
+  <header>
+    <a href="/" class="logo glitch" data-text="SOLANAYIELD">SOLANAYIELD</a>
+    <nav class="nav-links">
+      <a href="/live.html">⚡ Live</a>
+      <a href="/risk-monitor.html">📊 Yields</a>
+      <a href="/reasoning-viewer.html" class="active">🧠 AI Brain</a>
+      <a href="/blinks.html">🔗 Blinks</a>
+      <a href="/kill-switch-demo.html">🛑 Kill Switch</a>
+    </nav>
+    <div class="header-controls">
+      <button class="toggle-btn" id="eli5-toggle">👶 ELI5</button>
+      <button class="toggle-btn" id="refresh-btn">🔄</button>
     </div>
   </header>
 
