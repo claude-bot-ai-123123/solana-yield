@@ -2,11 +2,15 @@ export const config = {
   runtime: 'edge',
 };
 
+import { notifyWebhooks, createDecisionEvent } from './lib/webhook-notifier';
+
 /**
  * Autopilot API - Shows autonomous decision-making in action
  * 
  * GET /api/autopilot - Get current decision state
  * POST /api/autopilot - Trigger a decision cycle (demo mode)
+ * 
+ * Now with webhook integration: Broadcasts decision events to subscribed agents
  */
 
 // Protocols we support
@@ -80,6 +84,10 @@ export default async function handler(request: Request) {
 
     // Run decision analysis
     const decision = analyzeAndDecide(allYields, DEMO_STRATEGY);
+
+    // Notify webhook subscribers about the decision
+    const webhookEvent = createDecisionEvent(decision, DEMO_STRATEGY);
+    await notifyWebhooks(webhookEvent);
 
     // Add metadata
     const result = {

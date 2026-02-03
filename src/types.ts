@@ -1,11 +1,13 @@
 import { PublicKey, Keypair } from '@solana/web3.js';
 
 export interface YieldOpportunity {
-  protocol: 'kamino' | 'drift' | 'jito' | 'marinade' | 'mango';
+  protocol: 'kamino' | 'drift' | 'jito' | 'marinade' | 'mango' | 'pump.fun' | 'orca';
   asset: string;
+  type?: 'trading-fees' | 'lending' | 'staking' | 'liquidity';
   apy: number;
   tvl: number;
   risk: 'low' | 'medium' | 'high';
+  chain?: 'solana';
   minDeposit?: number;
   metadata?: Record<string, unknown>;
 }

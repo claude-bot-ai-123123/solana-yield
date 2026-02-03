@@ -14,16 +14,19 @@ export const config = {
  * - position_closed: Position withdrawn
  * - rebalance_executed: Portfolio rebalanced to optimize yields
  * - fee_incurred: Transaction or protocol fees charged
+ * - decision_made: Autopilot strategic decision (integrated as of v1.1)
+ * 
+ * Integration: Now actively broadcasts events from /api/autopilot decisions!
  */
 
 interface WebhookEvent {
-  event: 'yield_earned' | 'position_opened' | 'position_closed' | 'rebalance_executed' | 'fee_incurred';
+  event: 'yield_earned' | 'position_opened' | 'position_closed' | 'rebalance_executed' | 'fee_incurred' | 'decision_made';
   timestamp: string;
   wallet: string;
   protocol: string;
   asset: string;
-  amount: number;
-  amountUsd: number;
+  amount?: number;
+  amountUsd?: number;
   metadata?: Record<string, unknown>;
 }
 
@@ -188,6 +191,24 @@ export default async function handler(request: Request) {
       }), { headers });
     }
     
+    // Internal broadcast endpoint (called by other API routes)
+    if (request.method === 'POST' && path === '/api/webhook/broadcast') {
+      const event = await request.json() as WebhookEvent;
+      
+      if (!event.event || !event.timestamp) {
+        return new Response(JSON.stringify({
+          error: 'Invalid event format',
+        }), { status: 400, headers });
+      }
+      
+      await broadcastEvent(event);
+      
+      return new Response(JSON.stringify({
+        success: true,
+        delivered: SUBSCRIPTIONS.size,
+      }), { headers });
+    }
+    
     // Get recent events
     if (request.method === 'GET' && path === '/api/webhook/events') {
       const limit = parseInt(url.searchParams.get('limit') || '20');
@@ -240,6 +261,7 @@ export default async function handler(request: Request) {
         position_closed: 'Position withdrawn/exited',
         rebalance_executed: 'Portfolio rebalanced to optimize yields',
         fee_incurred: 'Transaction or protocol fees charged',
+        decision_made: 'Autopilot made a strategic decision (hold/rebalance/enter)',
       },
       eventSchema: {
         event: 'string (event type)',

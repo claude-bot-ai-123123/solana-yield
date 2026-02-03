@@ -7,6 +7,8 @@ import { JitoAdapter } from '../adapters/jito';
 import { MarinadeAdapter } from '../adapters/marinade';
 import { MangoAdapter } from '../adapters/mango';
 import { FundingRateAdapter } from '../adapters/funding';
+import { PumpAdapter } from '../adapters/pump';
+import { OrcaAdapter } from '../adapters/orca';
 
 export class YieldMonitor {
   private connection: Connection;
@@ -17,6 +19,8 @@ export class YieldMonitor {
     marinade: MarinadeAdapter;
     mango: MangoAdapter;
     funding: FundingRateAdapter;
+    pump: PumpAdapter;
+    orca: OrcaAdapter;
   };
 
   constructor(connection: Connection) {
@@ -28,6 +32,8 @@ export class YieldMonitor {
       marinade: new MarinadeAdapter(connection),
       mango: new MangoAdapter(connection),
       funding: new FundingRateAdapter(connection),
+      pump: new PumpAdapter(connection),
+      orca: new OrcaAdapter(connection),
     };
   }
 
@@ -58,6 +64,8 @@ export class YieldMonitor {
       this.adapters.marinade.getYields(),
       this.adapters.mango.getYields(),
       this.adapters.funding.getYields(),
+      this.adapters.pump.getYields(),
+      this.adapters.orca.getYields(),
     ]);
 
     return results

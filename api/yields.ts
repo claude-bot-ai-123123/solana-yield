@@ -3,10 +3,10 @@ export const config = {
 };
 
 // Protocols we actively support with full integration
-const SUPPORTED_PROTOCOLS = ['kamino', 'drift', 'jito', 'marinade'];
+const SUPPORTED_PROTOCOLS = ['kamino', 'drift', 'jito', 'marinade', 'orca'];
 
 // Additional protocols to show (read-only yield data)
-const EXTENDED_PROTOCOLS = ['raydium', 'orca', 'sanctum', 'marginfi', 'solend'];
+const EXTENDED_PROTOCOLS = ['raydium', 'sanctum', 'marginfi', 'solend', 'pump'];
 
 export default async function handler(request: Request) {
   const headers = { 
@@ -27,10 +27,10 @@ export default async function handler(request: Request) {
       ? [...SUPPORTED_PROTOCOLS, ...EXTENDED_PROTOCOLS]
       : SUPPORTED_PROTOCOLS;
     
-    const solanaYields = data.data
+    let solanaYields = data.data
       .filter((p: any) => p.chain === 'Solana' && p.tvlUsd >= minTvl && p.apy >= minApy)
       .filter((p: any) => protocols.some(
-        proto => p.project.toLowerCase().includes(proto)
+        proto => p.project.toLowerCase().includes(proto) && proto !== 'pump'
       ))
       .sort((a: any, b: any) => b.apy - a.apy)
       .slice(0, extended ? 50 : 20)
@@ -43,6 +43,33 @@ export default async function handler(request: Request) {
         supported: SUPPORTED_PROTOCOLS.some(proto => p.project.toLowerCase().includes(proto)),
         pool: p.pool,
       }));
+
+    // Add Pump.fun yields if extended mode
+    if (extended || protocols.includes('pump')) {
+      try {
+        const baseUrl = new URL(request.url).origin;
+        const pumpResponse = await fetch(`${baseUrl}/api/yields/pump`);
+        const pumpData = await pumpResponse.json();
+        
+        if (pumpData.yields) {
+          const pumpFormatted = pumpData.yields
+            .filter((p: any) => p.apy >= minApy && p.tvl >= minTvl)
+            .map((p: any) => ({
+              protocol: 'pump.fun',
+              asset: p.asset,
+              apy: Math.round(p.apy * 100) / 100,
+              tvl: Math.round(p.tvl),
+              risk: 'high' as const,
+              supported: false,
+              pool: 'meme-trading',
+            }));
+          
+          solanaYields = [...pumpFormatted, ...solanaYields].slice(0, extended ? 50 : 20);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch pump.fun yields:', err);
+      }
+    }
 
     return new Response(JSON.stringify({ 
       count: solanaYields.length,
