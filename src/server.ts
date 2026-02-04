@@ -30,6 +30,14 @@ import {
   generateComparisonReport,
   BacktestConfig,
 } from './lib/backtest';
+import {
+  getAlertEngine,
+  getAlertStream,
+  AlertEngine,
+  AlertStreamServer,
+  AlertCondition,
+  AlertType,
+} from './lib/alerts';
 import { Strategy } from './types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -39,6 +47,43 @@ const monitor = new YieldMonitor(connection);
 const jupiter = new JupiterSwap(connection);
 const historyStore = getHistoryStore(process.env.DECISION_DATA_DIR || './data/decisions');
 const mcpServer = new MCPServer(connection);
+
+// ============================================================================
+// Initialize Alert Engine (Real-time Yield Alerts!)
+// ============================================================================
+
+const alertEngine = getAlertEngine(process.env.ALERT_DATA_DIR || './data/alerts');
+const alertStream = getAlertStream();
+
+// Start yield monitoring for alerts (every 5 minutes)
+let alertMonitorInterval: NodeJS.Timeout | null = null;
+
+async function runAlertCheck(): Promise<void> {
+  try {
+    const yields = await monitor.fetchAllSolanaOpportunities();
+    const analyzed = analyzeOpportunities(yields);
+    const alerts = await alertEngine.processYields(analyzed);
+    
+    if (alerts.length > 0) {
+      console.log(`🔔 ${alerts.length} new alert(s) triggered`);
+    }
+  } catch (err) {
+    console.error(`Alert check failed: ${err}`);
+  }
+}
+
+function startAlertMonitor(intervalMs: number = 5 * 60 * 1000): void {
+  if (alertMonitorInterval) {
+    clearInterval(alertMonitorInterval);
+  }
+  
+  // Run immediately
+  runAlertCheck();
+  
+  // Then on interval
+  alertMonitorInterval = setInterval(runAlertCheck, intervalMs);
+  console.log(`🔔 Alert monitor started (checking every ${intervalMs / 1000}s)`);
+}
 
 // ============================================================================
 // Initialize Trading Mode (Live Autonomous Trading!)
@@ -146,6 +191,21 @@ const routes: Record<string, RouteHandler> = {
         '/backtest/quick': 'GET - Quick 6-month backtest (?capital=10000&risk=medium)',
         '/backtest/compare': 'GET - Compare multiple strategies (?months=6)',
         '/backtest/run': 'POST - Run custom backtest with configuration',
+        // 🔔 Real-time Yield Alerts (NEW!)
+        '/alerts': 'GET - Alert system overview',
+        '/alerts/conditions': 'GET - List all alert conditions',
+        '/alerts/conditions/:id': 'GET - Get specific condition',
+        '/alerts/conditions/create': 'POST - Create new alert condition',
+        '/alerts/conditions/:id/update': 'POST - Update a condition',
+        '/alerts/conditions/:id/delete': 'POST - Delete a condition',
+        '/alerts/history': 'GET - Get triggered alerts (?limit=50&type=apy_above)',
+        '/alerts/stats': 'GET - Alert statistics',
+        '/alerts/acknowledge/:id': 'POST - Acknowledge an alert',
+        '/alerts/acknowledge-all': 'POST - Acknowledge all alerts',
+        '/alerts/presets': 'GET - List available presets',
+        '/alerts/presets/create': 'POST - Create alerts from preset (?preset=yield-hunter)',
+        '/alerts/stream': 'GET - SSE stream for real-time alerts',
+        '/alerts/check': 'POST - Trigger manual alert check',
         // Health & MCP
         '/health': 'GET - Health check',
         '/mcp': 'MCP (Model Context Protocol) - AI agent integration',
@@ -801,6 +861,268 @@ const routes: Record<string, RouteHandler> = {
       error(res, 500, `Request failed: ${err}`);
     }
   },
+
+  // ============================================================================
+  // 🔔 Real-time Yield Alert Endpoints (NEW!)
+  // ============================================================================
+
+  'GET /alerts': async (req, res) => {
+    const stats = alertEngine.getStats();
+    json(res, {
+      name: 'SolanaYield Real-time Alert System',
+      version: '1.0.0',
+      description: 'Configure alerts for yield changes, risk events, and new opportunities',
+      stats: {
+        activeConditions: stats.activeConditions,
+        totalAlerts: stats.totalAlerts,
+        alertsToday: stats.alertsToday,
+      },
+      monitoringInterval: '5 minutes',
+      endpoints: {
+        'GET /alerts/conditions': 'List all alert conditions',
+        'GET /alerts/conditions/:id': 'Get a specific condition',
+        'POST /alerts/conditions/create': 'Create a new alert condition',
+        'POST /alerts/conditions/:id/update': 'Update a condition',
+        'POST /alerts/conditions/:id/delete': 'Delete a condition',
+        'GET /alerts/history': 'Get triggered alerts (?limit=50&type=apy_above&severity=critical)',
+        'GET /alerts/stats': 'Alert statistics',
+        'POST /alerts/acknowledge/:id': 'Acknowledge an alert',
+        'POST /alerts/acknowledge-all': 'Acknowledge all unacknowledged alerts',
+        'GET /alerts/presets': 'List available alert presets',
+        'POST /alerts/presets/create': 'Create alerts from preset (?preset=yield-hunter)',
+        'GET /alerts/stream': 'SSE stream for real-time alerts',
+        'POST /alerts/check': 'Trigger manual alert check now',
+      },
+      alertTypes: {
+        apy_above: 'APY rises above threshold',
+        apy_below: 'APY drops below threshold',
+        apy_change: 'APY changes by X% from baseline',
+        tvl_change: 'TVL changes significantly',
+        risk_increase: 'Risk score increases',
+        risk_decrease: 'Risk score decreases',
+        new_opportunity: 'New high-yield opportunity discovered',
+        protocol_event: 'Protocol-specific event',
+      },
+      presets: ['whale-alert', 'yield-hunter', 'risk-monitor', 'conservative'],
+      example: {
+        createCondition: {
+          method: 'POST',
+          url: '/alerts/conditions/create',
+          body: {
+            type: 'apy_above',
+            protocol: 'kamino',
+            asset: '*',
+            threshold: 15,
+            cooldownMs: 3600000,
+            enabled: true,
+          },
+        },
+      },
+    });
+  },
+
+  'GET /alerts/conditions': async (req, res) => {
+    const conditions = alertEngine.getConditions();
+    json(res, {
+      count: conditions.length,
+      conditions: conditions.map(c => ({
+        id: c.id,
+        type: c.type,
+        enabled: c.enabled,
+        protocol: c.protocol || '*',
+        asset: c.asset || '*',
+        threshold: c.threshold,
+        changePercent: c.changePercent,
+        cooldownMs: c.cooldownMs,
+        cooldownHuman: `${Math.round(c.cooldownMs / 60000)} minutes`,
+        triggerCount: c.triggerCount,
+        lastTriggered: c.lastTriggered ? new Date(c.lastTriggered).toISOString() : null,
+        createdAt: new Date(c.createdAt).toISOString(),
+        webhook: c.webhook ? '***configured***' : null,
+      })),
+    });
+  },
+
+  'POST /alerts/conditions/create': async (req, res) => {
+    try {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const params = JSON.parse(body);
+          
+          if (!params.type) {
+            error(res, 400, 'type is required');
+            return;
+          }
+          
+          const validTypes: AlertType[] = [
+            'apy_above', 'apy_below', 'apy_change', 'tvl_change',
+            'risk_increase', 'risk_decrease', 'new_opportunity', 'protocol_event'
+          ];
+          
+          if (!validTypes.includes(params.type)) {
+            error(res, 400, `Invalid type. Must be one of: ${validTypes.join(', ')}`);
+            return;
+          }
+          
+          const condition = alertEngine.createCondition({
+            type: params.type,
+            enabled: params.enabled !== false,
+            protocol: params.protocol || '*',
+            asset: params.asset || '*',
+            threshold: params.threshold,
+            changePercent: params.changePercent,
+            minApy: params.minApy,
+            maxRiskScore: params.maxRiskScore,
+            cooldownMs: params.cooldownMs || 60 * 60 * 1000,
+            webhook: params.webhook,
+          });
+          
+          json(res, {
+            success: true,
+            message: 'Alert condition created',
+            condition,
+          });
+        } catch (err) {
+          error(res, 400, `Invalid request: ${err}`);
+        }
+      });
+    } catch (err) {
+      error(res, 500, `Request failed: ${err}`);
+    }
+  },
+
+  'GET /alerts/history': async (req, res) => {
+    const url = new URL(req.url || '', `http://localhost:${PORT}`);
+    
+    const alerts = alertEngine.getAlerts({
+      limit: parseInt(url.searchParams.get('limit') || '50'),
+      offset: parseInt(url.searchParams.get('offset') || '0'),
+      type: url.searchParams.get('type') as AlertType | undefined,
+      protocol: url.searchParams.get('protocol') || undefined,
+      severity: url.searchParams.get('severity') || undefined,
+      unacknowledgedOnly: url.searchParams.get('unacknowledged') === 'true',
+      since: url.searchParams.get('since') ? parseInt(url.searchParams.get('since')!) : undefined,
+    });
+    
+    json(res, {
+      count: alerts.length,
+      alerts: alerts.map(a => ({
+        id: a.id,
+        type: a.type,
+        severity: a.severity,
+        timestamp: a.timestamp,
+        time: new Date(a.timestamp).toISOString(),
+        protocol: a.protocol,
+        asset: a.asset,
+        title: a.title,
+        message: a.message,
+        currentValue: a.currentValue,
+        previousValue: a.previousValue,
+        changePercent: a.changePercent,
+        riskScore: a.riskScore,
+        tvl: a.tvl,
+        acknowledged: a.acknowledged,
+        acknowledgedAt: a.acknowledgedAt ? new Date(a.acknowledgedAt).toISOString() : null,
+      })),
+    });
+  },
+
+  'GET /alerts/stats': async (req, res) => {
+    const stats = alertEngine.getStats();
+    json(res, {
+      summary: {
+        totalConditions: stats.totalConditions,
+        activeConditions: stats.activeConditions,
+        totalAlerts: stats.totalAlerts,
+        alertsToday: stats.alertsToday,
+      },
+      byAlertType: stats.byType,
+      bySeverity: stats.bySeverity,
+      byProtocol: stats.byProtocol,
+      topTriggeringConditions: stats.topTriggering,
+    });
+  },
+
+  'POST /alerts/acknowledge-all': async (req, res) => {
+    const count = alertEngine.acknowledgeAll();
+    json(res, {
+      success: true,
+      acknowledgedCount: count,
+    });
+  },
+
+  'GET /alerts/presets': async (req, res) => {
+    json(res, {
+      presets: {
+        'whale-alert': {
+          description: 'Track large TVL movements (>25% changes)',
+          conditions: ['tvl_change @ 25%'],
+        },
+        'yield-hunter': {
+          description: 'Alert on high APY opportunities',
+          conditions: ['new_opportunity @ 15% APY / <45 risk', 'apy_above @ 20%'],
+        },
+        'risk-monitor': {
+          description: 'Track risk score and APY volatility',
+          conditions: ['risk_increase @ 15 points', 'apy_change @ 30%'],
+        },
+        'conservative': {
+          description: 'Stablecoin-focused, low-risk alerts',
+          conditions: ['apy_below USDC @ 5%', 'risk_increase @ 10 points'],
+        },
+      },
+      usage: 'POST /alerts/presets/create?preset=yield-hunter',
+    });
+  },
+
+  'POST /alerts/presets/create': async (req, res) => {
+    const url = new URL(req.url || '', `http://localhost:${PORT}`);
+    const preset = url.searchParams.get('preset');
+    
+    const validPresets = ['whale-alert', 'yield-hunter', 'risk-monitor', 'conservative'];
+    
+    if (!preset || !validPresets.includes(preset)) {
+      error(res, 400, `Invalid preset. Must be one of: ${validPresets.join(', ')}`);
+      return;
+    }
+    
+    const conditions = alertEngine.createPreset(preset as any);
+    
+    json(res, {
+      success: true,
+      preset,
+      conditionsCreated: conditions.length,
+      conditions: conditions.map(c => ({
+        id: c.id,
+        type: c.type,
+        threshold: c.threshold,
+        changePercent: c.changePercent,
+      })),
+    });
+  },
+
+  'GET /alerts/stream': async (req, res) => {
+    alertStream.handleConnection(req, res);
+  },
+
+  'POST /alerts/check': async (req, res) => {
+    try {
+      console.log('🔔 Manual alert check triggered');
+      await runAlertCheck();
+      const stats = alertEngine.getStats();
+      
+      json(res, {
+        success: true,
+        message: 'Alert check completed',
+        alertsToday: stats.alertsToday,
+        activeConditions: stats.activeConditions,
+      });
+    } catch (err) {
+      error(res, 500, `Alert check failed: ${err}`);
+    }
+  },
 };
 
 function json(res: ServerResponse, data: unknown) {
@@ -905,6 +1227,89 @@ const dynamicRoutes: Array<{
       } catch (err) {
         error(res, 500, `Failed to get replay context: ${err}`);
       }
+    },
+  },
+  // Alert condition by ID
+  {
+    pattern: /^\/alerts\/conditions\/([^/]+)$/,
+    method: 'GET',
+    handler: async (req, res, params) => {
+      const id = params.id;
+      const condition = alertEngine.getCondition(id);
+      
+      if (!condition) {
+        error(res, 404, `Condition not found: ${id}`);
+        return;
+      }
+      
+      json(res, { condition });
+    },
+  },
+  // Update alert condition
+  {
+    pattern: /^\/alerts\/conditions\/([^/]+)\/update$/,
+    method: 'POST',
+    handler: async (req, res, params) => {
+      const id = params.id;
+      
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', async () => {
+        try {
+          const updates = JSON.parse(body);
+          const updated = alertEngine.updateCondition(id, updates);
+          
+          if (!updated) {
+            error(res, 404, `Condition not found: ${id}`);
+            return;
+          }
+          
+          json(res, {
+            success: true,
+            condition: updated,
+          });
+        } catch (err) {
+          error(res, 400, `Invalid request: ${err}`);
+        }
+      });
+    },
+  },
+  // Delete alert condition
+  {
+    pattern: /^\/alerts\/conditions\/([^/]+)\/delete$/,
+    method: 'POST',
+    handler: async (req, res, params) => {
+      const id = params.id;
+      const deleted = alertEngine.deleteCondition(id);
+      
+      if (!deleted) {
+        error(res, 404, `Condition not found: ${id}`);
+        return;
+      }
+      
+      json(res, {
+        success: true,
+        message: `Condition ${id} deleted`,
+      });
+    },
+  },
+  // Acknowledge single alert
+  {
+    pattern: /^\/alerts\/acknowledge\/([^/]+)$/,
+    method: 'POST',
+    handler: async (req, res, params) => {
+      const id = params.id;
+      const acknowledged = alertEngine.acknowledgeAlert(id);
+      
+      if (!acknowledged) {
+        error(res, 404, `Alert not found: ${id}`);
+        return;
+      }
+      
+      json(res, {
+        success: true,
+        message: `Alert ${id} acknowledged`,
+      });
     },
   },
 ];
@@ -1019,6 +1424,9 @@ const server = createServer(async (req, res) => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('Shutting down...');
+  if (alertMonitorInterval) {
+    clearInterval(alertMonitorInterval);
+  }
   if (tradingManager) {
     tradingManager.stop();
   }
@@ -1029,7 +1437,12 @@ process.on('SIGTERM', () => {
 server.listen(PORT, () => {
   console.log(`🌾 SolanaYield API running on http://localhost:${PORT}`);
   console.log(`🤖 Live Trading: ${tradingManager ? 'ENABLED' : 'DISABLED (no keypair)'}`);
+  console.log(`🔔 Alert System: ENABLED`);
   if (tradingManager) {
-    console.log(`📡 Real-time stream: http://localhost:${PORT}/trading/stream`);
+    console.log(`📡 Trading stream: http://localhost:${PORT}/trading/stream`);
   }
+  console.log(`📡 Alert stream: http://localhost:${PORT}/alerts/stream`);
+  
+  // Start alert monitoring
+  startAlertMonitor(5 * 60 * 1000); // Every 5 minutes
 });

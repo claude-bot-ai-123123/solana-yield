@@ -50,6 +50,21 @@ export default async function handler(request: Request) {
   amount = parseFloat(url.searchParams.get('amount') || '') || amount;
 
   try {
+    // Fetch macro risk from WARGAMES
+    let macroRisk = { score: 50, maxAllocation: 70 };
+    try {
+      const macroResponse = await fetch('https://wargames-api.vercel.app/live/risk');
+      if (macroResponse.ok) {
+        const macroData = await macroResponse.json();
+        macroRisk.score = macroData.score;
+        // Calculate max allocation based on macro risk
+        if (macroData.score <= 25) macroRisk.maxAllocation = 90;
+        else if (macroData.score <= 50) macroRisk.maxAllocation = 70;
+        else if (macroData.score <= 75) macroRisk.maxAllocation = 50;
+        else macroRisk.maxAllocation = 30;
+      }
+    } catch { /* Use defaults */ }
+
     // Fetch yields
     const response = await fetch('https://yields.llama.fi/pools');
     const data = await response.json();
@@ -136,6 +151,11 @@ export default async function handler(request: Request) {
         totalAmount: amount,
         expectedApy: Math.round(weightedApy * 100) / 100,
         diversification: allocations.length,
+        macroRisk: {
+          score: macroRisk.score,
+          maxAllocation: macroRisk.maxAllocation,
+          provider: 'WARGAMES',
+        },
       },
       allocations,
       // SOLPRISM verifiable reasoning
