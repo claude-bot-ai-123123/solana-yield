@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oracle Marketplace // Pyth Network Integration</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --neon-cyan: #00fff9;
+      --neon-pink: #ff00ff;
+      --neon-green: #39ff14;
+      --dark-bg: #0a0a0f;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--dark-bg);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 20px;
+      background: rgba(0, 255, 249, 0.05);
+      border: 1px solid var(--neon-cyan);
+      border-radius: 12px;
+    }
+
+    .header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 20px var(--neon-cyan);
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 30px;
+      gap: 10px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(0, 255, 249, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-card .label {
+      color: #666;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      color: var(--neon-cyan);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    .price-card {
+      background: linear-gradient(145deg, rgba(0, 255, 249, 0.05), rgba(255, 0, 255, 0.05));
+      border: 1px solid rgba(0, 255, 249, 0.2);
+      padding: 20px;
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+
+    .price-card:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 20px rgba(0, 255, 249, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .price-card .symbol {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .price-card .price {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--neon-green);
+      margin-bottom: 10px;
+    }
+
+    .price-card .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+    }
+
+    .price-card .status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .price-card .status.trading { color: var(--neon-green); }
+    .price-card .status.halted { color: #ff4444; }
+
+    .price-card .confidence {
+      color: #666;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: var(--neon-cyan);
+      font-size: 1.2rem;
+    }
+
+    .error {
+      text-align: center;
+      padding: 40px;
+      color: #ff4444;
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid #ff4444;
+      border-radius: 8px;
+      margin: 20px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: var(--neon-cyan);
+      text-decoration: none;
+      padding: 8px 16px;
+      border: 1px solid var(--neon-cyan);
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+
+    .back-link:hover {
+      background: rgba(0, 255, 249, 0.1);
+      box-shadow: 0 0 15px rgba(0, 255, 249, 0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .pulse {
+      animation: pulse 2s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← Back to Dashboard</a>
+
+    <div class="header">
+      <h1>📡 Oracle Marketplace</h1>
+      <p>Real-time price feeds powered by Pyth Network</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="label">Active Feeds</div>
+        <div class="value" id="feedCount">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Last Update</div>
+        <div class="value" id="lastUpdate">--</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Latency</div>
+        <div class="value" id="latency">--</div>
+      </div>
+    </div>
+
+    <div id="content">
+      <div class="loading pulse">Loading oracle data...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '/api/oracle';
+    let lastFetchTime = 0;
+
+    function formatPrice(price, decimals = 2) {
+      if (price < 0.01) return `$${price.toFixed(6)}`;
+      if (price < 1) return `$${price.toFixed(4)}`;
+      if (price < 1000) return `$${price.toFixed(decimals)}`;
+      return `$${price.toLocaleString('en-US', { maximumFractionDigits: decimals })}`;
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp * 1000);
+      return date.toLocaleTimeString('en-US', { hour12: false });
+    }
+
+    function renderPrices(data) {
+      if (!data || !data.prices || data.prices.length === 0) {
+        document.getElementById('content').innerHTML = '<div class="error">No oracle data available</div>';
+        return;
+      }
+
+      // Update stats
+      document.getElementById('feedCount').textContent = data.prices.length;
+      const now = new Date();
+      document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false 
+      });
+      
+      const latency = Date.now() - lastFetchTime;
+      document.getElementById('latency').textContent = `${latency}ms`;
+
+      // Render price cards
+      const grid = document.createElement('div');
+      grid.className = 'price-grid';
+
+      data.prices
+        .sort((a, b) => b.price - a.price) // Sort by price descending
+        .forEach(price => {
+          const card = document.createElement('div');
+          card.className = 'price-card';
+          
+          const symbol = price.symbol.split('/')[0];
+          const statusClass = price.status === 'trading' ? 'trading' : 'halted';
+          const statusIcon = price.status === 'trading' ? '●' : '○';
+          
+          card.innerHTML = `
+            <div class="symbol">${symbol}/USD</div>
+            <div class="price">${formatPrice(price.price)}</div>
+            <div class="meta">
+              <span class="status ${statusClass}">${statusIcon} ${price.status}</span>
+              <span class="confidence">±${formatPrice(price.confidence, 4)}</span>
+            </div>
+          `;
+          
+          grid.appendChild(card);
+        });
+
+      document.getElementById('content').innerHTML = '';
+      document.getElementById('content').appendChild(grid);
+    }
+
+    async function fetchPrices() {
+      try {
+        lastFetchTime = Date.now();
+        const response = await fetch(API_URL);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderPrices(data);
+      } catch (error) {
+        console.error('Failed to fetch oracle data:', error);
+        document.getElementById('content').innerHTML = `
+          <div class="error">
+            <strong>Failed to load oracle data</strong><br/>
+            ${error.message}
+          </div>
+        `;
+      }
+    }
+
+    // Initial fetch
+    fetchPrices();
+
+    // Auto-refresh every 5 seconds
+    setInterval(fetchPrices, 5000);
+  </script>
+</body>
+</html>

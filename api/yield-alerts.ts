@@ -4,7 +4,9 @@
  * Comprehensive alerting for DeFi yield monitoring.
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+export const config = {
+  runtime: 'edge',
+};
 
 // ============================================================================
 // Types
@@ -127,51 +129,62 @@ const DEMO_ALERTS: Alert[] = [
 ];
 
 // ============================================================================
-// Handler
+// Handler (Edge Runtime)
 // ============================================================================
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+const HEADERS = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+};
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: HEADERS,
+  });
+}
+
+export default async function handler(request: Request) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: HEADERS });
   }
 
-  const action = req.query.action as string;
+  const url = new URL(request.url);
+  const action = url.searchParams.get('action');
 
   try {
     switch (action) {
-      case undefined:
+      case null:
       case 'overview':
-        return res.json(getOverview());
+        return json(getOverview());
         
       case 'conditions':
-        return res.json(getConditions());
+        return json(getConditions());
         
       case 'create':
-        return handleCreate(req, res);
+        return await handleCreate(request);
         
       case 'history':
-        return res.json(getHistory(req));
+        return json(getHistory(url));
         
       case 'stats':
-        return res.json(getStats());
+        return json(getStats());
         
       case 'presets':
-        return handlePresets(req, res);
+        return await handlePresets(request, url);
         
       case 'check':
-        return await handleCheck(req, res);
+        return await handleCheck(request);
         
       case 'acknowledge':
-        return handleAcknowledge(req, res);
+        return handleAcknowledge(url);
         
       default:
-        return res.status(400).json({ error: `Unknown action: ${action}` });
+        return json({ error: `Unknown action: ${action}` }, 400);
     }
   } catch (err) {
-    return res.status(500).json({ error: `Internal error: ${err}` });
+    return json({ error: `Internal error: ${err}` }, 500);
   }
 }
 
@@ -248,12 +261,15 @@ function getConditions() {
   };
 }
 
-function handleCreate(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Use POST' });
+async function handleCreate(request: Request) {
+  if (request.method !== 'POST') {
+    return json({ error: 'Use POST' }, 405);
   }
   
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+  let body: any = {};
+  try {
+    body = await request.json();
+  } catch {}
   
   const validTypes: AlertType[] = [
     'apy_above', 'apy_below', 'apy_change', 'tvl_change',
@@ -261,9 +277,9 @@ function handleCreate(req: VercelRequest, res: VercelResponse) {
   ];
   
   if (!body.type || !validTypes.includes(body.type)) {
-    return res.status(400).json({
+    return json({
       error: `Invalid type. Must be one of: ${validTypes.join(', ')}`,
-    });
+    }, 400);
   }
   
   const condition: AlertCondition = {
@@ -283,7 +299,7 @@ function handleCreate(req: VercelRequest, res: VercelResponse) {
   
   DEMO_CONDITIONS.push(condition);
   
-  return res.json({
+  return json({
     success: true,
     message: 'Alert condition created',
     condition,
@@ -291,8 +307,13 @@ function handleCreate(req: VercelRequest, res: VercelResponse) {
   });
 }
 
-function getHistory(req: VercelRequest) {
-  const { limit, offset, type, protocol, severity, unacknowledged } = req.query;
+function getHistory(url: URL) {
+  const limit = url.searchParams.get('limit');
+  const offset = url.searchParams.get('offset');
+  const type = url.searchParams.get('type');
+  const protocol = url.searchParams.get('protocol');
+  const severity = url.searchParams.get('severity');
+  const unacknowledged = url.searchParams.get('unacknowledged');
   
   let filtered = [...DEMO_ALERTS];
   
@@ -303,8 +324,8 @@ function getHistory(req: VercelRequest) {
   
   filtered.sort((a, b) => b.timestamp - a.timestamp);
   
-  const start = parseInt(offset as string) || 0;
-  const count = parseInt(limit as string) || 50;
+  const start = parseInt(offset || '0');
+  const count = parseInt(limit || '50');
   
   return {
     count: filtered.length,
@@ -332,11 +353,11 @@ function getStats() {
   };
 }
 
-function handlePresets(req: VercelRequest, res: VercelResponse) {
-  const { preset } = req.query;
+async function handlePresets(request: Request, url: URL) {
+  const preset = url.searchParams.get('preset');
   
-  if (req.method === 'GET' && !preset) {
-    return res.json({
+  if (request.method === 'GET' && !preset) {
+    return json({
       presets: {
         'whale-alert': {
           description: 'Track large TVL movements (>25% changes)',
@@ -359,16 +380,16 @@ function handlePresets(req: VercelRequest, res: VercelResponse) {
     });
   }
   
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Use POST to create presets' });
+  if (request.method !== 'POST') {
+    return json({ error: 'Use POST to create presets' }, 405);
   }
   
   const validPresets = ['whale-alert', 'yield-hunter', 'risk-monitor', 'conservative'];
   
-  if (!preset || !validPresets.includes(preset as string)) {
-    return res.status(400).json({
+  if (!preset || !validPresets.includes(preset)) {
+    return json({
       error: `Invalid preset. Must be one of: ${validPresets.join(', ')}`,
-    });
+    }, 400);
   }
   
   const conditions: AlertCondition[] = [];
@@ -391,7 +412,7 @@ function handlePresets(req: VercelRequest, res: VercelResponse) {
       break;
   }
   
-  return res.json({
+  return json({
     success: true,
     preset,
     conditionsCreated: conditions.length,
@@ -404,9 +425,9 @@ function handlePresets(req: VercelRequest, res: VercelResponse) {
   });
 }
 
-async function handleCheck(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Use POST' });
+async function handleCheck(request: Request) {
+  if (request.method !== 'POST') {
+    return json({ error: 'Use POST' }, 405);
   }
   
   // Fetch yields from DeFi Llama
@@ -426,13 +447,13 @@ async function handleCheck(req: VercelRequest, res: VercelResponse) {
         riskScore: estimateRisk(p),
       }));
   } catch (err) {
-    return res.status(500).json({ error: `Failed to fetch yields: ${err}` });
+    return json({ error: `Failed to fetch yields: ${err}` }, 500);
   }
   
   // Check conditions
   const newAlerts = checkConditions(yields);
   
-  return res.json({
+  return json({
     success: true,
     message: 'Alert check completed',
     yieldsChecked: yields.length,
@@ -442,22 +463,22 @@ async function handleCheck(req: VercelRequest, res: VercelResponse) {
   });
 }
 
-function handleAcknowledge(req: VercelRequest, res: VercelResponse) {
-  const { id } = req.query;
+function handleAcknowledge(url: URL) {
+  const id = url.searchParams.get('id');
   
   if (!id) {
     const count = DEMO_ALERTS.filter(a => !a.acknowledged).length;
     DEMO_ALERTS.forEach(a => a.acknowledged = true);
-    return res.json({ success: true, acknowledgedCount: count });
+    return json({ success: true, acknowledgedCount: count });
   }
   
   const alert = DEMO_ALERTS.find(a => a.id === id);
   if (!alert) {
-    return res.status(404).json({ error: `Alert not found: ${id}` });
+    return json({ error: `Alert not found: ${id}` }, 404);
   }
   
   alert.acknowledged = true;
-  return res.json({ success: true, message: `Alert ${id} acknowledged` });
+  return json({ success: true, message: `Alert ${id} acknowledged` });
 }
 
 // ============================================================================
