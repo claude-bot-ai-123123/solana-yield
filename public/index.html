@@ -1561,8 +1561,8 @@
       <!-- Trust Badges -->
       <div class="trust-badges">
         <div class="badge">🔮 SOLPRISM Verified</div>
-        <div class="badge">🏦 4 DeFi Protocols</div>
-        <div class="badge">🤖 7+ Agent Integrations</div>
+        <div class="badge">🏦 9 DeFi Protocols</div>
+        <div class="badge">🌍 WARGAMES Macro Risk</div>
         <div class="badge">🛡️ Kill Switch Enabled</div>
       </div>
     </section>
@@ -1742,6 +1742,11 @@
           <div class="feature-icon">📊</div>
           <div class="feature-title">Risk-Adjusted APY</div>
           <div class="feature-desc">Don't chase raw APY. Our Sharpe-like scoring penalizes risk so you see true risk-adjusted returns.</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🌍</div>
+          <div class="feature-title">Macro Risk Integration</div>
+          <div class="feature-desc">WARGAMES feeds global macro data (VIX, fear/greed, geopolitical) to auto-reduce exposure during market stress.</div>
         </div>
       </div>
     </section>
@@ -2076,10 +2081,34 @@
       document.getElementById('confidence-fill').style.width = `${confidence * 100}%`;
       document.getElementById('confidence-pct').textContent = `${(confidence * 100).toFixed(0)}%`;
 
-      // Set reasoning
+      // Set reasoning with macro risk info
+      const macroRisk = data.strategy?.macroRisk;
+      const macroScore = macroRisk?.score || 50;
+      const macroMax = macroRisk?.maxAllocation || 70;
+      const macroColor = macroScore <= 30 ? '#00ff9d' : macroScore <= 60 ? '#ffc800' : '#ff4444';
+      const macroLabel = macroScore <= 30 ? 'LOW RISK' : macroScore <= 60 ? 'NEUTRAL' : 'ELEVATED';
+      
       const reasoning = data.reasoning || 
         `Based on ${selectedRisk} risk tolerance and $${amount} investment, the 5 agents reached consensus on optimal allocation across ${data.allocations?.length || 3} protocols. The strategy balances yield optimization (${data.strategy?.expectedApy?.toFixed(1) || '8.5'}% expected APY) with protocol safety scores.`;
+      
+      // Check if macro ceiling was applied
+      const macroAdjusted = data.allocations?.some(a => a.macroAdjusted);
+      const macroNote = macroAdjusted 
+        ? `<span style="color: ${macroColor};">⚠️ Macro ceiling applied — risky allocation capped at ${macroMax}%</span>`
+        : `<span style="color: #666;">Macro conditions normal — no adjustment needed</span>`;
+      
       document.getElementById('consensus-reasoning').innerHTML = `
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid ${macroColor}40;">
+          <div style="text-align: center;">
+            <div style="font-size: 1.5rem; font-weight: bold; color: ${macroColor}; font-family: 'Orbitron', sans-serif;">${macroScore}</div>
+            <div style="font-size: 0.65rem; color: #888;">MACRO RISK</div>
+          </div>
+          <div style="flex: 1;">
+            <div style="font-size: 0.8rem; color: ${macroColor}; font-weight: 600;">${macroLabel}</div>
+            <div style="font-size: 0.7rem; color: #888;">via WARGAMES · Max ${macroMax}% risky allocation</div>
+          </div>
+        </div>
+        <div style="margin-bottom: 0.5rem;">${macroNote}</div>
         <strong style="color: var(--neon-cyan);">Reasoning:</strong> ${reasoning}
       `;
 
