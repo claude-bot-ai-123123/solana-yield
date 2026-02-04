@@ -1,4 +1,6 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
+export const config = {
+  runtime: 'edge',
+};
 
 // Pyth price feed IDs (Hermes format)
 const PYTH_FEEDS: Record<string, string> = {
@@ -22,21 +24,26 @@ interface PythPrice {
   };
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+export default async function handler(req: Request): Promise<Response> {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Content-Type': 'application/json',
+  };
   
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return new Response(null, { status: 200, headers });
   }
 
   try {
-    const { symbol } = req.query;
+    const url = new URL(req.url);
+    const symbol = url.searchParams.get('symbol');
     const feedIds = Object.values(PYTH_FEEDS);
     
     // Fetch from Pyth Hermes API
-    const url = `https://hermes.pyth.network/v2/updates/price/latest?${feedIds.map(id => `ids[]=${id}`).join('&')}`;
-    const response = await fetch(url);
+    const apiUrl = `https://hermes.pyth.network/v2/updates/price/latest?${feedIds.map(id => `ids[]=${id}`).join('&')}`;
+    const response = await fetch(apiUrl);
     
     if (!response.ok) {
       throw new Error(`Pyth API error: ${response.status}`);
@@ -52,12 +59,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }, {} as Record<string, string>);
     
     const formattedPrices = prices.map(p => {
-      const symbol = feedToSymbol[p.id] || p.id;
+      const sym = feedToSymbol[p.id] || p.id;
       const price = parseFloat(p.price.price) * Math.pow(10, p.price.expo);
       const confidence = parseFloat(p.price.conf) * Math.pow(10, p.price.expo);
       
       return {
-        symbol,
+        symbol: sym,
         price: price,
         confidence: confidence,
         publishTime: p.price.publish_time,
@@ -66,26 +73,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     // Single symbol query
-    if (symbol && typeof symbol === 'string') {
+    if (symbol) {
       const found = formattedPrices.find(p => p.symbol === symbol);
       if (!found) {
-        return res.status(404).json({ error: `Price not found for ${symbol}` });
+        return new Response(
+          JSON.stringify({ error: `Price not found for ${symbol}` }),
+          { status: 404, headers }
+        );
       }
-      return res.status(200).json(found);
+      return new Response(JSON.stringify(found), { status: 200, headers });
     }
 
-    return res.status(200).json({
-      prices: formattedPrices,
-      timestamp: Date.now(),
-      source: 'Pyth Network (Hermes)',
-      count: formattedPrices.length,
-    });
+    return new Response(
+      JSON.stringify({
+        prices: formattedPrices,
+        timestamp: Date.now(),
+        source: 'Pyth Network (Hermes)',
+        count: formattedPrices.length,
+      }),
+      { status: 200, headers }
+    );
   } catch (error) {
     console.error('Oracle API error:', error);
-    return res.status(500).json({
-      error: 'Failed to fetch oracle data',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    return new Response(
+      JSON.stringify({
+        error: 'Failed to fetch oracle data',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      { status: 500, headers }
+    );
   }
 }
-
