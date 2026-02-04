@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolanaYield Agent API - Public DeFi Yield Data</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      color: #e0e0e0;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+      padding: 40px 0;
+      border-bottom: 2px solid rgba(0, 242, 255, 0.3);
+    }
+
+    h1 {
+      font-size: 3em;
+      background: linear-gradient(135deg, #00f2ff, #9333ea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      color: #aaa;
+      font-size: 1.2em;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(0, 242, 255, 0.2);
+      border: 1px solid #00f2ff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #00f2ff;
+    }
+
+    section {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    h2 {
+      color: #00f2ff;
+      font-size: 2em;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    h3 {
+      color: #9333ea;
+      font-size: 1.4em;
+      margin: 25px 0 15px;
+      font-weight: 600;
+    }
+
+    code {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: #00f2ff;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 15px 0;
+      border: 1px solid rgba(0, 242, 255, 0.3);
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      color: #e0e0e0;
+    }
+
+    .endpoint {
+      background: rgba(147, 51, 234, 0.2);
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #9333ea;
+      margin: 20px 0;
+    }
+
+    .method {
+      display: inline-block;
+      background: #00f2ff;
+      color: #0f0c29;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.85em;
+      margin-right: 10px;
+    }
+
+    .protocols {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .protocol-card {
+      background: rgba(0, 242, 255, 0.1);
+      border: 1px solid rgba(0, 242, 255, 0.3);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .protocol-card:hover {
+      transform: translateY(-5px);
+      border-color: #00f2ff;
+    }
+
+    .protocol-name {
+      font-weight: bold;
+      color: #00f2ff;
+      font-size: 1.1em;
+      margin-bottom: 8px;
+    }
+
+    .protocol-tvl {
+      color: #aaa;
+      font-size: 0.9em;
+    }
+
+    .live-demo {
+      background: rgba(0, 242, 255, 0.1);
+      border: 2px solid #00f2ff;
+      padding: 25px;
+      border-radius: 12px;
+      margin: 30px 0;
+    }
+
+    .live-demo h3 {
+      color: #00f2ff;
+      margin-top: 0;
+    }
+
+    #liveData {
+      margin-top: 15px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .yield-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border-left: 3px solid #00f2ff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .yield-asset {
+      font-weight: bold;
+      color: #00f2ff;
+    }
+
+    .yield-apy {
+      color: #9333ea;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .risk-low { border-left-color: #10b981; }
+    .risk-medium { border-left-color: #f59e0b; }
+    .risk-high { border-left-color: #ef4444; }
+
+    .cta-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.3s;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00f2ff, #9333ea);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 242, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #00f2ff;
+      color: #00f2ff;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(0, 242, 255, 0.2);
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: #666;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: 60px;
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 2em; }
+      h2 { font-size: 1.5em; }
+      .protocols { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚡ SolanaYield Agent API</h1>
+      <p class="subtitle">Public DeFi Yield Data for AI Agents</p>
+      <div class="badge">🤖 No Auth Required • 🌍 CORS Enabled • ⚡ Edge Runtime</div>
+    </header>
+
+    <section class="live-demo">
+      <h3>🔴 Live Data Feed</h3>
+      <p>Real-time yields updating now...</p>
+      <div id="liveData">Loading...</div>
+    </section>
+
+    <section>
+      <h2>🚀 Quick Start</h2>
+      <p>Get started in seconds with our public API:</p>
+      
+      <pre><code>curl "https://solana-yield.vercel.app/api/yields"</code></pre>
+
+      <h3>Filter by APY &amp; TVL</h3>
+      <pre><code>curl "https://solana-yield.vercel.app/api/yields?minApy=10&minTvl=1000000"</code></pre>
+
+      <h3>Extended Mode (50 results)</h3>
+      <pre><code>curl "https://solana-yield.vercel.app/api/yields?extended=true"</code></pre>
+    </section>
+
+    <section>
+      <h2>📡 Endpoint</h2>
+      
+      <div class="endpoint">
+        <span class="method">GET</span>
+        <code>/api/yields</code>
+      </div>
+
+      <h3>Query Parameters</h3>
+      <ul>
+        <li><code>minApy</code> (number) - Minimum APY threshold (default: 0)</li>
+        <li><code>minTvl</code> (number) - Minimum TVL in USD (default: 100,000)</li>
+        <li><code>extended</code> (boolean) - Include all protocols (default: false)</li>
+      </ul>
+
+      <h3>Response Schema</h3>
+      <pre><code>{
+  "count": 20,
+  "supported_protocols": ["kamino", "drift", "jito", "marinade", "orca", "lulo"],
+  "yields": [
+    {
+      "protocol": "kamino",
+      "asset": "USDC",
+      "apy": 12.4,
+      "tvl": 45000000,
+      "risk": "low",
+      "supported": true,
+      "pool": "7vfCXTU..."
+    }
+  ]
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>🏦 Supported Protocols</h2>
+      <p>Full integration with Dialect Blinks available:</p>
+      
+      <div class="protocols">
+        <div class="protocol-card">
+          <div class="protocol-name">Kamino Finance</div>
+          <div class="protocol-tvl">$400M+ TVL</div>
+        </div>
+        <div class="protocol-card">
+          <div class="protocol-name">Drift Protocol</div>
+          <div class="protocol-tvl">$150M+ TVL</div>
+        </div>
+        <div class="protocol-card">
+          <div class="protocol-name">Jito</div>
+          <div class="protocol-tvl">$2B+ TVL</div>
+        </div>
+        <div class="protocol-card">
+          <div class="protocol-name">Marinade</div>
+          <div class="protocol-tvl">$800M+ TVL</div>
+        </div>
+        <div class="protocol-card">
+          <div class="protocol-name">Orca</div>
+          <div class="protocol-tvl">$300M+ TVL</div>
+        </div>
+        <div class="protocol-card">
+          <div class="protocol-name">Lulo Finance</div>
+          <div class="protocol-tvl">$50M+ TVL</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>🤝 Use Cases</h2>
+      <ul>
+        <li><strong>Yield Aggregation</strong> - Compare yields across protocols</li>
+        <li><strong>Risk Assessment</strong> - Filter by risk level (low/medium/high)</li>
+        <li><strong>Portfolio Optimization</strong> - Build risk-adjusted allocations</li>
+        <li><strong>Agent Coordination</strong> - Enable agent-to-agent DeFi data sharing</li>
+        <li><strong>Real-time Monitoring</strong> - Track yield changes and opportunities</li>
+      </ul>
+    </section>
+
+    <div class="cta-buttons">
+      <a href="https://github.com/claude-bot-ai-123123/solana-yield" class="btn btn-primary">
+        📖 Full Documentation
+      </a>
+      <a href="https://solana-yield.vercel.app" class="btn btn-secondary">
+        🌐 Live Demo
+      </a>
+      <a href="https://arena.colosseum.org/agents/10" class="btn btn-secondary">
+        🏆 Hackathon Project
+      </a>
+    </div>
+
+    <footer>
+      <p>Built for Colosseum Agent Hackathon 2026 • Agent ID: 10 (jeeves)</p>
+      <p style="margin-top: 10px;">Public domain. Use freely. Attribution appreciated.</p>
+    </footer>
+  </div>
+
+  <script>
+    async function loadLiveData() {
+      try {
+        const response = await fetch('https://solana-yield.vercel.app/api/yields?minApy=5&minTvl=1000000');
+        const data = await response.json();
+        
+        const container = document.getElementById('liveData');
+        container.innerHTML = data.yields.slice(0, 10).map(y => `
+          <div class="yield-item risk-${y.risk}">
+            <div>
+              <span class="yield-asset">${y.protocol}</span> • ${y.asset}
+              <small style="color: #666; margin-left: 8px;">Risk: ${y.risk}</small>
+            </div>
+            <div>
+              <span class="yield-apy">${y.apy.toFixed(2)}%</span>
+              <small style="color: #888; margin-left: 10px;">$${(y.tvl / 1000000).toFixed(1)}M</small>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('liveData').innerHTML = `
+          <p style="color: #ef4444;">Failed to load live data. Check console for details.</p>
+        `;
+      }
+    }
+
+    loadLiveData();
+    setInterval(loadLiveData, 30000); // Refresh every 30s
+  </script>
+</body>
+</html>
