@@ -5,7 +5,9 @@
  * Public endpoint for UI + partner agents.
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+export const config = {
+  runtime: 'edge',
+};
 
 const WARGAMES_API = 'https://wargames-api.vercel.app/live/risk';
 
@@ -118,12 +120,18 @@ function formatRiskSummary(risk: WargamesRisk, ceiling: AllocationCeiling): stri
   `.trim();
 }
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+export default async function handler(request: Request) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Cache-Control': 's-maxage=300, stale-while-revalidate=600',
+  };
+
+  if (request.method !== 'GET') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers,
+    });
   }
 
   try {
@@ -131,7 +139,7 @@ export default async function handler(
     const risk = await fetchMacroRisk();
     
     if (!risk) {
-      return res.status(503).json({ 
+      return new Response(JSON.stringify({ 
         error: 'WARGAMES API unavailable',
         fallback: {
           maxDeFiAllocation: 60,
@@ -139,6 +147,9 @@ export default async function handler(
           riskLevel: 'medium',
           reasoning: 'Using conservative defaults'
         }
+      }), {
+        status: 503,
+        headers,
       });
     }
 
@@ -153,16 +164,18 @@ export default async function handler(
       timestamp: new Date().toISOString()
     };
 
-    // Cache for 5 minutes
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    
-    return res.status(200).json(response);
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers,
+    });
   } catch (error) {
     console.error('Macro risk API error:', error);
-    return res.status(500).json({ 
+    return new Response(JSON.stringify({ 
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers,
     });
   }
 }
