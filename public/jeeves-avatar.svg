@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="100%" style="stop-color:#1a0a2e"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00fff9"/>
+      <stop offset="100%" style="stop-color:#9945FF"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="400" fill="url(#bg)"/>
+  
+  <!-- Grid lines (subtle) -->
+  <g stroke="#00fff9" stroke-opacity="0.1" stroke-width="1">
+    <line x1="0" y1="100" x2="400" y2="100"/>
+    <line x1="0" y1="200" x2="400" y2="200"/>
+    <line x1="0" y1="300" x2="400" y2="300"/>
+    <line x1="100" y1="0" x2="100" y2="400"/>
+    <line x1="200" y1="0" x2="200" y2="400"/>
+    <line x1="300" y1="0" x2="300" y2="400"/>
+  </g>
+  
+  <!-- Head shape - geometric hexagon -->
+  <polygon points="200,60 300,110 300,250 200,300 100,250 100,110" 
+           fill="none" stroke="url(#neon)" stroke-width="3" filter="url(#glow)"/>
+  
+  <!-- Eyes - glowing rectangles -->
+  <rect x="130" y="150" width="50" height="20" rx="3" fill="#00fff9" filter="url(#glow)"/>
+  <rect x="220" y="150" width="50" height="20" rx="3" fill="#00fff9" filter="url(#glow)"/>
+  
+  <!-- Eye inner glow -->
+  <rect x="140" y="155" width="30" height="10" rx="2" fill="#ffffff" opacity="0.8"/>
+  <rect x="230" y="155" width="30" height="10" rx="2" fill="#ffffff" opacity="0.8"/>
+  
+  <!-- Nose line -->
+  <line x1="200" y1="180" x2="200" y2="220" stroke="#9945FF" stroke-width="2" filter="url(#glow)"/>
+  
+  <!-- Mouth - subtle line -->
+  <path d="M 160 250 Q 200 265 240 250" fill="none" stroke="#00fff9" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Circuit lines on sides -->
+  <g stroke="#9945FF" stroke-width="1.5" opacity="0.7" filter="url(#glow)">
+    <path d="M 80 130 L 60 130 L 60 200 L 40 200"/>
+    <path d="M 80 180 L 50 180 L 50 250"/>
+    <path d="M 320 130 L 340 130 L 340 200 L 360 200"/>
+    <path d="M 320 180 L 350 180 L 350 250"/>
+  </g>
+  
+  <!-- Small dots at circuit ends -->
+  <circle cx="40" cy="200" r="4" fill="#9945FF" filter="url(#glow)"/>
+  <circle cx="50" cy="250" r="4" fill="#9945FF" filter="url(#glow)"/>
+  <circle cx="360" cy="200" r="4" fill="#9945FF" filter="url(#glow)"/>
+  <circle cx="350" cy="250" r="4" fill="#9945FF" filter="url(#glow)"/>
+  
+  <!-- "J" watermark -->
+  <text x="200" y="350" text-anchor="middle" font-family="monospace" font-size="24" fill="#00fff9" opacity="0.4">JEEVES</text>
+</svg>
