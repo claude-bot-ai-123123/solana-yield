@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WARGAMES Macro Risk | SolanaYield</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 2px solid #9945ff;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #9945ff 0%, #14f195 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #a0a0a0;
+      font-size: 1.1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(153, 69, 255, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #14f195;
+    }
+
+    .risk-score {
+      font-size: 4rem;
+      font-weight: bold;
+      text-align: center;
+      margin: 1rem 0;
+    }
+
+    .risk-low { color: #14f195; }
+    .risk-medium { color: #ffa500; }
+    .risk-high { color: #ff4444; }
+    .risk-extreme { color: #ff0000; }
+
+    .bias-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .bias-risk-on { 
+      background: linear-gradient(135deg, #14f195 0%, #9945ff 100%);
+      color: #000;
+    }
+    .bias-neutral { 
+      background: linear-gradient(135deg, #ffa500 0%, #ff6b35 100%);
+      color: #000;
+    }
+    .bias-risk-off { 
+      background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+      color: #fff;
+    }
+
+    .component-bar {
+      margin-bottom: 1rem;
+    }
+
+    .component-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+    }
+
+    .bar-container {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #9945ff 0%, #14f195 100%);
+      transition: width 0.5s ease;
+    }
+
+    .driver-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .driver-item {
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid #9945ff;
+      border-radius: 4px;
+    }
+
+    .allocation-ceiling {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      margin: 1rem 0;
+      color: #14f195;
+    }
+
+    .reasoning {
+      background: rgba(153, 69, 255, 0.1);
+      border: 1px solid #9945ff;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 4rem;
+      font-size: 1.2rem;
+      color: #9945ff;
+    }
+
+    .error {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid #ff4444;
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      color: #ff4444;
+    }
+
+    .timestamp {
+      text-align: center;
+      margin-top: 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: #666;
+    }
+
+    footer a {
+      color: #9945ff;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: #14f195;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎯 WARGAMES Macro Risk</h1>
+      <p class="subtitle">Real-time global risk scoring for smarter DeFi allocation</p>
+    </header>
+
+    <div id="loading" class="loading">
+      Loading macro risk data...
+    </div>
+
+    <div id="error" class="error" style="display: none;">
+      Failed to load macro risk data. Please try again later.
+    </div>
+
+    <div id="content" style="display: none;">
+      <div class="grid">
+        <!-- Risk Score Card -->
+        <div class="card">
+          <h2>📊 Overall Risk Score</h2>
+          <div id="risk-score" class="risk-score">--</div>
+          <div style="text-align: center;">
+            <span id="bias-badge" class="bias-badge">LOADING</span>
+          </div>
+        </div>
+
+        <!-- Fear & Greed Index -->
+        <div class="card">
+          <h2>😱 Crypto Fear & Greed</h2>
+          <div id="fear-greed-score" class="risk-score">--</div>
+          <div id="fear-greed-label" style="text-align: center; color: #a0a0a0; font-size: 1.1rem;">
+            Loading...
+          </div>
+        </div>
+
+        <!-- Allocation Ceiling -->
+        <div class="card">
+          <h2>🎯 Max DeFi Allocation</h2>
+          <div id="max-allocation" class="allocation-ceiling">--%</div>
+          <div style="text-align: center; color: #a0a0a0; font-size: 0.95rem;">
+            <div>Single protocol: <span id="max-single" style="color: #14f195;">--%</span></div>
+            <div style="margin-top: 0.5rem;">
+              Risk Level: <span id="risk-level" style="color: #ffa500;">--</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Components -->
+      <div class="card">
+        <h2>📈 Risk Components</h2>
+        <div id="components">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Risk Drivers -->
+      <div class="card">
+        <h2>⚠️ Current Risk Drivers</h2>
+        <ul id="drivers" class="driver-list">
+          <!-- Dynamically populated -->
+        </ul>
+      </div>
+
+      <!-- Reasoning -->
+      <div class="card">
+        <h2>🧠 Allocation Strategy</h2>
+        <div id="reasoning" class="reasoning">
+          Loading reasoning...
+        </div>
+      </div>
+
+      <div id="timestamp" class="timestamp"></div>
+    </div>
+
+    <footer>
+      <p>Powered by <a href="https://solana-yield.vercel.app">SolanaYield</a> × <strong>WARGAMES</strong></p>
+      <p style="margin-top: 0.5rem;">
+        <a href="/">← Back to Dashboard</a> |
+        <a href="/integrations.html">Integrations</a>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    async function loadMacroRisk() {
+      try {
+        const response = await fetch('/api/macro-risk');
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Hide loading, show content
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+
+        // Populate risk score
+        const riskScore = data.risk.score;
+        const riskScoreEl = document.getElementById('risk-score');
+        riskScoreEl.textContent = riskScore;
+        
+        // Color code risk level
+        if (riskScore <= 25) riskScoreEl.className = 'risk-score risk-low';
+        else if (riskScore <= 50) riskScoreEl.className = 'risk-score risk-medium';
+        else if (riskScore <= 75) riskScoreEl.className = 'risk-score risk-high';
+        else riskScoreEl.className = 'risk-score risk-extreme';
+
+        // Bias badge
+        const biasEl = document.getElementById('bias-badge');
+        biasEl.textContent = data.risk.bias.replace('-', ' ');
+        biasEl.className = `bias-badge bias-${data.risk.bias}`;
+
+        // Fear & Greed
+        document.getElementById('fear-greed-score').textContent = data.risk.fearGreed.value;
+        document.getElementById('fear-greed-label').textContent = data.risk.fearGreed.classification;
+
+        // Allocation ceiling
+        document.getElementById('max-allocation').textContent = `${data.ceiling.maxDeFiAllocation}%`;
+        document.getElementById('max-single').textContent = `${data.ceiling.maxSingleProtocol}%`;
+        document.getElementById('risk-level').textContent = data.ceiling.riskLevel.toUpperCase();
+
+        // Risk components
+        const componentsEl = document.getElementById('components');
+        componentsEl.innerHTML = '';
+        for (const [key, value] of Object.entries(data.risk.components)) {
+          const bar = document.createElement('div');
+          bar.className = 'component-bar';
+          bar.innerHTML = `
+            <div class="component-label">
+              <span>${key.charAt(0).toUpperCase() + key.slice(1)}</span>
+              <span>${value}/100</span>
+            </div>
+            <div class="bar-container">
+              <div class="bar-fill" style="width: ${value}%"></div>
+            </div>
+          `;
+          componentsEl.appendChild(bar);
+        }
+
+        // Risk drivers
+        const driversEl = document.getElementById('drivers');
+        driversEl.innerHTML = '';
+        if (data.risk.drivers.length === 0) {
+          driversEl.innerHTML = '<li class="driver-item">No significant risk drivers detected</li>';
+        } else {
+          data.risk.drivers.forEach(driver => {
+            const li = document.createElement('li');
+            li.className = 'driver-item';
+            li.textContent = driver;
+            driversEl.appendChild(li);
+          });
+        }
+
+        // Reasoning
+        document.getElementById('reasoning').textContent = data.ceiling.reasoning;
+
+        // Timestamp
+        const updatedTime = new Date(data.risk.updated).toLocaleString();
+        document.getElementById('timestamp').textContent = `Last updated: ${updatedTime}`;
+
+      } catch (error) {
+        console.error('Failed to load macro risk:', error);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+      }
+    }
+
+    // Load on page load
+    loadMacroRisk();
+
+    // Auto-refresh every 5 minutes
+    setInterval(loadMacroRisk, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
