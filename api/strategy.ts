@@ -96,14 +96,56 @@ export default async function handler(request: Request) {
     const topOpps = eligible.sort((a, b) => b.apy - a.apy).slice(0, 5);
     const totalWeight = topOpps.reduce((sum, o) => sum + o.apy, 0);
     
-    const allocations = topOpps.map(opp => ({
+    // Build initial allocations
+    let allocations = topOpps.map(opp => ({
       protocol: opp.protocol,
       asset: opp.asset,
       apy: Math.round(opp.apy * 100) / 100,
       risk: opp.risk,
       allocation: Math.round((opp.apy / totalWeight) * 100),
       amount: Math.round((opp.apy / totalWeight) * amount * 100) / 100,
+      macroAdjusted: false,
     }));
+
+    // Apply WARGAMES macro ceiling - reduce risky allocations if needed
+    const riskyTotal = allocations
+      .filter(a => a.risk !== 'low')
+      .reduce((sum, a) => sum + a.allocation, 0);
+    
+    let macroAdjustmentApplied = false;
+    if (riskyTotal > macroRisk.maxAllocation) {
+      macroAdjustmentApplied = true;
+      const scaleFactor = macroRisk.maxAllocation / riskyTotal;
+      let freedAllocation = 0;
+      
+      allocations = allocations.map(a => {
+        if (a.risk !== 'low') {
+          const oldAlloc = a.allocation;
+          const newAlloc = Math.round(a.allocation * scaleFactor);
+          freedAllocation += oldAlloc - newAlloc;
+          return { ...a, allocation: newAlloc, amount: Math.round((newAlloc / 100) * amount * 100) / 100, macroAdjusted: true };
+        }
+        return a;
+      });
+      
+      // Add freed allocation to stables or create USDC position
+      const stableIdx = allocations.findIndex(a => a.risk === 'low');
+      if (stableIdx >= 0) {
+        allocations[stableIdx].allocation += freedAllocation;
+        allocations[stableIdx].amount = Math.round((allocations[stableIdx].allocation / 100) * amount * 100) / 100;
+        allocations[stableIdx].macroAdjusted = true;
+      } else if (freedAllocation > 5) {
+        allocations.push({
+          protocol: 'USDC Reserve',
+          asset: 'USDC',
+          apy: 0,
+          risk: 'low' as const,
+          allocation: freedAllocation,
+          amount: Math.round((freedAllocation / 100) * amount * 100) / 100,
+          macroAdjusted: true,
+        });
+      }
+    }
 
     const weightedApy = allocations.reduce((sum, a) => sum + (a.apy * a.allocation / 100), 0);
 
@@ -133,6 +175,8 @@ export default async function handler(request: Request) {
           `Best opportunity: ${topOpps[0]?.protocol} at ${topOpps[0]?.apy.toFixed(2)}% APY`,
           `Risk filter removed ${yields.length - eligible.length} high-risk pools`,
           `Diversification across ${allocations.length} protocols reduces single-point-of-failure risk`,
+          `WARGAMES macro risk: ${macroRisk.score}/100 → max ${macroRisk.maxAllocation}% risky allocation`,
+          macroAdjustmentApplied ? `⚠️ Macro ceiling applied: reduced risky exposure from ${riskyTotal}% to ${macroRisk.maxAllocation}%` : `Macro ceiling not triggered (${riskyTotal}% < ${macroRisk.maxAllocation}%)`,
         ],
       },
       decision: {
